@@ -1,6 +1,5 @@
 import { cn } from "@/shared/lib/cn";
 
-/** Content padding inside the app frame (no wide desktop max-width). */
 export function PageShell({
   children,
   className,
@@ -9,5 +8,14 @@ export function PageShell({
   className?: string;
   wide?: boolean;
 }) {
-  return <div className={cn("w-full px-4 py-6", className)}>{children}</div>;
+  return (
+    <div
+      className={cn(
+        "mx-auto w-full max-w-[var(--content-max)] px-4 py-8 sm:px-6 sm:py-10",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }

@@ -1,9 +1,7 @@
-"use client";
-
 import { AuthProvider } from "@/features/auth/AuthProvider";
-import { WebGLProvider } from "@/shared/three/WebGLGate";
 import type { SessionUser } from "@/features/auth/types";
 
+/** Keep the tree light — no global WebGL/Three providers (they crash browsers). */
 export function Providers({
   children,
   user,
@@ -11,9 +9,5 @@ export function Providers({
   children: React.ReactNode;
   user: SessionUser | null;
 }) {
-  return (
-    <AuthProvider initialUser={user}>
-      <WebGLProvider>{children}</WebGLProvider>
-    </AuthProvider>
-  );
+  return <AuthProvider initialUser={user}>{children}</AuthProvider>;
 }

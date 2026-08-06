@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import type { PostSummary } from "@/features/posts/types";
 import { PostCard } from "@/features/posts/PostCard";
@@ -10,42 +8,40 @@ export function FeaturedArtistsSection({ posts }: { posts: PostSummary[] }) {
   const hasReal = posts.length > 0;
 
   return (
-    <section className="px-4 py-2">
-      <div className="flex items-end justify-between gap-3">
+    <section className="mx-auto max-w-[var(--content-max)] px-4 py-10 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="display text-2xl text-ink">
-            {copy.home.featuredTitle}
-          </h2>
+          <h2 className="display text-3xl text-ink">{copy.home.featuredTitle}</h2>
           {!hasReal ? (
-            <p className="mt-1 text-sm text-paper-muted">
+            <p className="mt-2 max-w-xl text-sm text-paper-muted sm:text-base">
               {copy.home.featuredEmpty}
             </p>
           ) : null}
         </div>
-        <ButtonLink href="/explore" variant="ghost" size="sm">
-          Wall
+        <ButtonLink href="/explore" variant="outline" size="sm">
+          Explore the wall
         </ButtonLink>
       </div>
 
       {hasReal ? (
-        <div className="mt-4 space-y-4">
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
       ) : (
-        <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2">
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="relative h-52 w-40 shrink-0 snap-center overflow-hidden rounded-2xl border border-line"
+              className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-line"
             >
               <Image
                 src={assets.comingSoon}
                 alt="Coming soon"
                 fill
                 className="object-cover"
-                sizes="160px"
+                sizes="(max-width: 640px) 100vw, 33vw"
               />
             </div>
           ))}

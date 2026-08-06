@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -18,21 +19,34 @@ type WebGLContextValue = {
 
 const WebGLContext = createContext<WebGLContextValue | null>(null);
 
-function detectWebGL(): boolean {
+/** Cache once — never create a new WebGL context per React snapshot. */
+let cachedSupport: boolean | null = null;
+
+function detectWebGLOnce(): boolean {
   if (typeof window === "undefined") return false;
+  if (cachedSupport !== null) return cachedSupport;
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(
-      canvas.getContext("webgl") || canvas.getContext("experimental-webgl"),
-    );
+    const gl =
+      canvas.getContext("webgl", { failIfMajorPerformanceCaveat: true }) ||
+      canvas.getContext("experimental-webgl");
+    cachedSupport = Boolean(gl);
+    // Drop the context immediately so we don't leak GPU contexts.
+    if (gl && "getExtension" in gl) {
+      const ext = (
+        gl as WebGLRenderingContext
+      ).getExtension("WEBGL_lose_context");
+      ext?.loseContext();
+    }
   } catch {
-    return false;
+    cachedSupport = false;
   }
+  return cachedSupport;
 }
 
 function getSnapshot(): { supported: boolean; enabled: boolean } {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const supported = detectWebGL() && !reduce;
+  const supported = detectWebGLOnce() && !reduce;
   const stored = window.localStorage.getItem("tap-webgl");
   let enabled = WEBGL_DEFAULT && supported;
   if (stored === "true") enabled = supported;
@@ -58,9 +72,10 @@ function subscribe(onStoreChange: () => void) {
 
 export function WebGLProvider({ children }: { children: ReactNode }) {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const ready = useRef(true);
 
   const setEnabled = useCallback((value: boolean) => {
-    const supported = detectWebGL();
+    const supported = detectWebGLOnce();
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -78,20 +93,18 @@ export function WebGLProvider({ children }: { children: ReactNode }) {
     [state.enabled, state.supported, setEnabled],
   );
 
+  if (!ready.current) return children;
+
   return (
     <WebGLContext.Provider value={value}>{children}</WebGLContext.Provider>
   );
 }
 
 export function useWebGLEnabled() {
-  const ctx = useContext(WebGLContext);
-  if (!ctx) {
-    throw new Error("useWebGLEnabled must be used within WebGLProvider");
-  }
-  return ctx;
+  return useContext(WebGLContext);
 }
 
-/** Renders children only when WebGL is enabled; otherwise renders fallback. */
+/** Safe without provider — always falls back (marketing site default). */
 export function WebGLGate({
   children,
   fallback,
@@ -99,6 +112,7 @@ export function WebGLGate({
   children: ReactNode;
   fallback: ReactNode;
 }) {
-  const { enabled } = useWebGLEnabled();
-  return <>{enabled ? children : fallback}</>;
+  const ctx = useWebGLEnabled();
+  if (!ctx?.enabled) return <>{fallback}</>;
+  return <>{children}</>;
 }

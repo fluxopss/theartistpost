@@ -1,24 +1,15 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import type { PostDetail } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { LikeButton } from "@/shared/ui/LikeButton";
-import { WebGLGate } from "@/shared/three/WebGLGate";
-
-const PostCard3D = dynamic(
-  () => import("@/shared/three/PostCard3D").then((m) => m.PostCard3D),
-  { ssr: false },
-);
 
 export function PostDetailView({ post }: { post: PostDetail }) {
-  const accent = post.theme?.primary ?? "#031a37";
-
   return (
     <article>
-      <div className="relative isolate min-h-[42vh] overflow-hidden">
+      <div className="relative isolate min-h-[42vh] overflow-hidden md:min-h-[52vh]">
         {post.mediaUrl ? (
           <Image
             src={post.mediaUrl}
@@ -26,21 +17,23 @@ export function PostDetailView({ post }: { post: PostDetail }) {
             fill
             priority
             className="object-cover"
-            sizes="(max-width: 430px) 100vw, 430px"
+            sizes="100vw"
           />
         ) : (
           <div className="absolute inset-0 bg-surface-muted" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/50 to-ink/20" />
-        <div className="relative z-10 flex min-h-[42vh] flex-col justify-end px-4 pb-6 pt-16">
+        <div className="relative z-10 mx-auto flex min-h-[42vh] max-w-[var(--content-max)] flex-col justify-end px-4 pb-8 pt-20 sm:px-6 md:min-h-[52vh]">
           <Link
             href="/explore"
             className="mb-auto w-fit rounded-full bg-ink/40 px-3 py-1 text-xs font-semibold text-paper-on-dark backdrop-blur"
           >
             ← Explore
           </Link>
-          <h1 className="display text-3xl text-paper-on-dark">{post.title}</h1>
-          <p className="mt-2 text-sm text-paper-on-dark/80">
+          <h1 className="display text-3xl text-paper-on-dark sm:text-5xl">
+            {post.title}
+          </h1>
+          <p className="mt-2 text-sm text-paper-on-dark/80 sm:text-base">
             by{" "}
             <Link
               href={`/artist/${post.artist.handle}`}
@@ -52,7 +45,7 @@ export function PostDetailView({ post }: { post: PostDetail }) {
         </div>
       </div>
 
-      <div className="space-y-5 px-4 py-5">
+      <div className="mx-auto max-w-[var(--content-max)] space-y-6 px-4 py-8 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <LikeButton initialCount={post.likeCount} />
           <span className="text-xs text-paper-muted">
@@ -68,22 +61,9 @@ export function PostDetailView({ post }: { post: PostDetail }) {
           ))}
         </div>
 
-        <p className="text-sm leading-relaxed text-paper-muted">
+        <p className="max-w-2xl text-base leading-relaxed text-paper-muted">
           {post.description}
         </p>
-
-        <WebGLGate
-          fallback={
-            <div
-              className="flex h-44 items-center justify-center rounded-2xl border border-line bg-surface-muted text-xs text-paper-muted"
-              style={{ boxShadow: `inset 0 0 40px ${accent}18` }}
-            >
-              3D preview paused
-            </div>
-          }
-        >
-          <PostCard3D accent={accent} mediaUrl={post.mediaUrl} />
-        </WebGLGate>
 
         <section>
           <h2 className="display text-xl text-ink">Comments</h2>

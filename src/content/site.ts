@@ -74,20 +74,18 @@ export const navMarketing = [
   { href: "/artist-schedule", label: "Artist Schedule" },
   { href: "/kindness-always", label: "Kindness Always" },
   { href: "/supporters", label: "Supporters" },
-] as const;
-
-export const navApp = [
   { href: "/explore", label: "Explore" },
-  { href: "/create", label: "Create" },
 ] as const;
 
-/** Bottom tab bar — mobile app chrome */
+export const navApp = [] as const;
+
+/** @deprecated App tabs removed — site uses standard header nav. */
 export const appTabs = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/explore", label: "Explore", icon: "explore" },
   { href: "/artist-schedule", label: "Schedule", icon: "schedule" },
   { href: "/kindness-always", label: "Merch", icon: "merch" },
-  { href: "/more", label: "More", icon: "more" },
+  { href: "/about", label: "About", icon: "more" },
 ] as const;
 
 export type AppTabIcon = (typeof appTabs)[number]["icon"];

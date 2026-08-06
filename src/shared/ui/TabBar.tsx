@@ -72,7 +72,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="App tabs"
-      className="absolute inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[var(--app-frame-max)] border-t border-line bg-surface/95 backdrop-blur-md"
       style={{ paddingBottom: "var(--safe-bottom)" }}
     >
       <ul className="grid h-[var(--tab-bar-height)] grid-cols-5">

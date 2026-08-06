@@ -1,22 +1,27 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { assets, copy, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
-import {
-  HeroFallback,
-  InteractiveHeroScene,
-} from "@/shared/three/InteractiveHeroScene";
+import { HeroFallback } from "@/shared/three/HeroFallback";
 import { WebGLGate, useWebGLEnabled } from "@/shared/three/WebGLGate";
 
+/** Lazy R3F — never block or crash the brand home if WebGL/Three fails. */
+const InteractiveHeroScene = dynamic(
+  () =>
+    import("@/shared/three/InteractiveHeroScene").then(
+      (m) => m.InteractiveHeroScene,
+    ),
+  { ssr: false, loading: () => <HeroFallback /> },
+);
+
 export function HomeHero() {
-  const reduce = useReducedMotion();
   const { enabled, setEnabled, supported } = useWebGLEnabled();
 
   return (
-    <section className="relative isolate overflow-hidden section-dark px-4 pb-8 pt-10">
+    <section className="relative isolate overflow-hidden section-dark px-4 pb-10 pt-12">
       <WebGLGate fallback={<HeroFallback />}>
         <InteractiveHeroScene />
       </WebGLGate>
@@ -26,19 +31,14 @@ export function HomeHero() {
           alt=""
           fill
           priority
-          className="object-cover opacity-20"
-          sizes="430px"
+          className="object-cover opacity-25"
+          sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/50 via-ink/70 to-ink" />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/40 via-ink/75 to-ink" />
       </div>
 
-      <div className="relative z-10">
-        <motion.div
-          initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex justify-center"
-        >
+      <div className="relative z-10 mx-auto max-w-md">
+        <div className="flex justify-center">
           <Image
             src={assets.logo}
             alt={site.name}
@@ -47,29 +47,17 @@ export function HomeHero() {
             className="h-24 w-24 object-contain drop-shadow-lg"
             priority
           />
-        </motion.div>
-        <motion.h1
-          initial={reduce ? false : { opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="display mt-5 text-center text-3xl text-paper-on-dark"
-        >
+        </div>
+        <p className="mt-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-spark-coral">
+          {site.name}
+        </p>
+        <h1 className="display mt-3 text-center text-3xl text-paper-on-dark sm:text-4xl">
           {site.headline}
-        </motion.h1>
-        <motion.p
-          initial={reduce ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14 }}
-          className="mx-auto mt-3 max-w-[18rem] text-center text-sm text-paper-on-dark/75"
-        >
+        </h1>
+        <p className="mx-auto mt-3 max-w-[18rem] text-center text-sm text-paper-on-dark/80">
           {site.tagline}
-        </motion.p>
-        <motion.div
-          initial={reduce ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-6 flex flex-col gap-2"
-        >
+        </p>
+        <div className="mt-7 flex flex-col gap-2.5">
           <ButtonLink
             href="/artist-schedule"
             variant="secondary"
@@ -95,11 +83,11 @@ export function HomeHero() {
           >
             Visit Hacienda
           </ButtonLink>
-        </motion.div>
+        </div>
         {supported ? (
           <button
             type="button"
-            className="mt-4 w-full text-center text-[10px] text-paper-on-dark/50"
+            className="mt-5 w-full text-center text-[10px] text-paper-on-dark/45"
             onClick={() => setEnabled(!enabled)}
           >
             {enabled ? "Disable scene" : "Enable scene"}
@@ -123,7 +111,7 @@ export function HaciendaStoryCard() {
             alt=""
             fill
             className="object-cover"
-            sizes="400px"
+            sizes="(max-width: 768px) 100vw, 480px"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />
           <p className="absolute bottom-3 left-3 right-3 display text-lg text-paper-on-dark">

@@ -1,12 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { PostDetail } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { LikeButton } from "@/shared/ui/LikeButton";
-import { PostCard3D } from "@/shared/three/PostCard3D";
 import { WebGLGate } from "@/shared/three/WebGLGate";
 import {
   fadeUp,
@@ -14,8 +14,12 @@ import {
   useMotionSafe,
 } from "@/shared/motion/variants";
 
+const PostCard3D = dynamic(
+  () => import("@/shared/three/PostCard3D").then((m) => m.PostCard3D),
+  { ssr: false },
+);
+
 export function PostDetailView({ post }: { post: PostDetail }) {
-  const reduce = useReducedMotion();
   const { initial, animate } = useMotionSafe();
   const accent = post.theme?.primary ?? "#031a37";
 
@@ -29,7 +33,7 @@ export function PostDetailView({ post }: { post: PostDetail }) {
             fill
             priority
             className="object-cover"
-            sizes="430px"
+            sizes="(max-width: 430px) 100vw, 430px"
           />
         ) : (
           <div className="absolute inset-0 bg-surface-muted" />
@@ -42,13 +46,7 @@ export function PostDetailView({ post }: { post: PostDetail }) {
           >
             ← Explore
           </Link>
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="display text-3xl text-paper-on-dark"
-          >
-            {post.title}
-          </motion.h1>
+          <h1 className="display text-3xl text-paper-on-dark">{post.title}</h1>
           <p className="mt-2 text-sm text-paper-on-dark/80">
             by{" "}
             <Link

@@ -20,7 +20,7 @@ html {
 }
 
 body {
-  background: var(--surface);
+  background: var(--ink);
   color: var(--paper);
   font-family: var(--font-body);
   min-height: 100dvh;

@@ -88,13 +88,4 @@ export function InteractiveHeroScene() {
   );
 }
 
-export function HeroFallback() {
-  return (
-    <div className="absolute inset-0 -z-10 overflow-hidden bg-ink" aria-hidden>
-      <div className="absolute -left-1/4 top-[-20%] h-[70%] w-[70%] rounded-full bg-accent-secondary/30 blur-3xl" />
-      <div className="absolute -right-1/4 bottom-[-10%] h-[60%] w-[60%] rounded-full bg-white/5 blur-3xl" />
-      <div className="grain" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--ink)_75%)]" />
-    </div>
-  );
-}
+export { HeroFallback } from "./HeroFallback";

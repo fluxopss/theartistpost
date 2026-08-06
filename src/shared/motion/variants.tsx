@@ -32,9 +32,10 @@ export function useMotionSafe() {
   const reduce = useReducedMotion();
   return {
     reduce: Boolean(reduce),
-    initial: reduce ? false : "hidden",
-    animate: "show",
-  } as const;
+    // Never SSR as opacity:0 — if client JS fails, content stays readable.
+    initial: false as const,
+    animate: "show" as const,
+  };
 }
 
 export function MotionSection({
@@ -44,14 +45,14 @@ export function MotionSection({
   children: ReactNode;
   className?: string;
 }) {
-  const { reduce, initial, animate } = useMotionSafe();
+  const { reduce, animate } = useMotionSafe();
   return (
     <motion.section
       className={className}
       variants={staggerContainer}
-      initial={initial}
+      initial={false}
       whileInView={reduce ? undefined : animate}
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.15 }}
     >
       {children}
     </motion.section>

@@ -15,4 +15,8 @@
 ssh flux-vps-deploy 'cd /var/www/theartistpost && git pull && pnpm install --frozen-lockfile && pnpm build && pm2 restart theartistpost'
 ```
 
+Build uses **webpack** (`next build --webpack`). Next 16 Turbopack production builds were blanking the client after hydrate.
+
+Keep `NEXT_PUBLIC_WEBGL_DEFAULT=false` unless you intentionally opt into the Three.js hero.
+
 First-time bootstrap is done by the deploy agent (clone, .env, traefik, DNS, pm2 start).

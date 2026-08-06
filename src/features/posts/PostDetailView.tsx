@@ -3,16 +3,10 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import type { PostDetail } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { LikeButton } from "@/shared/ui/LikeButton";
 import { WebGLGate } from "@/shared/three/WebGLGate";
-import {
-  fadeUp,
-  staggerContainer,
-  useMotionSafe,
-} from "@/shared/motion/variants";
 
 const PostCard3D = dynamic(
   () => import("@/shared/three/PostCard3D").then((m) => m.PostCard3D),
@@ -20,7 +14,6 @@ const PostCard3D = dynamic(
 );
 
 export function PostDetailView({ post }: { post: PostDetail }) {
-  const { initial, animate } = useMotionSafe();
   const accent = post.theme?.primary ?? "#031a37";
 
   return (
@@ -59,16 +52,8 @@ export function PostDetailView({ post }: { post: PostDetail }) {
         </div>
       </div>
 
-      <motion.div
-        className="space-y-5 px-4 py-5"
-        variants={staggerContainer}
-        initial={initial}
-        animate={animate}
-      >
-        <motion.div
-          variants={fadeUp}
-          className="flex flex-wrap items-center gap-2"
-        >
+      <div className="space-y-5 px-4 py-5">
+        <div className="flex flex-wrap items-center gap-2">
           <LikeButton initialCount={post.likeCount} />
           <span className="text-xs text-paper-muted">
             {post.viewCount} views
@@ -81,31 +66,26 @@ export function PostDetailView({ post }: { post: PostDetail }) {
               href={`/explore?tag=${tag.slug}`}
             />
           ))}
-        </motion.div>
+        </div>
 
-        <motion.p
-          variants={fadeUp}
-          className="text-sm leading-relaxed text-paper-muted"
-        >
+        <p className="text-sm leading-relaxed text-paper-muted">
           {post.description}
-        </motion.p>
+        </p>
 
-        <motion.div variants={fadeUp}>
-          <WebGLGate
-            fallback={
-              <div
-                className="flex h-44 items-center justify-center rounded-2xl border border-line bg-surface-muted text-xs text-paper-muted"
-                style={{ boxShadow: `inset 0 0 40px ${accent}18` }}
-              >
-                3D preview paused
-              </div>
-            }
-          >
-            <PostCard3D accent={accent} mediaUrl={post.mediaUrl} />
-          </WebGLGate>
-        </motion.div>
+        <WebGLGate
+          fallback={
+            <div
+              className="flex h-44 items-center justify-center rounded-2xl border border-line bg-surface-muted text-xs text-paper-muted"
+              style={{ boxShadow: `inset 0 0 40px ${accent}18` }}
+            >
+              3D preview paused
+            </div>
+          }
+        >
+          <PostCard3D accent={accent} mediaUrl={post.mediaUrl} />
+        </WebGLGate>
 
-        <motion.section variants={fadeUp}>
+        <section>
           <h2 className="display text-xl text-ink">Comments</h2>
           <ul className="mt-3 space-y-3">
             {post.comments.length === 0 ? (
@@ -124,8 +104,8 @@ export function PostDetailView({ post }: { post: PostDetail }) {
               ))
             )}
           </ul>
-        </motion.section>
-      </motion.div>
+        </section>
+      </div>
     </article>
   );
 }

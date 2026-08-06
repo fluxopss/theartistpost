@@ -2,18 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import { appTabs, type AppTabIcon } from "@/content/site";
 import { cn } from "@/shared/lib/cn";
 
 function TabIcon({ icon, active }: { icon: AppTabIcon; active: boolean }) {
-  const stroke = active ? "currentColor" : "currentColor";
   const common = {
     width: 22,
     height: 22,
     viewBox: "0 0 24 24",
     fill: "none",
-    stroke,
+    stroke: "currentColor",
     strokeWidth: 1.8,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
@@ -92,11 +90,7 @@ export function TabBar() {
                 aria-current={active ? "page" : undefined}
               >
                 {active ? (
-                  <motion.span
-                    layoutId="tab-indicator"
-                    className="absolute inset-x-4 top-1 h-0.5 rounded-full bg-spark-coral"
-                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                  />
+                  <span className="absolute inset-x-4 top-1 h-0.5 rounded-full bg-spark-coral" />
                 ) : null}
                 <TabIcon icon={tab.icon} active={active} />
                 <span>{tab.label}</span>

@@ -1,33 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { links, moreMenu, site } from "@/content/site";
-import {
-  staggerContainer,
-  fadeUp,
-  useMotionSafe,
-} from "@/shared/motion/variants";
 
 export default function MorePage() {
-  const { initial, animate } = useMotionSafe();
   const socialEntries = Object.entries(links.social) as Array<[string, string]>;
 
   return (
-    <motion.div
-      className="px-4 py-6"
-      variants={staggerContainer}
-      initial={initial}
-      animate={animate}
-    >
-      <motion.h1 variants={fadeUp} className="display text-3xl text-ink">
-        More
-      </motion.h1>
-      <motion.p variants={fadeUp} className="mt-1 text-sm text-paper-muted">
-        {site.legalName}
-      </motion.p>
+    <div className="px-4 py-6">
+      <h1 className="display text-3xl text-ink">More</h1>
+      <p className="mt-1 text-sm text-paper-muted">{site.legalName}</p>
 
-      <motion.ul variants={staggerContainer} className="mt-6 space-y-2">
+      <ul className="mt-6 space-y-2">
         {moreMenu.map((item) => {
           const className =
             "flex items-center justify-between rounded-xl border border-line bg-surface-muted px-4 py-4 active:scale-[0.98] transition";
@@ -49,59 +33,52 @@ export default function MorePage() {
 
           if ("external" in item && item.external) {
             return (
-              <motion.li key={item.href} variants={fadeUp}>
+              <li key={item.href}>
                 <a
                   href={item.href}
-                  className={className}
                   target={
                     item.href.startsWith("mailto:") ? undefined : "_blank"
                   }
                   rel={
                     item.href.startsWith("mailto:") ? undefined : "noreferrer"
                   }
+                  className={className}
                 >
                   {body}
                 </a>
-              </motion.li>
+              </li>
             );
           }
 
           return (
-            <motion.li key={item.href} variants={fadeUp}>
+            <li key={item.href}>
               <Link href={item.href} className={className}>
                 {body}
               </Link>
-            </motion.li>
+            </li>
           );
         })}
-      </motion.ul>
+      </ul>
 
-      <motion.section variants={fadeUp} className="mt-8">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-paper-muted">
+      <div className="mt-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-paper-muted">
           Social
-        </h2>
+        </p>
         <ul className="mt-3 flex flex-wrap gap-2">
-          {socialEntries.map(([key, href]) => (
-            <li key={key}>
+          {socialEntries.map(([name, href]) => (
+            <li key={name}>
               <a
                 href={href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-semibold capitalize text-ink"
+                className="inline-flex rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold capitalize text-ink"
               >
-                {key === "x" ? "X" : key}
+                {name}
               </a>
             </li>
           ))}
         </ul>
-      </motion.section>
-
-      <motion.p
-        variants={fadeUp}
-        className="mt-10 text-center text-[11px] text-paper-muted"
-      >
-        {site.copyright}
-      </motion.p>
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -1,12 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import type { PostSummary, TagSummary } from "@/features/posts/types";
 import { PostCard } from "@/features/posts/PostCard";
 import { TagChip } from "@/shared/ui/TagChip";
 import { Button } from "@/shared/ui/Button";
-import { staggerContainer, useMotionSafe } from "@/shared/motion/variants";
 import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 
 export function ExploreGrid({
@@ -23,7 +21,6 @@ export function ExploreGrid({
   const [posts, setPosts] = useState(initialPosts);
   const [cursor, setCursor] = useState(initialCursor);
   const [pending, startTransition] = useTransition();
-  const { initial, animate } = useMotionSafe();
 
   const filtered = useMemo(() => {
     if (!activeTag) return posts;
@@ -69,18 +66,11 @@ export function ExploreGrid({
         </div>
       </div>
 
-      <motion.div
-        className="mt-4 space-y-4"
-        variants={staggerContainer}
-        initial={initial}
-        animate={animate}
-      >
-        <AnimatePresence mode="popLayout">
-          {filtered.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      <div className="mt-4 space-y-4">
+        {filtered.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
 
       {cursor ? (
         <div className="mt-6 flex justify-center pb-4">

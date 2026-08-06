@@ -2,10 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import type { PostSummary } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
-import { fadeUp } from "@/shared/motion/variants";
 import { cn } from "@/shared/lib/cn";
 
 export function PostCard({
@@ -17,18 +15,11 @@ export function PostCard({
   className?: string;
   featured?: boolean;
 }) {
-  const reduce = useReducedMotion();
-
   return (
-    <motion.article
-      variants={fadeUp}
-      layout
-      whileTap={reduce ? undefined : { scale: 0.985 }}
-      className={cn("group relative", className)}
-    >
+    <article className={cn("group relative", className)}>
       <Link
         href={`/post/${post.slug}`}
-        className="block overflow-hidden rounded-2xl border border-line bg-surface shadow-sm"
+        className="block overflow-hidden rounded-2xl border border-line bg-surface shadow-sm active:scale-[0.99] transition"
       >
         <div
           className={cn(
@@ -66,6 +57,6 @@ export function PostCard({
           </span>
         </div>
       </Link>
-    </motion.article>
+    </article>
   );
 }

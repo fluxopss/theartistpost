@@ -1,0 +1,14 @@
+http:
+  routers:
+    theartistpost:
+      rule: "Host(`theartistpost.fluxlab.agency`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: theartistpost
+  services:
+    theartistpost:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3013"

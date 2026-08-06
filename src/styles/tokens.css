@@ -1,0 +1,90 @@
+/**
+ * Brand tokens aligned to https://theartistpost.org/
+ * Mobile-app shell: navy primary + logo-derived accents.
+ */
+:root {
+  --ink: #031a37;
+  --ink-elevated: #0a2748;
+  --surface: #ffffff;
+  --surface-muted: #f4f6f9;
+  --surface-hover: #e8edf4;
+  --paper: #031a37;
+  --paper-on-dark: #dfe0e4;
+  --paper-muted: #5a6b80;
+  --line: rgba(3, 26, 55, 0.12);
+  --line-strong: rgba(3, 26, 55, 0.22);
+  --line-on-dark: rgba(223, 224, 228, 0.18);
+
+  --accent: #031a37;
+  --accent-ink: #dfe0e4;
+  --accent-soft: rgba(3, 26, 55, 0.08);
+  --accent-secondary: #23406e;
+  --glow: rgba(35, 64, 110, 0.25);
+
+  /* Logo-derived accents — use sparingly */
+  --spark-coral: #ff6b5b;
+  --spark-gold: #f0b429;
+  --spark-teal: #2ec4b6;
+
+  --danger: #c43c55;
+  --success: #1f8a5a;
+
+  --font-display: var(--font-poppins), "Poppins", sans-serif;
+  --font-body: var(--font-open-sans), "Open Sans", sans-serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 160ms;
+  --duration-med: 320ms;
+  --duration-slow: 560ms;
+
+  --nav-height: 3.25rem;
+  --tab-bar-height: 4.25rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-frame-max: 430px;
+  --content-max: 72rem;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-elevated: var(--ink-elevated);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-paper: var(--paper);
+  --color-paper-on-dark: var(--paper-on-dark);
+  --color-paper-muted: var(--paper-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-on-dark: var(--line-on-dark);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-glow: var(--glow);
+  --color-spark-coral: var(--spark-coral);
+  --color-spark-gold: var(--spark-gold);
+  --color-spark-teal: var(--spark-teal);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}

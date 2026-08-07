@@ -2,25 +2,10 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  useScroll,
-} from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { assets, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { useReducedMotion } from "@/hooks/useMedia";
-
-const collage = [
-  assets.cover,
-  assets.hacienda,
-  assets.aboutHero,
-  assets.comingSoon,
-  "/merch/gallery.jpeg",
-  "/merch/img-1605.jpg",
-];
 
 export function HomeHero() {
   const reduce = useReducedMotion();
@@ -29,139 +14,117 @@ export function HomeHero() {
     target: ref,
     offset: ["start start", "end start"],
   });
-  const bgY = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, 120]);
-
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const springX = useSpring(mx, { stiffness: 120, damping: 18 });
-  const springY = useSpring(my, { stiffness: 120, damping: 18 });
-  const rotateX = useTransform(springY, [-40, 40], reduce ? [0, 0] : [8, -8]);
-  const rotateY = useTransform(springX, [-40, 40], reduce ? [0, 0] : [-8, 8]);
-
-  function onMouseMove(e: React.MouseEvent) {
-    if (reduce) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    mx.set(e.clientX - rect.left - rect.width / 2);
-    my.set(e.clientY - rect.top - rect.height / 2);
-  }
-
-  function onMouseLeave() {
-    mx.set(0);
-    my.set(0);
-  }
+  const plateScale = useTransform(
+    scrollYProgress,
+    [0, 1],
+    reduce ? [1, 1] : [1.08, 1.2],
+  );
+  const plateY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    reduce ? [0, 0] : [0, 80],
+  );
 
   return (
     <section
       ref={ref}
       className="relative isolate min-h-[min(100dvh,920px)] overflow-hidden"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
     >
-      <motion.div className="absolute inset-0 -z-10" style={{ y: bgY }}>
-        <div className="absolute inset-0 grid grid-cols-2 gap-1 opacity-40 sm:grid-cols-3 md:opacity-50">
-          {collage.map((src, i) => (
-            <div
-              key={src + i}
-              className="relative min-h-[28vh] overflow-hidden sm:min-h-[36vh]"
-            >
-              <Image
-                src={src}
-                alt=""
-                fill
-                priority={i < 2}
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, 33vw"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/80 to-surface" />
+      <motion.div
+        className="absolute inset-0 -z-10"
+        style={{ scale: plateScale, y: plateY }}
+      >
+        <Image
+          src={assets.cover}
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/70 to-surface" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,107,91,0.22),transparent_50%),radial-gradient(ellipse_at_80%_60%,rgba(46,196,182,0.18),transparent_45%)]" />
       </motion.div>
 
-      <div className="mx-auto flex max-w-[var(--content-max)] flex-col items-center px-4 pb-20 pt-16 text-center sm:px-6 sm:pb-28 sm:pt-24">
+      {!reduce ? (
+        <>
+          <div className="blob blob-1 opacity-40" aria-hidden />
+          <div className="blob blob-2 opacity-30" aria-hidden />
+        </>
+      ) : null}
+
+      <div className="mx-auto flex min-h-[min(100dvh,920px)] max-w-[var(--content-max)] flex-col items-center justify-center px-4 pb-24 pt-20 text-center sm:px-6">
         <motion.div
-          style={{ rotateX, rotateY, transformPerspective: 900 }}
-          className="will-change-transform"
+          initial={reduce ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           <Image
             src={assets.logo}
             alt={site.name}
-            width={160}
-            height={160}
-            className="h-28 w-28 object-contain drop-shadow-[0_0_40px_rgba(46,196,182,0.35)] sm:h-36 sm:w-36"
+            width={168}
+            height={168}
+            className="mx-auto h-28 w-28 object-contain drop-shadow-[0_0_48px_rgba(46,196,182,0.4)] sm:h-36 sm:w-36"
             priority
           />
         </motion.div>
 
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.28em] text-spark-coral">
+        <motion.p
+          className="mt-7 text-xs font-semibold uppercase tracking-[0.32em] text-spark-coral sm:text-sm"
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+        >
           {site.name}
-        </p>
+        </motion.p>
 
         <motion.h1
-          className="display mt-4 max-w-4xl text-[clamp(2.4rem,7vw,5rem)] text-paper-on-dark"
-          initial={reduce ? false : { opacity: 0, y: 24 }}
+          className="display mt-4 max-w-4xl text-[clamp(2.6rem,8vw,5.25rem)] text-paper-on-dark"
+          initial={reduce ? false : { opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <AnimatedHeadline text={site.headline} reduce={reduce} />
+          Creativity needs kindness
         </motion.h1>
 
-        <p className="mx-auto mt-5 max-w-xl text-base text-paper-on-dark/75 sm:text-lg">
-          {site.tagline}
-        </p>
+        <motion.p
+          className="mx-auto mt-5 max-w-xl text-base text-paper-on-dark/78 sm:text-lg"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.55 }}
+        >
+          West Palm Beach arts hub — freedom to create, courage to uplift.
+        </motion.p>
 
-        <div className="mt-10 flex w-full max-w-lg flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-          <ButtonLink
-            href="/artist-schedule"
-            variant="secondary"
-            size="lg"
-            className="rounded-full"
-          >
-            Artist Schedule
-          </ButtonLink>
-          <ButtonLink
-            href="/about"
-            variant="onDark"
-            size="lg"
-            className="rounded-full"
-          >
-            About the Mission
-          </ButtonLink>
-          <ButtonLink
-            href={site.mapsUrl}
-            external
-            variant="onDark"
-            size="lg"
-            className="rounded-full"
-          >
-            Visit Hacienda
-          </ButtonLink>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function AnimatedHeadline({ text, reduce }: { text: string; reduce: boolean }) {
-  if (reduce) return <>{text}</>;
-  const words = text.split(" ");
-  return (
-    <span className="inline-flex flex-wrap justify-center gap-x-[0.28em]">
-      {words.map((word, i) => (
-        <motion.span
-          key={word + i}
-          className="inline-block"
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          className="mt-10 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center"
+          initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            delay: 0.12 + i * 0.08,
-            duration: 0.45,
-            ease: [0.22, 1, 0.36, 1],
+            delay: 0.45,
+            type: "spring",
+            stiffness: 140,
+            damping: 18,
           }}
         >
-          {word}
-        </motion.span>
-      ))}
-    </span>
+          <ButtonLink
+            href="/kindness-always"
+            variant="secondary"
+            size="lg"
+            className="rounded-full !bg-spark-coral !text-ink shadow-[0_0_36px_rgba(255,107,91,0.35)]"
+          >
+            Leave a Kindness
+          </ButtonLink>
+          <ButtonLink
+            href="/explore"
+            variant="onDark"
+            size="lg"
+            className="rounded-full"
+          >
+            Explore the Wall
+          </ButtonLink>
+        </motion.div>
+      </div>
+    </section>
   );
 }

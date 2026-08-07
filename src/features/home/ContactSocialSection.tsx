@@ -1,75 +1,103 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { copy, site } from "@/content/site";
-import { Button, ButtonLink } from "@/shared/ui/Button";
+import { OpenStatus } from "@/components/OpenStatus";
+import { SectionReveal } from "@/components/SectionReveal";
+import { SubscribeForm } from "@/components/SubscribeForm";
+
+const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(site.address.full)}&output=embed`;
 
 export function ContactSocialSection() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
-
-  function onSubscribe(e: FormEvent) {
-    e.preventDefault();
-    if (!email.trim()) {
-      setStatus("Enter an email address.");
-      return;
-    }
-    setStatus("Thanks — newsletter signup will connect soon.");
-    setEmail("");
-  }
-
   return (
-    <section className="mx-auto max-w-[var(--content-max)] px-4 py-12 sm:px-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-line bg-surface-muted p-6 sm:p-8">
-          <h2 className="display text-2xl text-ink sm:text-3xl">
+    <SectionReveal
+      className="mx-auto max-w-[var(--content-max)] px-4 pb-20 pt-8 sm:px-6 sm:pb-28"
+      id="contact"
+    >
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="rounded-3xl border border-line bg-surface-glass p-6 sm:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-coral">
+            Visit
+          </p>
+          <h2 className="display mt-2 text-3xl text-paper">
             {copy.home.contactTitle}
           </h2>
-          <p className="mt-2 text-sm font-semibold text-ink sm:text-base">
+          <p className="mt-2 text-sm text-paper-muted">
             {copy.home.contactLead}
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-paper-muted sm:text-base">
+          <p className="mt-3 text-sm leading-relaxed text-paper-muted">
             {copy.home.contactBody}
           </p>
-          <p className="mt-4 text-sm text-paper-muted">{site.address.full}</p>
-          <p className="mt-1 text-sm text-paper-muted">
-            Open today {site.hoursToday}
-          </p>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-            <ButtonLink href={`mailto:${site.email}`}>
-              {copy.home.dropLine}
-            </ButtonLink>
-            <ButtonLink href={site.mapsUrl} external variant="outline">
-              {copy.home.getDirections}
-            </ButtonLink>
+
+          <div className="mt-6">
+            <OpenStatus />
+          </div>
+
+          <ul className="mt-6 space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <MapPin className="mt-0.5 h-4 w-4 text-spark-teal" aria-hidden />
+              <a
+                href={site.mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-paper hover:text-spark-teal"
+              >
+                {site.address.full}
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="h-4 w-4 text-spark-teal" aria-hidden />
+              <a
+                href={`tel:${site.phoneTel}`}
+                className="text-paper hover:text-spark-teal"
+              >
+                {site.phone}
+              </a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-spark-teal" aria-hidden />
+              <a
+                href={`mailto:${site.email}`}
+                className="text-paper hover:text-spark-teal"
+              >
+                {site.email}
+              </a>
+            </li>
+          </ul>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-line">
+            <iframe
+              title="Map to The Artist Post at Hacienda"
+              src={mapsEmbed}
+              className="h-56 w-full grayscale-[30%] contrast-125"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </div>
 
-        <div className="rounded-2xl border border-line p-6 sm:p-8">
-          <h3 className="display text-xl text-ink">
+        <div className="rounded-3xl border border-line bg-ink-elevated p-6 sm:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
+            Stay close
+          </p>
+          <h2 className="display mt-2 text-3xl text-paper">
             {copy.home.subscribeTitle}
-          </h3>
-          <p className="mt-2 text-sm text-paper-muted">
+          </h2>
+          <p className="mt-3 text-sm text-paper-muted">
             {copy.home.subscribeBody}
           </p>
-          <form onSubmit={onSubscribe} className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 py-2.5 text-sm"
-              aria-label="Email"
-            />
-            <Button type="submit">Sign up</Button>
-          </form>
-          {status ? (
-            <p className="mt-3 text-sm text-paper-muted" role="status">
-              {status}
-            </p>
-          ) : null}
+          <SubscribeForm className="mt-8" />
+          <p className="mt-6 text-xs text-paper-muted">
+            {copy.home.dropLine}{" "}
+            <a
+              href={`mailto:${site.email}`}
+              className="text-spark-teal hover:underline"
+            >
+              {site.email}
+            </a>
+          </p>
         </div>
       </div>
-    </section>
+    </SectionReveal>
   );
 }

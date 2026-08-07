@@ -1,0 +1,24 @@
+{
+  "name": "The Artist Post",
+  "short_name": "Artist Post",
+  "description": "Local arts & entertainment hub for West Palm Beach — The Artist Post at Hacienda.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#031A37",
+  "theme_color": "#031A37",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/brand/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

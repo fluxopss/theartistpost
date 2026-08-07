@@ -5,6 +5,11 @@ html {
   scroll-behavior: smooth;
 }
 
+html.cursor-trail-active,
+html.cursor-trail-active * {
+  cursor: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -17,6 +22,11 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  .blob,
+  .cursor-trail {
+    display: none !important;
+  }
 }
 
 body {
@@ -24,11 +34,12 @@ body {
   color: var(--paper);
   font-family: var(--font-body);
   min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--paper-on-dark);
+  background: var(--spark-teal);
+  color: var(--ink);
 }
 
 a {
@@ -37,27 +48,131 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-secondary);
+  outline: 2px solid var(--spark-teal);
   outline-offset: 3px;
-}
-
-.grain {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
 }
 
 .display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.05;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .section-dark {
   background: var(--ink);
   color: var(--paper-on-dark);
+}
+
+.glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--line);
+}
+
+.grain-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+  animation: blob-drift 18s var(--ease-out) infinite alternate;
+}
+
+.blob-1 {
+  background: var(--blob-1);
+  width: min(50vw, 420px);
+  height: min(50vw, 420px);
+  top: -10%;
+  left: -5%;
+}
+
+.blob-2 {
+  background: var(--blob-2);
+  width: min(45vw, 380px);
+  height: min(45vw, 380px);
+  top: 40%;
+  right: -8%;
+  animation-delay: -6s;
+}
+
+.blob-3 {
+  background: var(--blob-3);
+  width: min(40vw, 320px);
+  height: min(40vw, 320px);
+  bottom: 5%;
+  left: 30%;
+  animation-delay: -12s;
+}
+
+@keyframes blob-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, 6%) scale(1.08);
+  }
+  100% {
+    transform: translate(-3%, 3%) scale(0.95);
+  }
+}
+
+.perspective-card {
+  perspective: 1000px;
+}
+
+.flip-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.55s var(--ease-out);
+}
+
+.flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 0%,
+    var(--surface-hover) 50%,
+    var(--surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

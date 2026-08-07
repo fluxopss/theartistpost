@@ -1,15 +1,17 @@
 # The Artist Post
 
-Interactive playground for artists at [theartistpost.org](https://theartistpost.org) — creative **mobile-app UI** (phone frame + bottom tabs), brand marketing screens, and Prisma-backed Explore / Create.
+Local arts & entertainment hub for West Palm Beach — **gallery at night** redesign.
+
+Live brand: [theartistpost.org](https://theartistpost.org)
 
 ## Stack
 
-- **Next.js** (App Router) + React + TypeScript
-- **Tailwind CSS v4** with design tokens in `src/styles/tokens.css`
-- **Framer Motion** for UI motion
-- **Three.js + React Three Fiber + Drei** for optional WebGL (Home hero + post detail accent)
-- **Prisma** + PostgreSQL (fixtures fallback until DB is connected)
-- **Mock auth** abstraction ready for NextAuth
+- **Next.js 16** (App Router) + React 19 + TypeScript
+- **Tailwind CSS v4** — tokens in `src/styles/tokens.css`
+- **Framer Motion** — reveals, hero, schedule, nav
+- **lucide-react** + Radix Dialog (lightbox)
+- **Prisma** + PostgreSQL for Explore / Create (fixtures fallback)
+- **PWA** — `public/manifest.webmanifest` + `public/sw.js`
 
 ## Quick start
 
@@ -20,72 +22,73 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Without a real `DATABASE_URL`, pages load **in-memory fixtures** so the UI stays alive.
+Without `DATABASE_URL`, Explore loads in-memory fixtures.
 
 ## Environment
 
-Copy `.env.example` → `.env` and set:
+Copy `.env.example` → `.env`:
 
-| Variable                    | Purpose                                 |
-| --------------------------- | --------------------------------------- |
-| `DATABASE_URL`              | Postgres connection string              |
-| `NEXT_PUBLIC_SITE_URL`      | Absolute URL for metadata               |
-| `NEXT_PUBLIC_SITE_NAME`     | Brand name                              |
-| `NEXT_PUBLIC_WEBGL_DEFAULT` | `true` / `false` — default WebGL on/off |
-
-## Database (when ready)
-
-Temp **VPS Postgres** is the wiring framework (Docker on `flux-vps`, port **5433**). See [deploy/vps-postgres.md](deploy/vps-postgres.md).
-
-```bash
-# .env DATABASE_URL must point at 2.25.206.39:5433 (password in local .env + VPS /opt/apps/theartistpost/.env)
-pnpm db:push
-pnpm db:seed
-```
-
-Prisma schema: `prisma/schema.prisma`  
-Seed: `prisma/seed.ts`
-
-UFW allows 5433 only from Flux Hub’s public IP. Rotate credentials before production and move to managed Postgres when ready.
+| Variable                    | Purpose                          |
+| --------------------------- | -------------------------------- |
+| `DATABASE_URL`              | Postgres connection              |
+| `NEXT_PUBLIC_SITE_URL`      | Absolute URL for metadata / PWA  |
+| `NEXT_PUBLIC_SITE_NAME`     | Brand name                       |
+| `NEXT_PUBLIC_WEBGL_DEFAULT` | Opt-in Three.js (`true`/`false`) |
 
 ## Routes
 
-| Path               | Purpose                                                    |
-| ------------------ | ---------------------------------------------------------- |
-| `/`                | Brand home — hero, Hacienda, Featured Coming Soon, contact |
-| `/about`           | Mission, 501(c)(3), donate, partner                        |
-| `/artist-schedule` | Showcase + artist onboarding                               |
-| `/kindness-always` | Kindness Always merch                                      |
-| `/supporters`      | Chapters + legal                                           |
-| `/explore`         | Community post grid (VPS Postgres)                         |
-| `/post/[slug]`     | Post detail + optional PostCard3D                          |
-| `/artist/[handle]` | Artist profile                                             |
-| `/create`          | Multi-step create wizard                                   |
+| Path                                          | Purpose                                               |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `/`                                           | Hero, featured artists, Hacienda, contact / subscribe |
+| `/about`                                      | Mission & nonprofit                                   |
+| `/artist-schedule`                            | Interactive list ↔ calendar schedule                  |
+| `/kindness-always`                            | Kindness Always / merch                               |
+| `/supporters`                                 | Chapters & legal                                      |
+| `/explore`                                    | The Wall — filters, lightbox, infinite scroll         |
+| `/create`, `/post/[slug]`, `/artist/[handle]` | Community product surfaces                            |
 
-## WebGL toggle
+**Donate:** PayPal `hosted_button_id=3DCYEFGX7GXMY` (persistent CTA in nav + footer).
 
-- Disabled automatically when WebGL is missing or `prefers-reduced-motion` is on
-- User can toggle from the Home hero; preference stored in `localStorage` (`tap-webgl`)
-- Components: `WebGLGate`, `InteractiveHeroScene`, `PostCard3D`
+## Content & data
 
-## Auth (TODO: NextAuth)
+- Marketing copy: `src/content/site.ts`
+- Featured artists placeholders: `src/data/artists.ts`
+- Schedule placeholders: `src/data/events.ts`
 
-- Types + adapter: `src/features/auth/`
-- `mockAuthAdapter` always returns a studio guest artist
-- Swap `authAdapter` for NextAuth `auth()` / `getServerSession` when ready
-- Env placeholders for `NEXTAUTH_URL` / `NEXTAUTH_SECRET` are in `.env.example`
+## Design system
+
+- Dark default theme (`localStorage` key `tap-theme`); toggle in nav
+- Display: Clash Display (Fontshare) · Body: Jost
+- Reusable UI: `src/components/` — `NavBar`, `Footer`, `SectionReveal`, `ArtistCard`, `Lightbox`, `ThemeToggle`, etc.
+- Respects `prefers-reduced-motion` (cursor trail, blobs, parallax intensity)
+
+## Deploy (Git → VPS only)
+
+Production always ships **git push → Flux VPS**. Do not deploy this app to Vercel.
+
+1. Commit locally and push to `fluxopss/theartistpost` (`main`)
+2. On VPS: pull → install → build → PM2 restart (port **3013**)
+3. Edge: Traefik at `/docker/traefik/dynamic/theartistpost.yml`
+4. Temp URL: https://theartistpost.fluxlab.agency · DNS A → `2.25.206.39`
+
+```bash
+# after git push to fluxopss/theartistpost main
+ssh flux-vps-deploy 'cd /var/www/theartistpost && git pull && pnpm install --frozen-lockfile && pnpm build && pm2 restart theartistpost'
+```
+
+Details: [`deploy/README.md`](deploy/README.md) · Postgres: [`deploy/vps-postgres.md`](deploy/vps-postgres.md)
 
 ## Scripts
 
-| Command            | Action                                    |
-| ------------------ | ----------------------------------------- |
-| `pnpm dev`         | Dev server                                |
-| `pnpm build`       | Generate Prisma client + production build |
-| `pnpm db:generate` | Prisma client only                        |
-| `pnpm db:push`     | Push schema to DB                         |
-| `pnpm db:seed`     | Seed artists / posts / tags               |
-| `pnpm lint`        | ESLint                                    |
+| Command                    | Action                                  |
+| -------------------------- | --------------------------------------- |
+| `pnpm dev`                 | Local dev server                        |
+| `pnpm build`               | Prisma generate + Next production build |
+| `pnpm start`               | Serve production build                  |
+| `pnpm lint`                | ESLint                                  |
+| `pnpm db:push` / `db:seed` | Schema + seed when DB is ready          |
 
-## Architecture
+## Specs
 
-Feature folders under `src/features/{posts,artists,home,auth}` with shared UI, motion, and three modules in `src/shared/`. Server Components fetch via `queries.ts`; mutations live in `actions.ts`.
+- Design: `docs/superpowers/specs/2026-08-06-gallery-night-redesign.md`
+- Plan: `docs/superpowers/plans/2026-08-06-gallery-night-redesign.md`

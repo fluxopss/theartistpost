@@ -3,82 +3,111 @@ import Image from "next/image";
 import { assets, copy, links } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
+import { SectionReveal } from "@/components/SectionReveal";
 
 export const metadata: Metadata = {
   title: "Supporters",
   description: copy.supporters.expansion,
 };
 
+const regions = [
+  "Oklahoma",
+  "Idaho",
+  "Nevada",
+  "Tennessee",
+  "Washington",
+  "Florida",
+  "Texas",
+];
+
 export default function SupportersPage() {
   return (
     <>
-      <div className="section-dark px-4 py-6">
-        <h1 className="display text-3xl text-paper-on-dark">
-          {copy.supporters.title}
-        </h1>
-        <p className="mt-2 text-sm text-paper-on-dark/75">
-          {copy.supporters.findTitle}
-        </p>
-      </div>
+      <section className="border-b border-line bg-ink-elevated/50">
+        <PageShell className="!pb-12 !pt-16">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
+            {copy.supporters.findTitle}
+          </p>
+          <h1 className="display mt-3 text-4xl text-paper sm:text-5xl">
+            {copy.supporters.title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm text-paper-muted sm:text-base">
+            {copy.supporters.expansion}
+          </p>
+        </PageShell>
+      </section>
 
-      <PageShell className="space-y-5">
-        <p className="text-sm leading-relaxed text-paper-muted">
-          {copy.supporters.expansion}
-        </p>
-
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-line">
+      <PageShell className="space-y-10">
+        <SectionReveal className="relative aspect-[16/10] overflow-hidden rounded-3xl border border-line">
           <Image
             src={assets.supportersMap}
             alt="Chapter map"
             fill
             className="object-cover"
-            sizes="400px"
+            sizes="(max-width: 1024px) 100vw, 72rem"
+            priority
           />
-        </div>
+        </SectionReveal>
 
-        <div className="rounded-2xl border border-line bg-surface-muted p-4">
-          <h2 className="display text-xl text-ink">
+        <SectionReveal>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-spark-teal">
+            Active regions
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {regions.map((r) => (
+              <li
+                key={r}
+                className="rounded-full border border-line bg-surface-glass px-4 py-2 text-sm text-paper"
+              >
+                {r}
+              </li>
+            ))}
+          </ul>
+        </SectionReveal>
+
+        <SectionReveal className="rounded-3xl border border-line bg-surface-glass p-6 sm:p-8">
+          <h2 className="display text-2xl text-paper sm:text-3xl">
             {copy.supporters.launchTitle}
           </h2>
-          <p className="mt-2 font-semibold text-ink">
+          <p className="mt-3 font-semibold text-spark-coral">
             {copy.supporters.wantTitle}
           </p>
-          <p className="mt-2 text-sm text-paper-muted">
+          <p className="mt-3 max-w-2xl text-sm text-paper-muted">
             {copy.supporters.applyBody}
           </p>
           <ButtonLink
             href={`mailto:Robbie@theartistpost.org?subject=${encodeURIComponent("Chapter Application — The Artist Post")}`}
-            className="mt-4 w-full"
+            className="mt-6 rounded-full"
           >
             {copy.supporters.applyCta}
           </ButtonLink>
-          <p className="mt-3 text-xs text-paper-muted">
+          <p className="mt-4 text-xs text-paper-muted">
             Artists: start with the{" "}
             <a
               href={links.artistAgreement}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-ink underline"
+              className="font-medium text-spark-teal underline"
             >
               artist agreement
             </a>
             .
           </p>
-        </div>
+        </SectionReveal>
 
-        <div className="rounded-2xl border border-line p-4">
-          <p className="text-xs text-paper-muted">
+        <SectionReveal className="rounded-3xl border border-line p-6">
+          <p className="text-sm text-paper-muted">
             {copy.supporters.legalNote}
           </p>
           <a
             href="/legal/IRS Final Letter Oklahoma 2020.pdf"
-            className="mt-3 inline-block text-sm font-semibold text-ink underline"
+            className="mt-4 inline-block text-sm font-semibold text-spark-teal underline"
             target="_blank"
             rel="noreferrer"
           >
             IRS Final Letter — Oklahoma 2020
           </a>
-        </div>
+        </SectionReveal>
       </PageShell>
     </>
   );

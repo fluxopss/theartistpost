@@ -1,36 +1,43 @@
 /**
- * Brand tokens aligned to https://theartistpost.org/
- * Mobile-app shell: navy primary + logo-derived accents.
+ * Brand tokens — Gallery at Night
+ * Dark default; light mode via [data-theme="light"]
  */
-:root {
-  --ink: #031a37;
-  --ink-elevated: #0a2748;
-  --surface: #ffffff;
-  --surface-muted: #f4f6f9;
-  --surface-hover: #e8edf4;
-  --paper: #031a37;
-  --paper-on-dark: #dfe0e4;
-  --paper-muted: #5a6b80;
-  --line: rgba(3, 26, 55, 0.12);
-  --line-strong: rgba(3, 26, 55, 0.22);
-  --line-on-dark: rgba(223, 224, 228, 0.18);
+:root,
+[data-theme="dark"] {
+  --ink: #020b1a;
+  --ink-elevated: #0a1f3d;
+  --ink-glass: rgba(10, 31, 61, 0.72);
+  --surface: #031a37;
+  --surface-muted: #0a2748;
+  --surface-hover: #12305a;
+  --surface-glass: rgba(8, 28, 56, 0.55);
+  --paper: #e8ecf4;
+  --paper-on-dark: #f4f6fa;
+  --paper-muted: #8b9bb3;
+  --line: rgba(232, 236, 244, 0.1);
+  --line-strong: rgba(232, 236, 244, 0.22);
+  --line-on-dark: rgba(232, 236, 244, 0.16);
 
-  --accent: #031a37;
-  --accent-ink: #dfe0e4;
-  --accent-soft: rgba(3, 26, 55, 0.08);
+  --accent: #2a5a9e;
+  --accent-ink: #f4f6fa;
+  --accent-soft: rgba(46, 196, 182, 0.12);
   --accent-secondary: #23406e;
-  --glow: rgba(35, 64, 110, 0.25);
+  --glow: rgba(46, 196, 182, 0.35);
 
-  /* Logo-derived accents — use sparingly */
   --spark-coral: #ff6b5b;
   --spark-gold: #f0b429;
   --spark-teal: #2ec4b6;
+  --spark-violet: #8b5cf6;
 
-  --danger: #c43c55;
-  --success: #1f8a5a;
+  --danger: #f07178;
+  --success: #3dd68c;
 
-  --font-display: var(--font-poppins), "Poppins", sans-serif;
-  --font-body: var(--font-open-sans), "Open Sans", sans-serif;
+  --blob-1: rgba(255, 107, 91, 0.22);
+  --blob-2: rgba(46, 196, 182, 0.18);
+  --blob-3: rgba(240, 180, 41, 0.14);
+
+  --font-display: var(--font-clash), "Clash Display", sans-serif;
+  --font-body: var(--font-jost), "Jost", sans-serif;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -46,25 +53,56 @@
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
   --radius-xl: 1.75rem;
+  --radius-2xl: 2rem;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 160ms;
   --duration-med: 320ms;
   --duration-slow: 560ms;
 
-  --nav-height: 3.25rem;
-  --tab-bar-height: 4.25rem;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --app-frame-max: 430px;
+  --nav-height: 4rem;
   --content-max: 72rem;
+  --glass-blur: 16px;
+  --shadow-glow: 0 0 40px rgba(46, 196, 182, 0.15);
+}
+
+[data-theme="light"] {
+  --ink: #031a37;
+  --ink-elevated: #0a2748;
+  --ink-glass: rgba(255, 255, 255, 0.86);
+  --surface: #f3f5f9;
+  --surface-muted: #ffffff;
+  --surface-hover: #e6ebf3;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --paper: #031a37;
+  --paper-on-dark: #f4f6fa;
+  --paper-muted: #5a6b80;
+  --line: rgba(3, 26, 55, 0.1);
+  --line-strong: rgba(3, 26, 55, 0.2);
+  --line-on-dark: rgba(244, 246, 250, 0.2);
+
+  --accent: #031a37;
+  --accent-ink: #f4f6fa;
+  --accent-soft: rgba(3, 26, 55, 0.06);
+  --accent-secondary: #1a4a7a;
+  --glow: rgba(35, 64, 110, 0.2);
+
+  --blob-1: rgba(255, 107, 91, 0.12);
+  --blob-2: rgba(46, 196, 182, 0.1);
+  --blob-3: rgba(240, 180, 41, 0.1);
+
+  --shadow-glow: 0 8px 32px rgba(3, 26, 55, 0.08);
 }
 
 @theme inline {
   --color-ink: var(--ink);
   --color-ink-elevated: var(--ink-elevated);
+  --color-ink-glass: var(--ink-glass);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-glass: var(--surface-glass);
   --color-paper: var(--paper);
   --color-paper-on-dark: var(--paper-on-dark);
   --color-paper-muted: var(--paper-muted);
@@ -79,6 +117,7 @@
   --color-spark-coral: var(--spark-coral);
   --color-spark-gold: var(--spark-gold);
   --color-spark-teal: var(--spark-teal);
+  --color-spark-violet: var(--spark-violet);
   --color-danger: var(--danger);
   --color-success: var(--success);
   --font-display: var(--font-display);
@@ -87,4 +126,5 @@
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
 }

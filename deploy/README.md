@@ -1,5 +1,7 @@
 # VPS deploy notes — theartistpost.fluxlab.agency
 
+**Update flow:** Git → VPS only. Push `main` to `fluxopss/theartistpost`, then pull/build/restart on the server. Never deploy this app to Vercel.
+
 ## Runtime
 
 - App path: `/var/www/theartistpost`

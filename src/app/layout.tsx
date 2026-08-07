@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Open_Sans, Poppins } from "next/font/google";
+import { Jost } from "next/font/google";
 import { getSession } from "@/features/auth/adapter";
 import { assets, site } from "@/content/site";
 import { AppShell } from "@/shared/ui/AppShell";
@@ -7,14 +7,8 @@ import { Providers } from "@/shared/ui/Providers";
 import { SITE_URL } from "@/shared/lib/constants";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
-});
-
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -26,8 +20,16 @@ export const metadata: Metadata = {
     template: `%s · ${site.name}`,
   },
   description: site.metaDescription,
+  applicationName: site.name,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: site.name,
+  },
   icons: {
     icon: assets.favicon,
+    apple: assets.favicon,
   },
   openGraph: {
     title: site.name,
@@ -44,8 +46,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#031A37",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#031A37" },
+    { media: "(prefers-color-scheme: light)", color: "#F3F5F9" },
+  ],
 };
+
+const themeInit = `(function(){try{var t=localStorage.getItem('tap-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
 
 export default async function RootLayout({
   children,
@@ -57,8 +64,18 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${openSans.variable} h-full`}
+      data-theme="dark"
+      className={`${jost.variable} h-full`}
+      suppressHydrationWarning
     >
+      <head>
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap"
+          rel="stylesheet"
+        />
+        <style>{`:root{--font-clash:"Clash Display",sans-serif;}`}</style>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body className="min-h-full antialiased">
         <Providers user={user}>
           <AppShell>{children}</AppShell>

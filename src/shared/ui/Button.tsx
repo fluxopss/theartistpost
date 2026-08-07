@@ -7,11 +7,13 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "onDark";
 type ButtonSize = "sm" | "md" | "lg";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-ink text-paper-on-dark hover:bg-ink-elevated shadow-sm",
-  secondary: "bg-accent-secondary text-paper-on-dark hover:brightness-110",
+  primary:
+    "bg-ink text-paper-on-dark hover:bg-ink-elevated shadow-[0_0_24px_rgba(46,196,182,0.12)]",
+  secondary:
+    "bg-spark-teal text-[#020b1a] hover:brightness-110 shadow-[0_0_24px_rgba(46,196,182,0.25)]",
   ghost: "bg-transparent text-paper hover:bg-surface-hover",
   outline:
-    "bg-transparent text-ink border border-line-strong hover:border-ink hover:bg-accent-soft",
+    "bg-transparent text-paper border border-line-strong hover:border-spark-teal hover:text-spark-teal",
   onDark:
     "bg-transparent text-paper-on-dark border border-line-on-dark hover:bg-white/10",
 };

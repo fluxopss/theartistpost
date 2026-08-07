@@ -1,13 +1,21 @@
-import { Nav } from "@/shared/ui/Nav";
-import { SiteFooter } from "@/shared/ui/SiteFooter";
+import { Atmosphere } from "@/components/Atmosphere";
+import { CursorTrail } from "@/components/CursorTrail";
+import { Footer } from "@/components/Footer";
+import { NavBar } from "@/components/NavBar";
+import { ScrollProgress } from "@/components/ScrollProgress";
+import { PwaRegister } from "@/components/PwaRegister";
 
-/** Standard marketing website chrome — not an app shell. */
+/** Gallery-night marketing chrome. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-surface">
-      <Nav />
-      <main className="flex-1">{children}</main>
-      <SiteFooter />
+    <div className="relative flex min-h-dvh flex-col bg-surface text-paper">
+      <ScrollProgress />
+      <Atmosphere />
+      <CursorTrail />
+      <NavBar />
+      <main className="relative flex-1">{children}</main>
+      <Footer />
+      <PwaRegister />
     </div>
   );
 }

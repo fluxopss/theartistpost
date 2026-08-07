@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { assets, copy, links } from "@/content/site";
-import { ButtonLink } from "@/shared/ui/Button";
+import { assets, copy } from "@/content/site";
 import { PageShell } from "@/shared/ui/PageShell";
+import { ScheduleView } from "@/components/ScheduleView";
 
 export const metadata: Metadata = {
   title: "Artist Schedule",
@@ -11,69 +11,38 @@ export const metadata: Metadata = {
 
 export default function ArtistSchedulePage() {
   return (
-    <div className="section-dark min-h-full">
-      <div className="px-4 pb-4 pt-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-spark-gold">
-          {copy.schedule.venue}
-        </p>
-        <h1 className="display mt-2 text-3xl text-paper-on-dark">
-          {copy.schedule.title}
-        </h1>
-        <p className="mt-2 text-sm text-paper-on-dark/75">
-          {copy.schedule.supportLine}
-        </p>
-      </div>
-
-      <PageShell className="space-y-4 !bg-transparent pt-0">
-        <div className="overflow-hidden rounded-2xl border border-line-on-dark bg-ink-elevated">
-          <div className="relative aspect-[16/10]">
-            <Image
-              src={assets.comingSoon}
-              alt=""
-              fill
-              className="object-cover opacity-80"
-              sizes="400px"
-            />
-          </div>
-          <div className="p-4">
-            <h2 className="display text-xl text-paper-on-dark">
-              {copy.schedule.showcaseTitle}
-            </h2>
-            <p className="mt-2 text-sm font-semibold text-spark-coral">
-              {copy.schedule.status}
-            </p>
-          </div>
+    <>
+      <section className="relative overflow-hidden border-b border-line">
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src={assets.comingSoon}
+            alt=""
+            fill
+            className="object-cover opacity-25"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-ink/80 to-surface" />
         </div>
+        <PageShell className="!pb-10 !pt-16">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
+            {copy.schedule.venue}
+          </p>
+          <h1 className="display mt-3 text-4xl text-paper sm:text-5xl">
+            {copy.schedule.title}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm text-paper-muted sm:text-base">
+            {copy.schedule.status}
+          </p>
+        </PageShell>
+      </section>
 
-        <div className="rounded-2xl border border-line-on-dark bg-ink-elevated p-4">
-          <h2 className="display text-lg text-paper-on-dark">
-            {copy.schedule.ready}
-          </h2>
-          <div className="mt-4 space-y-4">
-            <div className="rounded-xl bg-ink/50 p-3">
-              <p className="text-sm font-semibold text-paper-on-dark">
-                {copy.schedule.step1}
-              </p>
-              <ButtonLink
-                href={links.artistAgreement}
-                external
-                variant="secondary"
-                className="mt-3 w-full"
-              >
-                {copy.schedule.step1Cta}
-              </ButtonLink>
-            </div>
-            <div className="rounded-xl bg-ink/50 p-3">
-              <p className="text-xs text-paper-on-dark/70">
-                {copy.schedule.step2Lead}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-paper-on-dark">
-                {copy.schedule.step2}
-              </p>
-            </div>
-          </div>
-        </div>
+      <PageShell className="!pt-8">
+        <h2 className="display mb-6 text-2xl text-paper">
+          {copy.schedule.showcaseTitle}
+        </h2>
+        <ScheduleView />
       </PageShell>
-    </div>
+    </>
   );
 }

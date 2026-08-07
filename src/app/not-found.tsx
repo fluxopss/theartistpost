@@ -4,22 +4,25 @@ import { PageShell } from "@/shared/ui/PageShell";
 
 export default function NotFound() {
   return (
-    <PageShell className="text-center">
-      <h1 className="display text-4xl text-ink">Lost in the gallery</h1>
-      <p className="mx-auto mt-3 max-w-xs text-sm text-paper-muted">
+    <PageShell className="text-center !pt-24">
+      <h1 className="display text-4xl text-paper">Lost in the gallery</h1>
+      <p className="mx-auto mt-3 max-w-sm text-sm text-paper-muted">
         That scene isn&apos;t on the wall yet.
       </p>
-      <div className="mt-6 flex flex-col gap-2">
-        <ButtonLink href="/explore" className="w-full">
-          Explore Posts
+      <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <ButtonLink href="/explore" className="rounded-full">
+          Explore The Wall
         </ButtonLink>
-        <ButtonLink href="/" variant="outline" className="w-full">
+        <ButtonLink href="/" variant="outline" className="rounded-full">
           Home
         </ButtonLink>
       </div>
-      <p className="mt-6 text-sm text-paper-muted">
+      <p className="mt-8 text-sm text-paper-muted">
         Or{" "}
-        <Link href="/create" className="font-semibold text-ink underline">
+        <Link
+          href="/create"
+          className="font-semibold text-spark-teal underline"
+        >
           create something new
         </Link>
         .

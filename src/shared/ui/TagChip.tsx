@@ -13,10 +13,10 @@ export function TagChip({
   href?: string;
 }) {
   const className = cn(
-    "inline-flex items-center rounded-sm px-2.5 py-1 text-xs font-semibold tracking-wide uppercase transition",
+    "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide uppercase transition",
     active
-      ? "bg-ink text-paper-on-dark"
-      : "bg-accent-soft text-paper-muted hover:text-ink",
+      ? "bg-spark-teal text-ink"
+      : "border border-line bg-surface-glass text-paper-muted hover:text-paper",
   );
 
   if (href) {

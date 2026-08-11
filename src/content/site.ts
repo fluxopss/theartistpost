@@ -51,9 +51,9 @@ export const links = {
 
 export const assets = {
   logo: "/brand/logo.png",
-  favicon: "/brand/favicon.png",
-  cover: "/brand/cover.jpg",
-  hacienda: "/brand/hacienda.png",
+  favicon: "/brand/favicon-64.png",
+  cover: "/brand/cover-opt.jpg",
+  hacienda: "/brand/hacienda.webp",
   comingSoon: "/brand/coming-soon.jpg",
   aboutHero: "/brand/about-hero.png",
   partnerSubCulture: "/brand/partner-subculture.png",

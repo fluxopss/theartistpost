@@ -17,7 +17,7 @@ export function useReducedMotion(): boolean {
 }
 
 export function useIsTouchDevice(): boolean {
-  const [touch, setTouch] = useState(true);
+  const [touch, setTouch] = useState(false);
 
   useEffect(() => {
     const coarse = window.matchMedia("(pointer: coarse)").matches;

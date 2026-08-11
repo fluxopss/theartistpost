@@ -7,6 +7,8 @@ import { create } from "zustand";
 import { z } from "zod";
 import { createPostAction } from "@/features/posts/actions";
 import { Button } from "@/shared/ui/Button";
+import { Modal } from "@/design-system/primitives/Modal";
+import { useToast } from "@/design-system/primitives/Toast";
 import { cn } from "@/shared/lib/cn";
 
 type Draft = {
@@ -59,8 +61,14 @@ const stepSchemas = [
   z.object({
     mediaUrl: z
       .string()
-      .url("Enter a valid media URL")
-      .or(z.literal(""))
+      .refine(
+        (v) =>
+          !v ||
+          v.startsWith("/") ||
+          v.startsWith("https://") ||
+          v.startsWith("http://"),
+        "Enter a valid media URL or upload an image",
+      )
       .optional(),
     mediaType: z.enum(["IMAGE", "VIDEO", "EMBED", "CANVAS"]),
   }),
@@ -77,10 +85,14 @@ const stepSchemas = [
 export function CreatePostWizard() {
   const draft = useDraftStore();
   const router = useRouter();
+  const { push: toast } = useToast();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const tagList = useMemo(
     () =>
@@ -112,8 +124,41 @@ export function CreatePostWizard() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
-  function submit() {
+  function requestPublish() {
     if (!validateCurrent()) return;
+    setConfirmOpen(true);
+  }
+
+  async function onFileSelected(file: File | null) {
+    if (!file) return;
+    setError(null);
+    setPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        setError(data.error ?? "Upload failed");
+        return;
+      }
+      draft.setField("mediaUrl", data.url);
+      draft.setField("mediaType", "IMAGE");
+      toast({
+        title: "Image ready",
+        description: "Preview attached — continue when you’re happy with it.",
+        tone: "success",
+      });
+    } catch {
+      setError("Upload failed — try again or paste a URL.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function submit() {
+    setConfirmOpen(false);
     startTransition(async () => {
       const result = await createPostAction({
         title: draft.title,
@@ -128,18 +173,26 @@ export function CreatePostWizard() {
 
       if (!result.ok) {
         setError(result.error);
+        toast({ title: "Couldn’t publish", description: result.error, tone: "danger" });
         return;
       }
 
       draft.reset();
+      setPreview(null);
       if (result.mode === "fixture") {
-        setMessage(
+        const msg =
           result.message ??
-            "Draft accepted locally. Connect Postgres to persist and open the post.",
-        );
+          "Draft accepted locally. Connect Postgres to persist and open the post.";
+        setMessage(msg);
+        toast({ title: "Saved locally", description: msg, tone: "success" });
         return;
       }
       setMessage("Post created — opening scene…");
+      toast({
+        title: "Published",
+        description: "Opening your scene…",
+        tone: "success",
+      });
       router.push(`/post/${result.slug}`);
     });
   }
@@ -179,7 +232,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Title
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.title}
                   onChange={(e) => draft.setField("title", e.target.value)}
                   required
@@ -188,7 +241,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Tags (comma separated)
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.tags}
                   onChange={(e) => draft.setField("tags", e.target.value)}
                   placeholder="neon, motion"
@@ -197,7 +250,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Visibility
                 <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.visibility}
                   onChange={(e) =>
                     draft.setField(
@@ -216,22 +269,47 @@ export function CreatePostWizard() {
           {step === 1 ? (
             <fieldset className="space-y-4">
               <legend className="display mb-2 text-2xl">Media</legend>
-              <p className="text-sm text-paper-muted">
-                URL / embed for now — file upload comes later.
-              </p>
               <label className="block text-sm text-paper-muted">
-                Media URL
+                Upload image
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="mt-2 block w-full text-sm text-paper file:mr-3 file:rounded-full file:border-0 file:bg-spark-teal file:px-4 file:py-2 file:text-sm file:font-semibold file:!text-[#020b1a]"
+                  disabled={uploading || pending}
+                  onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              {(preview || draft.mediaUrl) && draft.mediaType === "IMAGE" ? (
+                <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-ink">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview || draft.mediaUrl}
+                    alt="Upload preview"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              ) : null}
+              {uploading ? (
+                <p className="text-sm text-spark-teal" role="status">
+                  Uploading…
+                </p>
+              ) : null}
+              <label className="block text-sm text-paper-muted">
+                Or paste a media URL
+                <input
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.mediaUrl}
-                  onChange={(e) => draft.setField("mediaUrl", e.target.value)}
-                  placeholder="https://…"
+                  onChange={(e) => {
+                    draft.setField("mediaUrl", e.target.value);
+                    setPreview(null);
+                  }}
+                  placeholder="https://… or /uploads/…"
                 />
               </label>
               <label className="block text-sm text-paper-muted">
                 Type
                 <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.mediaType}
                   onChange={(e) =>
                     draft.setField(
@@ -282,7 +360,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Layout style
                 <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
                   value={draft.layoutStyle}
                   onChange={(e) =>
                     draft.setField(
@@ -370,14 +448,34 @@ export function CreatePostWizard() {
         ) : (
           <Button
             type="button"
-            onClick={submit}
+            onClick={requestPublish}
             disabled={pending}
             className="flex-[2]"
           >
-            {pending ? "Publishing…" : "Publish"}
+            {pending ? "Publishing…" : "Review & publish"}
           </Button>
         )}
       </div>
+
+      <Modal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirm publish"
+        description="Nothing posts until you confirm. This cannot be undone from this screen."
+      >
+        <p className="text-sm text-paper-muted">
+          Publish <strong className="text-paper">{draft.title}</strong> as{" "}
+          {draft.visibility.toLowerCase()}?
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+            Keep editing
+          </Button>
+          <Button variant="secondary" onClick={submit} disabled={pending}>
+            {pending ? "Publishing…" : "Yes, publish"}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

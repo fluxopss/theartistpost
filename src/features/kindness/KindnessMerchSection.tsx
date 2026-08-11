@@ -32,14 +32,14 @@ export function KindnessMerchSection() {
           {copy.kindness.merchBody}
         </p>
         <p className="mt-4 text-sm font-semibold text-paper">
-          {copy.kindness.orderLine}:{" "}
-          <a
-            href={`tel:${site.phoneTel}`}
-            className="text-spark-teal hover:underline"
-          >
-            {site.phone}
-          </a>
+          {copy.kindness.orderLine}
         </p>
+        <a
+          href={`tel:${site.phoneTel}`}
+          className="mt-2 inline-flex text-base font-semibold text-paper-on-dark underline decoration-spark-teal underline-offset-4"
+        >
+          {site.phone}
+        </a>
       </SectionReveal>
 
       <SectionReveal className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">

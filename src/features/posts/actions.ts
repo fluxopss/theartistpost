@@ -9,7 +9,18 @@ const createPostSchema = z.object({
   title: z.string().min(2).max(120),
   tags: z.array(z.string().min(1)).max(8).default([]),
   visibility: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
-  mediaUrl: z.string().url().optional().or(z.literal("")),
+  mediaUrl: z
+    .string()
+    .refine(
+      (v) =>
+        !v ||
+        v.startsWith("/") ||
+        v.startsWith("https://") ||
+        v.startsWith("http://"),
+      "Invalid media URL",
+    )
+    .optional()
+    .or(z.literal("")),
   mediaType: z.enum(["IMAGE", "VIDEO", "EMBED", "CANVAS"]).default("IMAGE"),
   description: z.string().max(4000).optional(),
   primaryColor: z.string().optional(),

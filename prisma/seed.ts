@@ -113,7 +113,7 @@ const posts: SeedPost[] = [
     slug: "orbit-studies",
     description: "Small moons practicing patience.",
     mediaUrl:
-      "https://images.unsplash.com/photo-1634017839464-5c339bbe3c8b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
     mediaType: "CANVAS",
     featured: false,
     viewCount: 2211,

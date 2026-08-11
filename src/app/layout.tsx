@@ -1,16 +1,35 @@
 import type { Metadata, Viewport } from "next";
 import { Jost } from "next/font/google";
+import localFont from "next/font/local";
 import { getSession } from "@/features/auth/adapter";
 import { assets, site } from "@/content/site";
 import { AppShell } from "@/shared/ui/AppShell";
 import { Providers } from "@/shared/ui/Providers";
 import { SITE_URL } from "@/shared/lib/constants";
+import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 import "./globals.css";
 
 const jost = Jost({
   variable: "--font-jost",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const clash = localFont({
+  src: [
+    {
+      path: "../fonts/ClashDisplay-Semibold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/ClashDisplay-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-clash",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -35,10 +54,13 @@ export const metadata: Metadata = {
     title: site.name,
     description: site.metaDescription,
     images: [assets.cover],
+    type: "website",
+    siteName: site.name,
   },
   twitter: {
     card: "summary_large_image",
     site: site.twitterHandle,
+    images: [assets.cover],
   },
 };
 
@@ -65,18 +87,15 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme="dark"
-      className={`${jost.variable} h-full`}
+      className={`${jost.variable} ${clash.variable} h-full`}
       suppressHydrationWarning
     >
       <head>
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap"
-          rel="stylesheet"
-        />
-        <style>{`:root{--font-clash:"Clash Display",sans-serif;}`}</style>
+        <link rel="preload" as="image" href="/brand/cover-opt.jpg" />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full antialiased">
+        <JsonLd data={organizationJsonLd()} />
         <Providers user={user}>
           <AppShell>{children}</AppShell>
         </Providers>

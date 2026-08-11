@@ -1,15 +1,16 @@
 # The Artist Post
 
-Local arts & entertainment hub for West Palm Beach — **gallery at night** redesign.
+Local arts & entertainment hub for West Palm Beach — **gallery at night** redesign, elevated toward award-tier interaction.
 
 Live brand: [theartistpost.org](https://theartistpost.org)
 
 ## Stack
 
-- **Next.js 16** (App Router) + React 19 + TypeScript
-- **Tailwind CSS v4** — tokens in `src/styles/tokens.css`
-- **Framer Motion** — reveals, hero, schedule, nav
-- **lucide-react** + Radix Dialog (lightbox)
+- **Next.js 16** (App Router) + React 19 + TypeScript (strict)
+- **Tailwind CSS v4** — tokens in `src/styles/tokens.css` + TS mirror in `src/design-system/tokens.ts`
+- **Framer Motion** — reveals, hero, schedule, nav, layout transitions
+- **Design system** — `src/design-system/` primitives (Button, Card, Chip, Modal, Accordion, Tabs, Toast, Skeleton, Lightbox)
+- **Content service** — `src/lib/content/` (seed adapter now; Supabase stub ready)
 - **Prisma** + PostgreSQL for Explore / Create (fixtures fallback)
 - **PWA** — `public/manifest.webmanifest` + `public/sw.js`
 
@@ -24,6 +25,42 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Without `DATABASE_URL`, Explore loads in-memory fixtures.
 
+```bash
+pnpm test   # unit tests (schemas, calendar, moderation)
+pnpm build  # production build
+```
+
+## Design system
+
+| Piece | Path |
+|-------|------|
+| CSS tokens (dark/light) | `src/styles/tokens.css` |
+| JS/Framer tokens | `src/design-system/tokens.ts` |
+| Primitives | `src/design-system/primitives/*` |
+| Barrel export | `src/design-system/index.ts` |
+| Live styleguide | `/styleguide` (dev) |
+
+Fonts: **Clash Display** (display) · **Jost** (body). Theme key: `tap-theme`. All motion honors `prefers-reduced-motion`.
+
+Reusable chrome still lives in `src/components/` and re-exports Button/Chip from the design system where applicable.
+
+## Content adapters
+
+```ts
+import { content } from "@/lib/content";
+
+const events = await content.getEvents();
+const chapters = await content.getChapters();
+```
+
+| Adapter | Env | Notes |
+|---------|-----|-------|
+| `seed` (default) | `CONTENT_ADAPTER=seed` | Uses `src/data/*`, kindness fixtures, chapter seed |
+| `supabase` | `CONTENT_ADAPTER=supabase` | Stub — see RLS notes in `src/lib/content/adapters/supabase.ts` |
+| Prisma posts | `DATABASE_URL` | Explore/Create remain on Prisma until migrated |
+
+Do not invent nonprofit facts. Placeholder artists/events stay labeled “Coming soon” until real data is provided.
+
 ## Environment
 
 Copy `.env.example` → `.env`:
@@ -34,6 +71,7 @@ Copy `.env.example` → `.env`:
 | `NEXT_PUBLIC_SITE_URL`      | Absolute URL for metadata / PWA  |
 | `NEXT_PUBLIC_SITE_NAME`     | Brand name                       |
 | `NEXT_PUBLIC_WEBGL_DEFAULT` | Opt-in Three.js (`true`/`false`) |
+| `CONTENT_ADAPTER`           | `seed` \| `supabase`             |
 
 ## Routes
 
@@ -41,52 +79,28 @@ Copy `.env.example` → `.env`:
 | --------------------------------------------- | ----------------------------------------------------- |
 | `/`                                           | Hero, featured artists, Hacienda, contact / subscribe |
 | `/about`                                      | Mission & nonprofit                                   |
-| `/artist-schedule`                            | Interactive list ↔ calendar schedule                  |
-| `/kindness-always`                            | Kindness Always / merch                               |
-| `/supporters`                                 | Chapters & legal                                      |
-| `/explore`                                    | The Wall — filters, lightbox, infinite scroll         |
+| `/artist-schedule`                            | List · month · agenda + onboarding wizard             |
+| `/event/[id]`                                 | Event detail + JSON-LD                                |
+| `/kindness-always`                            | Spark field + compose + merch                         |
+| `/supporters`                                 | Chapters map/grid + start a chapter                   |
+| `/explore`                                    | The Wall — filters, inertia pan, gallery lightbox     |
 | `/create`, `/post/[slug]`, `/artist/[handle]` | Community product surfaces                            |
+| `/styleguide`                                 | Design system reference                               |
+| `/sitemap.xml`, `/robots.txt`                 | SEO                                                   |
 
 **Donate:** PayPal `hosted_button_id=3DCYEFGX7GXMY` (persistent CTA in nav + footer).
 
-## Content & data
-
-- Marketing copy: `src/content/site.ts`
-- Featured artists placeholders: `src/data/artists.ts`
-- Schedule placeholders: `src/data/events.ts`
-
-## Design system
-
-- Dark default theme (`localStorage` key `tap-theme`); toggle in nav
-- Display: Clash Display (Fontshare) · Body: Jost
-- Reusable UI: `src/components/` — `NavBar`, `Footer`, `SectionReveal`, `ArtistCard`, `Lightbox`, `ThemeToggle`, etc.
-- Respects `prefers-reduced-motion` (cursor trail, blobs, parallax intensity)
+**Nonprofit:** EIN `85-2609788` · 522 Clematis Street, West Palm Beach, FL.
 
 ## Deploy (Git → VPS only)
 
 Production always ships **git push → Flux VPS**. Do not deploy this app to Vercel.
 
-1. Commit locally and push to `fluxopss/theartistpost` (`main`)
-2. On VPS: pull → install → build → PM2 restart (port **3013**)
-3. Edge: Traefik at `/docker/traefik/dynamic/theartistpost.yml`
-4. Temp URL: https://theartistpost.fluxlab.agency · DNS A → `2.25.206.39`
-
 ```bash
-# after git push to fluxopss/theartistpost main
 ssh flux-vps-deploy 'cd /var/www/theartistpost && git pull && pnpm install --frozen-lockfile && pnpm build && pm2 restart theartistpost'
 ```
 
 Details: [`deploy/README.md`](deploy/README.md) · Postgres: [`deploy/vps-postgres.md`](deploy/vps-postgres.md)
-
-## Scripts
-
-| Command                    | Action                                  |
-| -------------------------- | --------------------------------------- |
-| `pnpm dev`                 | Local dev server                        |
-| `pnpm build`               | Prisma generate + Next production build |
-| `pnpm start`               | Serve production build                  |
-| `pnpm lint`                | ESLint                                  |
-| `pnpm db:push` / `db:seed` | Schema + seed when DB is ready          |
 
 ## Specs
 

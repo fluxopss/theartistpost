@@ -48,7 +48,7 @@ function mapPostSummary(post: PostWithRelations): PostSummary {
     slug: post.slug,
     title: post.title,
     description: post.description,
-    mediaUrl: post.mediaUrl,
+    mediaUrl: sanitizeMediaUrl(post.mediaUrl),
     mediaType: post.mediaType,
     theme: (post.theme as PostTheme | null) ?? null,
     featured: post.featured,
@@ -59,6 +59,15 @@ function mapPostSummary(post: PostWithRelations): PostSummary {
     tags: post.tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
     artist: mapArtist(post.author),
   };
+}
+
+const BROKEN_MEDIA = "photo-1634017839464";
+const FALLBACK_MEDIA =
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80";
+
+function sanitizeMediaUrl(url: string | null): string | null {
+  if (!url) return url;
+  return url.includes(BROKEN_MEDIA) ? FALLBACK_MEDIA : url;
 }
 
 function mapPostDetail(post: PostWithRelations): PostDetail {

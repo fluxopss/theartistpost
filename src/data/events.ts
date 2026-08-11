@@ -62,18 +62,4 @@ export const events: ScheduleEvent[] = [
   },
 ];
 
-export function googleCalendarUrl(event: ScheduleEvent): string {
-  const fmt = (iso: string) =>
-    new Date(iso)
-      .toISOString()
-      .replace(/[-:]/g, "")
-      .replace(/\.\d{3}/, "");
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: event.title,
-    details: `${event.description}\n\nArtist: ${event.artist}\nVenue: ${event.venue}`,
-    location: event.venue,
-    dates: `${fmt(event.start)}/${fmt(event.end)}`,
-  });
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}
+export { googleCalendarUrl } from "@/lib/schedule/calendar";

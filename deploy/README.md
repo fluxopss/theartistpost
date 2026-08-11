@@ -12,8 +12,13 @@
 
 ## Deploy (from Flux Hub)
 
+**Preferred:** push `main` to `fluxopss/theartistpost`. VPS auto-updates within ~3 minutes via `redeploy-sites` (see Flux-Labs-HQ `brain/vps-autodeploy.md`).
+
 ```bash
-# after git push to fluxopss/theartistpost main
+# force now
+ssh flux-vps 'sudo -u deploy -H deploy-site theartistpost'
+
+# legacy manual
 ssh flux-vps-deploy 'cd /var/www/theartistpost && git pull && pnpm install --frozen-lockfile && pnpm build && pm2 restart theartistpost'
 ```
 

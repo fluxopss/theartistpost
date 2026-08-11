@@ -31,6 +31,7 @@ export function HaciendaShowcase() {
               alt="The Artist Post at The Hacienda"
               fill
               className="scale-110 object-cover"
+              quality={60}
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </motion.div>

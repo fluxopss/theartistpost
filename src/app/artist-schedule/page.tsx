@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { assets, copy } from "@/content/site";
+import { content } from "@/lib/content";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ScheduleView } from "@/components/ScheduleView";
 
 export const metadata: Metadata = {
   title: "Artist Schedule",
   description: copy.schedule.supportLine,
+  openGraph: {
+    title: "Artist Schedule",
+    description: copy.schedule.supportLine,
+  },
 };
 
-export default function ArtistSchedulePage() {
+export default async function ArtistSchedulePage() {
+  const events = await content.getEvents();
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-line">
@@ -41,7 +48,7 @@ export default function ArtistSchedulePage() {
         <h2 className="display mb-6 text-2xl text-paper">
           {copy.schedule.showcaseTitle}
         </h2>
-        <ScheduleView />
+        <ScheduleView events={events} />
       </PageShell>
     </>
   );

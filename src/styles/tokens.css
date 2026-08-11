@@ -36,7 +36,7 @@
   --blob-2: rgba(46, 196, 182, 0.18);
   --blob-3: rgba(240, 180, 41, 0.14);
 
-  --font-display: var(--font-clash), "Clash Display", sans-serif;
+  --font-display: var(--font-clash), "Clash Display", ui-sans-serif, sans-serif;
   --font-body: var(--font-jost), "Jost", sans-serif;
 
   --space-1: 0.25rem;

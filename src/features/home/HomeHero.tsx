@@ -1,63 +1,84 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { assets, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { useReducedMotion } from "@/hooks/useMedia";
+import { motion as motionTokens } from "@/design-system/tokens";
 
 export function HomeHero() {
   const reduce = useReducedMotion();
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  const plateScale = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduce ? [1, 1] : [1.08, 1.2],
-  );
-  const plateY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    reduce ? [0, 0] : [0, 80],
-  );
 
   return (
-    <section
-      ref={ref}
-      className="relative isolate min-h-[min(100dvh,920px)] overflow-hidden"
-    >
-      <motion.div
-        className="absolute inset-0 -z-10"
-        style={{ scale: plateScale, y: plateY }}
-      >
+    <section className="relative isolate min-h-[min(100dvh,920px)] overflow-hidden">
+      <div className="absolute inset-0 -z-20">
         <Image
           src={assets.cover}
           alt=""
           fill
           priority
-          className="object-cover object-center"
+          unoptimized
+          fetchPriority="high"
+          className="object-cover object-center scale-105"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/70 to-surface" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,107,91,0.22),transparent_50%),radial-gradient(ellipse_at_80%_60%,rgba(46,196,182,0.18),transparent_45%)]" />
-      </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/60 via-ink/75 to-surface" />
+        <div className="hero-mesh absolute inset-0 opacity-90" aria-hidden />
+      </div>
+
+      {!reduce ? (
+        <div
+          className="pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden opacity-40 md:block"
+          aria-hidden
+        >
+          <div className="absolute right-[-4%] top-[14%] h-[32%] w-[28%] overflow-hidden rounded-2xl border border-line-on-dark/30 shadow-glow rotate-3">
+            <Image
+              src={assets.hacienda}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="28vw"
+              quality={50}
+              loading="lazy"
+            />
+          </div>
+          <div className="absolute bottom-[12%] left-[-4%] h-[26%] w-[24%] overflow-hidden rounded-2xl border border-line-on-dark/30 -rotate-6">
+            <Image
+              src={assets.loveAll}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="24vw"
+              quality={50}
+              loading="lazy"
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        className="pointer-events-none absolute inset-0 -z-[5] opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          mixBlendMode: "overlay",
+        }}
+        aria-hidden
+      />
 
       {!reduce ? (
         <>
-          <div className="blob blob-1 opacity-40" aria-hidden />
-          <div className="blob blob-2 opacity-30" aria-hidden />
+          <div className="blob blob-1 opacity-35" aria-hidden />
+          <div className="blob blob-2 opacity-25" aria-hidden />
         </>
       ) : null}
 
       <div className="mx-auto flex min-h-[min(100dvh,920px)] max-w-[var(--content-max)] flex-col items-center justify-center px-4 pb-24 pt-20 text-center sm:px-6">
         <motion.div
-          initial={reduce ? false : { opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduce ? false : { opacity: 0, y: 16, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={motionTokens.spring.soft}
         >
           <Image
             src={assets.logo}
@@ -73,25 +94,34 @@ export function HomeHero() {
           className="mt-7 text-xs font-semibold uppercase tracking-[0.32em] text-spark-coral sm:text-sm"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
+          transition={{ delay: 0.12, duration: motionTokens.duration.med }}
         >
           {site.name}
         </motion.p>
 
-        <motion.h1
-          className="display mt-4 max-w-4xl text-[clamp(2.6rem,8vw,5.25rem)] text-paper-on-dark"
-          initial={reduce ? false : { opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        >
-          Creativity needs kindness
-        </motion.h1>
+        <h1 className="display mt-4 max-w-4xl text-[clamp(2.6rem,8vw,5.25rem)] text-paper-on-dark">
+          {"Creativity needs kindness".split(" ").map((word, i) => (
+            <motion.span
+              key={word + i}
+              className="mr-[0.28em] inline-block last:mr-0"
+              initial={reduce ? false : { opacity: 0, y: 36 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: 0.18 + i * 0.08,
+                duration: 0.55,
+                ease: motionTokens.easeOut,
+              }}
+            >
+              {word}
+            </motion.span>
+          ))}
+        </h1>
 
         <motion.p
           className="mx-auto mt-5 max-w-xl text-base text-paper-on-dark/78 sm:text-lg"
           initial={reduce ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.55 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
         >
           West Palm Beach arts hub — freedom to create, courage to uplift.
         </motion.p>
@@ -100,17 +130,13 @@ export function HomeHero() {
           className="mt-10 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: 0.45,
-            type: "spring",
-            stiffness: 140,
-            damping: 18,
-          }}
+          transition={{ delay: 0.58, ...motionTokens.spring.soft }}
         >
           <ButtonLink
             href="/kindness-always"
             variant="secondary"
             size="lg"
+            magnetic
             className="rounded-full !bg-spark-coral !text-ink shadow-[0_0_36px_rgba(255,107,91,0.35)]"
           >
             Leave a Kindness
@@ -119,6 +145,7 @@ export function HomeHero() {
             href="/explore"
             variant="onDark"
             size="lg"
+            magnetic
             className="rounded-full"
           >
             Explore the Wall

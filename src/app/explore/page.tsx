@@ -2,12 +2,23 @@ import type { Metadata } from "next";
 import { getAllTags, getPosts } from "@/features/posts/queries";
 import { ExploreGrid } from "@/features/posts/ExploreGrid";
 import { PageShell } from "@/shared/ui/PageShell";
-import Link from "next/link";
+import { ButtonLink } from "@/shared/ui/Button";
+import { assets } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Explore · The Wall",
   description:
     "Interactive gallery wall of artist posts — filter, scroll, and lightbox.",
+  openGraph: {
+    title: "Explore · The Wall",
+    description:
+      "Interactive gallery wall of artist posts — filter, scroll, and lightbox.",
+    images: [assets.cover],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [assets.cover],
+  },
 };
 
 export default async function ExplorePage({
@@ -32,16 +43,18 @@ export default async function ExplorePage({
             Explore
           </h1>
           <p className="mt-2 max-w-xl text-sm text-paper-muted">
-            Drag to pan on desktop, swipe on mobile. Tap a piece for lightbox —
-            or open the full post.
+            Drag to pan on desktop. Tap a piece for lightbox — or open the full
+            post.
           </p>
         </div>
-        <Link
+        <ButtonLink
           href="/create"
-          className="inline-flex items-center justify-center rounded-full border border-line px-4 py-2 text-sm font-semibold text-paper transition hover:border-spark-teal hover:text-spark-teal"
+          variant="outline"
+          magnetic
+          className="rounded-full"
         >
           Create a post
-        </Link>
+        </ButtonLink>
       </div>
       <div className="mt-8">
         <ExploreGrid

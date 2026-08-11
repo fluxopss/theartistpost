@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { kindnessSeeds } from "./fixtures";
+import { moderateKindnessBody } from "./moderation";
 import {
   KINDNESS_ANON,
   KINDNESS_LOCAL_CAP,
-  KINDNESS_MAX_BODY,
   KINDNESS_STORAGE_KEY,
   type KindnessMedium,
   type KindnessNote,
@@ -69,10 +69,11 @@ export function useKindnessNotes() {
   const notes = useMemo(() => mergeNotes(local), [local]);
 
   const addNote = useCallback((input: AddKindnessInput) => {
-    const body = input.body.trim().slice(0, KINDNESS_MAX_BODY);
-    if (!body) {
-      return { ok: false as const, error: "Write a few kind words first." };
+    const mod = moderateKindnessBody(input.body);
+    if (!mod.ok) {
+      return { ok: false as const, error: mod.error };
     }
+    const body = mod.cleaned;
 
     const note: KindnessNote = {
       id: crypto.randomUUID(),

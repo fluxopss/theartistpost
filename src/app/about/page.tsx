@@ -8,6 +8,15 @@ import { SectionReveal } from "@/components/SectionReveal";
 export const metadata: Metadata = {
   title: "About",
   description: site.aboutMetaDescription,
+  openGraph: {
+    title: "About",
+    description: site.aboutMetaDescription,
+    images: [assets.aboutHero],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [assets.aboutHero],
+  },
 };
 
 export default function AboutPage() {

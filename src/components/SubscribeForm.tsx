@@ -68,7 +68,7 @@ export function SubscribeForm({ className }: { className?: string }) {
             <Button
               type="submit"
               disabled={status === "loading"}
-              className="min-h-12 rounded-full !bg-spark-teal !text-ink"
+              className="min-h-12 rounded-full !bg-spark-teal !text-[#020b1a]"
             >
               {status === "loading" ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

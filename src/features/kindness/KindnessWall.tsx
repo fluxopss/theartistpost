@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { cn } from "@/shared/lib/cn";
 import { KindnessNoteCard } from "./KindnessNoteCard";
 import { KindnessNoteReader } from "./KindnessNoteReader";
-import { KindnessPhysicsField } from "./KindnessPhysicsField";
+import { KindnessPhysicsLazy } from "./KindnessPhysicsLazy";
 import {
   FILTER_OPTIONS,
   type KindnessFilter,
@@ -13,6 +11,8 @@ import {
 import { Chip } from "@/design-system/primitives/Chip";
 import { Skeleton } from "@/design-system/primitives/Skeleton";
 import { useIsTouchDevice, useReducedMotion } from "@/hooks/useMedia";
+import { cn } from "@/shared/lib/cn";
+import { useEffect, useMemo, useState } from "react";
 
 type KindnessWallProps = {
   notes: KindnessNote[];
@@ -120,9 +120,9 @@ export function KindnessWall({ notes, hydrated = true }: KindnessWallProps) {
             No notes here yet — be the first spark.
           </p>
         </div>
-      ) : showField ? (
-        <KindnessPhysicsField notes={filtered} onSelect={setActive} />
-      ) : (
+          ) : showField ? (
+            <KindnessPhysicsLazy notes={filtered} onSelect={setActive} />
+          ) : (
         <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-3">
           {filtered.map((note, i) => (
             <div key={note.id} className="mb-4 break-inside-avoid">

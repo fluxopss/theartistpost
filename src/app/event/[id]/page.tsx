@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { assets } from "@/content/site";
 import { content } from "@/lib/content";
 import { JsonLd, eventJsonLd } from "@/lib/seo/json-ld";
 import { googleCalendarUrl } from "@/lib/schedule/calendar";
@@ -25,6 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: event.title,
       description: event.description,
       type: "website",
+      images: [assets.coverOg],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: event.title,
+      description: event.description,
+      images: [assets.coverOg],
     },
   };
 }

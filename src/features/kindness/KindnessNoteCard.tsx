@@ -1,8 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Heart, Music, Palette, Sparkles, Theater } from "lucide-react";
-import { useReducedMotion } from "@/hooks/useMedia";
 import { cn } from "@/shared/lib/cn";
 import {
   MEDIUM_LABELS,
@@ -44,7 +42,6 @@ export function KindnessNoteCard({
   float = true,
   index = 0,
 }: KindnessNoteCardProps) {
-  const reduce = useReducedMotion();
   const Icon = mediumIcon[note.medium];
   const spark = SPARK_HEX[note.spark];
   const tilt = tiltFromId(note.id);
@@ -91,15 +88,16 @@ export function KindnessNoteCard({
     "group relative w-full overflow-hidden rounded-sm border border-[#d4c4b0] bg-[#f3e9d8] px-4 py-4 text-left shadow-[0_12px_40px_rgba(2,11,26,0.35)] transition duration-300",
     "hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(2,11,26,0.45)]",
     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-spark-teal",
-    float &&
-      !reduce &&
-      "motion-safe:animate-[blob-drift_10s_ease-in-out_infinite]",
+    float
+      ? "motion-safe:animate-[blob-drift_10s_ease-in-out_infinite]"
+      : "opacity-0 animate-[hero-rise_0.5s_var(--ease-out)_forwards] motion-reduce:opacity-100 motion-reduce:animate-none",
     className,
   );
 
   const style = {
-    transform: reduce ? undefined : `rotate(${tilt}deg)`,
+    transform: `rotate(${tilt}deg)`,
     boxShadow: `0 12px 40px rgba(2,11,26,0.35), 0 0 0 1px ${spark}33, 0 0 28px ${spark}40`,
+    animationDelay: float ? undefined : `${index * 0.04}s`,
   } as const;
 
   const iconBadge = (
@@ -114,38 +112,23 @@ export function KindnessNoteCard({
 
   if (onOpen) {
     return (
-      <motion.button
+      <button
         type="button"
         className={baseClass}
         style={style}
         onClick={() => onOpen(note)}
         aria-label={`Read note: ${note.body.slice(0, 80)}`}
-        initial={reduce ? false : { opacity: 0, y: 28 }}
-        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-8%" }}
-        transition={{
-          delay: index * 0.04,
-          duration: 0.5,
-          ease: [0.22, 1, 0.36, 1],
-        }}
       >
         {inner}
         {iconBadge}
-      </motion.button>
+      </button>
     );
   }
 
   return (
-    <motion.article
-      className={baseClass}
-      style={style}
-      initial={reduce ? false : { opacity: 0, y: 20 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.05, duration: 0.45 }}
-    >
+    <article className={baseClass} style={style}>
       {inner}
       {iconBadge}
-    </motion.article>
+    </article>
   );
 }

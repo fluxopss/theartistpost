@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lighthouse:mobile": "node scripts/lighthouse-mobile.mjs",
+    "lighthouse:gate": "node scripts/lighthouse-mobile.mjs --gate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

@@ -1,7 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
-import { fadeUp, reducedMotionVariants } from "@/shared/motion/variants";
 import { cn } from "@/shared/lib/cn";
 
 type SectionRevealProps = {
@@ -11,25 +7,20 @@ type SectionRevealProps = {
   id?: string;
 };
 
+/** CSS entrance — no Framer on the critical path. */
 export function SectionReveal({
   children,
   className,
   delay = 0,
   id,
 }: SectionRevealProps) {
-  const reduce = useReducedMotion();
-
   return (
-    <motion.div
+    <div
       id={id}
-      className={cn(className)}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-10% 0px" }}
-      variants={reduce ? reducedMotionVariants : fadeUp}
-      transition={reduce ? undefined : { delay }}
+      className={cn("section-reveal motion-reduce:animate-none", className)}
+      style={delay ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

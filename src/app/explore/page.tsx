@@ -1,9 +1,26 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { getAllTags, getPosts } from "@/features/posts/queries";
-import { ExploreGrid } from "@/features/posts/ExploreGrid";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 import { assets } from "@/content/site";
+import { SkeletonCard } from "@/design-system/primitives/Skeleton";
+
+const ExploreGrid = dynamic(
+  () =>
+    import("@/features/posts/ExploreGrid").then((m) => ({
+      default: m.ExploreGrid,
+    })),
+  {
+    loading: () => (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    ),
+  },
+);
 
 export const metadata: Metadata = {
   title: "Explore · The Wall",
@@ -13,11 +30,11 @@ export const metadata: Metadata = {
     title: "Explore · The Wall",
     description:
       "Interactive gallery wall of artist posts — filter, scroll, and lightbox.",
-    images: [assets.cover],
+    images: [assets.coverOg],
   },
   twitter: {
     card: "summary_large_image",
-    images: [assets.cover],
+    images: [assets.coverOg],
   },
 };
 

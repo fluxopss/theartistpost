@@ -1,11 +1,11 @@
 /* The Artist Post — shell offline cache */
-const CACHE = "tap-shell-v1";
+const CACHE = "tap-shell-v2";
 const SHELL = [
   "/",
   "/about",
   "/manifest.webmanifest",
-  "/brand/logo.png",
-  "/brand/favicon.png",
+  "/brand/logo.webp",
+  "/brand/icon-192.png",
 ];
 
 self.addEventListener("install", (event) => {

@@ -84,8 +84,6 @@ a {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  will-change: transform;
-  animation: blob-drift 18s var(--ease-out) infinite alternate;
 }
 
 .blob-1 {
@@ -188,23 +186,71 @@ a {
       rgba(139, 92, 246, 0.12),
       transparent 70%
     );
-  animation: mesh-shift 22s var(--ease-out) infinite alternate;
+  animation: none;
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-word {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.hero-enter {
+  animation: hero-rise 0.55s var(--ease-out) both;
+}
+
+.hero-enter-logo {
+  animation-delay: 0.05s;
+}
+
+.hero-enter-kicker {
+  animation-delay: 0.12s;
+}
+
+.hero-enter-word {
+  animation: hero-word 0.7s var(--ease-out) both;
+}
+
+.hero-enter-copy {
+  animation-delay: 0.55s;
+}
+
+.hero-enter-cta {
+  animation-delay: 0.62s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-mesh {
+  .hero-enter,
+  .hero-enter-word {
     animation: none;
   }
 }
 
-@keyframes mesh-shift {
-  0% {
-    filter: hue-rotate(0deg);
-    transform: scale(1);
+.section-reveal {
+  animation: hero-rise 0.55s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-reveal {
+    animation: none;
   }
-  100% {
-    filter: hue-rotate(12deg);
-    transform: scale(1.04);
-  }
+}
+
+.nav-sheet-in {
+  animation: hero-rise 0.2s var(--ease-out) both;
 }
 

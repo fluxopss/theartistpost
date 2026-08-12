@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { HeartHandshake, Menu, X } from "lucide-react";
 import { assets, links, navMarketing, site } from "@/content/site";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -52,7 +51,6 @@ export function NavBar() {
               width={44}
               height={44}
               className="h-10 w-10 object-contain sm:h-11 sm:w-11"
-              priority
             />
             <span className="display hidden text-base text-paper sm:block md:text-lg">
               {site.name}
@@ -112,64 +110,55 @@ export function NavBar() {
         </div>
       </header>
 
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            id="mobile-nav"
-            className="fixed inset-0 z-[55] flex flex-col bg-ink/95 backdrop-blur-xl xl:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <div className="flex h-[var(--nav-height)] items-center justify-between px-4">
-              <span className="display text-lg text-paper-on-dark">
-                {site.name}
-              </span>
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <button
-                  type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-on-dark text-paper-on-dark"
-                  aria-label="Close menu"
-                  onClick={() => setOpen(false)}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <nav
-              className="flex flex-1 flex-col justify-center gap-2 px-6 pb-16"
-              aria-label="Mobile"
-            >
-              {navMarketing.map((link, i) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * i }}
-                >
-                  <Link
-                    href={link.href}
-                    className="display block border-b border-line-on-dark py-4 text-3xl text-paper-on-dark"
-                    onClick={() => setOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
-              <ButtonLink
-                href={links.donate}
-                external
-                className="mt-8 w-full rounded-full !bg-spark-coral !text-ink"
-                size="lg"
+      {open ? (
+        <div
+          id="mobile-nav"
+          className="fixed inset-0 z-[55] flex flex-col bg-ink/95 backdrop-blur-xl nav-sheet-in xl:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+        >
+          <div className="flex h-[var(--nav-height)] items-center justify-between px-4">
+            <span className="display text-lg text-paper-on-dark">
+              {site.name}
+            </span>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-on-dark text-paper-on-dark"
+                aria-label="Close menu"
+                onClick={() => setOpen(false)}
               >
-                Donate
-              </ButtonLink>
-            </nav>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          <nav
+            className="flex flex-1 flex-col justify-center gap-2 px-6 pb-16"
+            aria-label="Mobile"
+          >
+            {navMarketing.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="display block border-b border-line-on-dark py-4 text-3xl text-paper-on-dark"
+                onClick={() => setOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <ButtonLink
+              href={links.donate}
+              external
+              className="mt-8 w-full rounded-full !bg-spark-coral !text-ink"
+              size="lg"
+            >
+              Donate
+            </ButtonLink>
+          </nav>
+        </div>
+      ) : null}
     </>
   );
 }

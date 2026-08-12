@@ -3,14 +3,14 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import type { Artist } from "@/data/artists";
+import type { ContentArtist } from "@/lib/content";
 import { Modal } from "@/design-system/primitives/Modal";
 import { motion as motionTokens } from "@/design-system/tokens";
 import { useIsTouchDevice, useReducedMotion } from "@/hooks/useMedia";
 import { cn } from "@/shared/lib/cn";
 
 type ArtistCardProps = {
-  artist: Artist;
+  artist: ContentArtist;
   className?: string;
 };
 

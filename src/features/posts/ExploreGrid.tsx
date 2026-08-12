@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   useCallback,
   useEffect,
@@ -10,18 +11,22 @@ import {
   useState,
   useTransition,
 } from "react";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { ZoomIn, ZoomOut } from "lucide-react";
 import type { PostSummary, TagSummary } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { Button, ButtonLink } from "@/shared/ui/Button";
-import {
-  Lightbox,
-  type LightboxItem,
-} from "@/design-system/primitives/Lightbox";
+import type { LightboxItem } from "@/design-system/primitives/Lightbox";
 import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { cn } from "@/shared/lib/cn";
 import { useIsTouchDevice } from "@/hooks/useMedia";
+
+const Lightbox = dynamic(
+  () =>
+    import("@/design-system/primitives/Lightbox").then((m) => ({
+      default: m.Lightbox,
+    })),
+  { ssr: false },
+);
 
 export function ExploreGrid({
   initialPosts,
@@ -172,7 +177,11 @@ export function ExploreGrid({
               />
             ))}
           </div>
-          <div className="hidden shrink-0 items-center gap-1 sm:flex" role="group" aria-label="Wall zoom">
+          <div
+            className="hidden shrink-0 items-center gap-1 sm:flex"
+            role="group"
+            aria-label="Wall zoom"
+          >
             <Button
               type="button"
               variant="ghost"
@@ -180,7 +189,9 @@ export function ExploreGrid({
               className="rounded-full"
               aria-label="Zoom out"
               disabled={scale <= 1}
-              onClick={() => setScale((s) => Math.max(1, Number((s - 0.15).toFixed(2))))}
+              onClick={() =>
+                setScale((s) => Math.max(1, Number((s - 0.15).toFixed(2))))
+              }
             >
               <ZoomOut className="h-4 w-4" />
             </Button>
@@ -191,7 +202,9 @@ export function ExploreGrid({
               className="rounded-full"
               aria-label="Zoom in"
               disabled={scale >= 1.45}
-              onClick={() => setScale((s) => Math.min(1.45, Number((s + 0.15).toFixed(2))))}
+              onClick={() =>
+                setScale((s) => Math.min(1.45, Number((s + 0.15).toFixed(2))))
+              }
             >
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -210,30 +223,22 @@ export function ExploreGrid({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <LayoutGroup>
-          <motion.div
-            layout
-            className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4"
-            style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-              width: `${100 / scale}%`,
-            }}
-          >
-            <AnimatePresence mode="popLayout">
-              {filtered.map((post, i) => (
-                <motion.div
-                  key={post.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <WallTile post={post} onOpen={() => setLightboxIndex(i)} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        </LayoutGroup>
+        <div
+          className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            width: `${100 / scale}%`,
+          }}
+        >
+          {filtered.map((post, i) => (
+            <WallTile
+              key={post.id}
+              post={post}
+              onOpen={() => setLightboxIndex(i)}
+            />
+          ))}
+        </div>
         <div data-sentinel className="h-8 w-full" aria-hidden />
       </div>
 
@@ -257,24 +262,30 @@ export function ExploreGrid({
             No posts for this filter yet. Compose a scene and hang it here —
             nothing publishes without your confirmation.
           </p>
-          <ButtonLink href="/create" variant="secondary" className="mt-6 rounded-full">
+          <ButtonLink
+            href="/create"
+            variant="secondary"
+            className="mt-6 rounded-full"
+          >
             Create a post
           </ButtonLink>
         </div>
       ) : null}
 
-      <Lightbox
-        open={lightboxIndex !== null}
-        onOpenChange={(open) => !open && setLightboxIndex(null)}
-        items={lightboxItems}
-        index={lightboxIndex ?? 0}
-        onIndexChange={setLightboxIndex}
-      />
+      {lightboxIndex !== null ? (
+        <Lightbox
+          open
+          onOpenChange={(open) => !open && setLightboxIndex(null)}
+          items={lightboxItems}
+          index={lightboxIndex}
+          onIndexChange={setLightboxIndex}
+        />
+      ) : null}
     </div>
   );
 }
 
-const assetsFallback = "/brand/cover.jpg";
+const assetsFallback = "/brand/cover-opt.webp";
 
 function WallTile({ post, onOpen }: { post: PostSummary; onOpen: () => void }) {
   return (

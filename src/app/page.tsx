@@ -1,17 +1,18 @@
 import { HomeHero } from "@/features/home/HomeHero";
-import { KindnessBridge } from "@/features/home/KindnessBridge";
 import { FeaturedArtistsSection } from "@/features/home/FeaturedArtistsSection";
-import { ContactSocialSection } from "@/features/home/ContactSocialSection";
-import { HaciendaShowcase } from "@/components/HaciendaShowcase";
+import { HomeKindnessDeferred } from "@/features/home/HomeKindnessDeferred";
+import { HomeLowerDeferred } from "@/features/home/HomeLowerDeferred";
+import { content } from "@/lib/content";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const artists = await content.getArtists();
+
   return (
     <>
       <HomeHero />
-      <KindnessBridge />
-      <FeaturedArtistsSection />
-      <HaciendaShowcase />
-      <ContactSocialSection />
+      <HomeKindnessDeferred />
+      <FeaturedArtistsSection artists={artists} />
+      <HomeLowerDeferred />
     </>
   );
 }

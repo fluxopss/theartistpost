@@ -50,21 +50,26 @@ export const links = {
 } as const;
 
 export const assets = {
-  logo: "/brand/logo.png",
+  logo: "/brand/logo.webp",
   favicon: "/brand/favicon-64.png",
-  cover: "/brand/cover-opt.jpg",
+  icon192: "/brand/icon-192.png",
+  icon512: "/brand/icon-512.png",
+  cover: "/brand/cover-opt.webp",
+  coverOg: "/brand/cover-og.webp",
   hacienda: "/brand/hacienda.webp",
-  comingSoon: "/brand/coming-soon.jpg",
-  aboutHero: "/brand/about-hero.png",
-  partnerSubCulture: "/brand/partner-subculture.png",
-  kindnessTrademark: "/brand/kindness-trademark.jpg",
-  loveAll: "/brand/love-all.png",
-  supportersMap: "/brand/supporters-map.png",
+  haciendaSm: "/brand/hacienda-sm.webp",
+  haciendaHero: "/brand/hacienda-hero.webp",
+  comingSoon: "/brand/coming-soon.webp",
+  aboutHero: "/brand/about-hero.webp",
+  partnerSubCulture: "/brand/partner-subculture.webp",
+  kindnessTrademark: "/brand/kindness-trademark.webp",
+  loveAll: "/brand/love-all.webp",
+  supportersMap: "/brand/supporters-map.webp",
   merch: [
-    "/merch/img-1605.jpg",
-    "/merch/img-5690.jpg",
-    "/merch/gallery.jpeg",
-    "/merch/tap-merch-site.jpg",
+    "/merch/img-1605.webp",
+    "/merch/img-5690.webp",
+    "/merch/gallery.webp",
+    "/merch/tap-merch-site.webp",
   ],
 } as const;
 

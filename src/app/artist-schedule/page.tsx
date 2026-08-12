@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Artist Schedule",
     description: copy.schedule.supportLine,
+    images: [assets.comingSoon],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [assets.comingSoon],
   },
 };
 

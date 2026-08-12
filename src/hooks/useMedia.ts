@@ -16,8 +16,9 @@ export function useReducedMotion(): boolean {
   return reduced;
 }
 
+/** Defaults to touch (mobile-first) so desktop-only effects do not load on first paint. */
 export function useIsTouchDevice(): boolean {
-  const [touch, setTouch] = useState(false);
+  const [touch, setTouch] = useState(true);
 
   useEffect(() => {
     const coarse = window.matchMedia("(pointer: coarse)").matches;

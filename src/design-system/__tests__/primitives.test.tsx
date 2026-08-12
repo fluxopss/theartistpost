@@ -55,13 +55,32 @@ describe("Lightbox gallery", () => {
         index={0}
         onIndexChange={onIndex}
         items={[
-          { src: "/brand/cover.jpg", alt: "One", title: "First" },
-          { src: "/brand/logo.png", alt: "Two", title: "Second" },
+          { src: "/brand/cover-opt.webp", alt: "One", title: "First" },
+          { src: "/brand/logo.webp", alt: "Two", title: "Second" },
         ]}
       />,
     );
     expect(screen.getAllByText("First").length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Next image" }));
+    expect(onIndex).toHaveBeenCalledWith(1);
+  });
+
+  it("advances on ArrowRight", async () => {
+    const user = userEvent.setup();
+    const onIndex = vi.fn();
+    render(
+      <Lightbox
+        open
+        onOpenChange={() => undefined}
+        index={0}
+        onIndexChange={onIndex}
+        items={[
+          { src: "/brand/cover-opt.webp", alt: "One", title: "First" },
+          { src: "/brand/logo.webp", alt: "Two", title: "Second" },
+        ]}
+      />,
+    );
+    await user.keyboard("{ArrowRight}");
     expect(onIndex).toHaveBeenCalledWith(1);
   });
 
@@ -74,7 +93,7 @@ describe("Lightbox gallery", () => {
         onOpenChange={onOpenChange}
         index={0}
         onIndexChange={() => undefined}
-        items={[{ src: "/brand/cover.jpg", alt: "Art", title: "Piece" }]}
+        items={[{ src: "/brand/cover-opt.webp", alt: "Art", title: "Piece" }]}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Close lightbox" }));

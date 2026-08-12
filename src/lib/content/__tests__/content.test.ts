@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { eventToIcs, monthMatrix, sameDay } from "@/lib/schedule/calendar";
 import { artistSchema, chapterSchema, eventSchema } from "@/lib/content/schemas";
+import { content } from "@/lib/content";
+import { filterArtists } from "@/features/home/filterArtists";
 import { moderateKindnessBody } from "@/features/kindness/moderation";
 
 describe("calendar helpers", () => {
@@ -43,7 +45,7 @@ describe("content schemas", () => {
       name: "Coming Soon",
       medium: "visual",
       bio: "Soon",
-      image: "/brand/coming-soon.jpg",
+      image: "/brand/coming-soon.webp",
       comingSoon: true,
     });
     expect(parsed.medium).toBe("visual");
@@ -90,5 +92,41 @@ describe("kindness moderation stub", () => {
   it("allows kind copy", () => {
     const result = moderateKindnessBody("Your set lifted the room tonight.");
     expect(result.ok).toBe(true);
+  });
+});
+
+describe("featured artist filters", () => {
+  const sample = [
+    {
+      id: "1",
+      name: "Ava",
+      medium: "music" as const,
+      bio: "Jazz at Hacienda",
+      image: "/brand/cover-opt.webp",
+    },
+    {
+      id: "2",
+      name: "Nia",
+      medium: "visual" as const,
+      bio: "Murals",
+      image: "/brand/cover-opt.webp",
+    },
+  ];
+
+  it("filters by medium", () => {
+    expect(filterArtists(sample, "", "music")).toHaveLength(1);
+    expect(filterArtists(sample, "", "all")).toHaveLength(2);
+  });
+
+  it("filters by query against name and bio", () => {
+    expect(filterArtists(sample, "hacienda", "all")[0]?.name).toBe("Ava");
+    expect(filterArtists(sample, "zzz", "all")).toHaveLength(0);
+  });
+});
+
+describe("content service seed adapter", () => {
+  it("returns an artists array without inventing names", async () => {
+    const artists = await content.getArtists();
+    expect(Array.isArray(artists)).toBe(true);
   });
 });

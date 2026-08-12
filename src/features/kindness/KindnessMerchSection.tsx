@@ -1,14 +1,27 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { assets, copy, links, site } from "@/content/site";
-import { ButtonLink } from "@/shared/ui/Button";
-import { Lightbox, type LightboxItem } from "@/components/Lightbox";
+import { ButtonLink } from "@/design-system/primitives/Button";
+import {
+  Lightbox,
+  type LightboxItem,
+} from "@/design-system/primitives/Lightbox";
 import { SectionReveal } from "@/components/SectionReveal";
 
 export function KindnessMerchSection() {
-  const [item, setItem] = useState<LightboxItem | null>(null);
+  const items: LightboxItem[] = useMemo(
+    () =>
+      assets.merch.map((src) => ({
+        src,
+        alt: "Kindness Always merch",
+        title: "Kindness Always merch",
+      })),
+    [],
+  );
+  const [index, setIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   return (
     <section
@@ -36,26 +49,27 @@ export function KindnessMerchSection() {
         </p>
         <a
           href={`tel:${site.phoneTel}`}
-          className="mt-2 inline-flex text-base font-semibold text-paper-on-dark underline decoration-spark-teal underline-offset-4"
+          className="mt-2 inline-flex min-h-11 items-center text-base font-semibold text-paper-on-dark underline decoration-spark-teal underline-offset-4"
         >
           {site.phone}
         </a>
       </SectionReveal>
 
       <SectionReveal className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {assets.merch.map((src) => (
+        {items.map((item, i) => (
           <button
-            key={src}
+            key={item.src}
             type="button"
-            className="relative aspect-square overflow-hidden rounded-2xl border border-line transition hover:border-spark-teal"
-            onClick={() =>
-              setItem({ src, alt: "Kindness Always merch", title: "Merch" })
-            }
-            aria-label="Open merch image"
+            className="relative aspect-square min-h-11 overflow-hidden rounded-2xl border border-line transition hover:border-spark-teal"
+            onClick={() => {
+              setIndex(i);
+              setOpen(true);
+            }}
+            aria-label={`Open merch image ${i + 1} of ${items.length}`}
           >
             <Image
-              src={src}
-              alt="Merch"
+              src={item.src}
+              alt={item.alt}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 50vw, 25vw"
@@ -69,6 +83,7 @@ export function KindnessMerchSection() {
           href={links.merch}
           external
           size="lg"
+          magnetic
           className="rounded-full !bg-spark-coral !text-ink"
         >
           {copy.kindness.buyCta}
@@ -76,9 +91,11 @@ export function KindnessMerchSection() {
       </SectionReveal>
 
       <Lightbox
-        open={Boolean(item)}
-        onOpenChange={(open) => !open && setItem(null)}
-        item={item}
+        open={open}
+        onOpenChange={setOpen}
+        items={items}
+        index={index}
+        onIndexChange={setIndex}
       />
     </section>
   );

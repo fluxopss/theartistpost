@@ -12,7 +12,7 @@ import "./globals.css";
 const jost = Jost({
   variable: "--font-jost",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
 });
 
 const clash = localFont({
@@ -20,11 +20,6 @@ const clash = localFont({
     {
       path: "../fonts/ClashDisplay-Semibold.woff2",
       weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../fonts/ClashDisplay-Bold.woff2",
-      weight: "700",
       style: "normal",
     },
   ],
@@ -47,20 +42,23 @@ export const metadata: Metadata = {
     title: site.name,
   },
   icons: {
-    icon: assets.favicon,
-    apple: assets.favicon,
+    icon: [
+      { url: assets.favicon, sizes: "64x64", type: "image/png" },
+      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: assets.icon192,
   },
   openGraph: {
     title: site.name,
     description: site.metaDescription,
-    images: [assets.cover],
+    images: [assets.coverOg],
     type: "website",
     siteName: site.name,
   },
   twitter: {
     card: "summary_large_image",
     site: site.twitterHandle,
-    images: [assets.cover],
+    images: [assets.coverOg],
   },
 };
 
@@ -91,7 +89,12 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="preload" as="image" href="/brand/cover-opt.jpg" />
+        <link
+          rel="preload"
+          as="image"
+          href="/brand/cover-opt.webp"
+          fetchPriority="high"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-full antialiased">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { copy } from "@/content/site";
+import { assets, copy } from "@/content/site";
 import { content } from "@/lib/content";
 import { SupportersExperience } from "@/features/supporters/SupportersExperience";
 
@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Supporters",
     description: copy.supporters.expansion,
+    images: [assets.supportersMap],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [assets.supportersMap],
   },
 };
 

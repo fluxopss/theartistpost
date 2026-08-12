@@ -1,11 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import { KindnessCompose } from "./KindnessCompose";
 import { KindnessHero } from "./KindnessHero";
-import { KindnessMerchSection } from "./KindnessMerchSection";
 import { KindnessWall } from "./KindnessWall";
 import { useKindnessNotes } from "./useKindnessNotes";
+import { LazyWhenVisible } from "@/components/LazyWhenVisible";
+
+const KindnessCompose = dynamic(
+  () =>
+    import("./KindnessCompose").then((m) => ({ default: m.KindnessCompose })),
+  { ssr: false },
+);
+
+const KindnessMerchSection = dynamic(
+  () =>
+    import("./KindnessMerchSection").then((m) => ({
+      default: m.KindnessMerchSection,
+    })),
+  { ssr: false },
+);
 
 export function KindnessContent() {
   const { notes, hydrated, storageError, clearStorageError, addNote } =
@@ -44,13 +58,17 @@ export function KindnessContent() {
         </button>
       </div>
 
-      <KindnessMerchSection />
+      <LazyWhenVisible minHeight={320}>
+        <KindnessMerchSection />
+      </LazyWhenVisible>
 
-      <KindnessCompose
-        open={composeOpen}
-        onOpenChange={setComposeOpen}
-        onSubmit={addNote}
-      />
+      {composeOpen ? (
+        <KindnessCompose
+          open={composeOpen}
+          onOpenChange={setComposeOpen}
+          onSubmit={addNote}
+        />
+      ) : null}
     </div>
   );
 }

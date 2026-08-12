@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Create a post",
     description: "Compose a scene for The Wall — confirm before publish.",
-    images: [assets.cover],
+    images: [assets.coverOg],
   },
   twitter: {
     card: "summary_large_image",
-    images: [assets.cover],
+    images: [assets.coverOg],
   },
 };
 

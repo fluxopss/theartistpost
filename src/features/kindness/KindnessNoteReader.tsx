@@ -2,8 +2,6 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Heart, Music, Palette, Sparkles, Theater } from "lucide-react";
-import { motion } from "framer-motion";
-import { useReducedMotion } from "@/hooks/useMedia";
 import {
   MEDIUM_LABELS,
   SPARK_HEX,
@@ -31,22 +29,18 @@ export function KindnessNoteReader({
   open,
   onOpenChange,
 }: KindnessNoteReaderProps) {
-  const reduce = useReducedMotion();
   const spark = note ? SPARK_HEX[note.spark] : "#2ec4b6";
   const Icon = note ? mediumIcon[note.medium] : Sparkles;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[80] bg-ink/80 backdrop-blur-md data-[state=open]:animate-in" />
+        <Dialog.Overlay className="fixed inset-0 z-[80] bg-ink/80 backdrop-blur-md" />
         <Dialog.Content
           className="fixed left-1/2 top-1/2 z-[90] w-[min(94vw,34rem)] -translate-x-1/2 -translate-y-1/2 outline-none"
           aria-describedby={undefined}
         >
-          <motion.div
-            initial={reduce ? false : { opacity: 0, scale: 0.94, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          <div
             className="relative overflow-hidden rounded-sm border border-[#d4c4b0] bg-[#f3e9d8] px-6 py-8 shadow-[0_24px_80px_rgba(2,11,26,0.55)] sm:px-10 sm:py-10"
             style={{
               boxShadow: `0 24px 80px rgba(2,11,26,0.55), 0 0 0 1px ${spark}44, 0 0 48px ${spark}33`,
@@ -85,7 +79,7 @@ export function KindnessNoteReader({
                 </p>
               </>
             ) : null}
-          </motion.div>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

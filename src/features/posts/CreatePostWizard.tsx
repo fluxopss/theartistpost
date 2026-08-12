@@ -6,6 +6,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { create } from "zustand";
 import { z } from "zod";
 import { createPostAction } from "@/features/posts/actions";
+import {
+  assertPublishConfirmed,
+  isReviewStep,
+} from "@/features/posts/publishGate";
 import { Button } from "@/shared/ui/Button";
 import { Modal } from "@/design-system/primitives/Modal";
 import { useToast } from "@/design-system/primitives/Toast";
@@ -126,6 +130,10 @@ export function CreatePostWizard() {
 
   function requestPublish() {
     if (!validateCurrent()) return;
+    if (!isReviewStep(step, steps.length)) {
+      setError("Finish the review step before publishing.");
+      return;
+    }
     setConfirmOpen(true);
   }
 
@@ -157,7 +165,12 @@ export function CreatePostWizard() {
     }
   }
 
-  function submit() {
+  function submitConfirmed() {
+    const gate = assertPublishConfirmed(true);
+    if (!gate.ok) {
+      setError(gate.error ?? "Confirm before publishing.");
+      return;
+    }
     setConfirmOpen(false);
     startTransition(async () => {
       const result = await createPostAction({
@@ -471,7 +484,7 @@ export function CreatePostWizard() {
           <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
             Keep editing
           </Button>
-          <Button variant="secondary" onClick={submit} disabled={pending}>
+          <Button variant="secondary" onClick={submitConfirmed} disabled={pending}>
             {pending ? "Publishing…" : "Yes, publish"}
           </Button>
         </div>

@@ -4,11 +4,43 @@ import { Accordion } from "@/design-system/primitives/Accordion";
 import { Button, ButtonLink } from "@/design-system/primitives/Button";
 import { Card } from "@/design-system/primitives/Card";
 import { Chip } from "@/design-system/primitives/Chip";
+import { Lightbox } from "@/design-system/primitives/Lightbox";
 import { Skeleton, SkeletonCard } from "@/design-system/primitives/Skeleton";
 import { Tabs } from "@/design-system/primitives/Tabs";
 import { useToast } from "@/design-system/primitives/Toast";
 import { tokens } from "@/design-system/tokens";
+import { assets } from "@/content/site";
 import { useState } from "react";
+
+function LightboxDemo() {
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const items = [
+    { src: assets.cover, alt: "Cover", title: "Gallery night" },
+    { src: assets.hacienda, alt: "Hacienda", title: "The Hacienda" },
+  ];
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setIndex(0);
+          setOpen(true);
+        }}
+      >
+        Open gallery lightbox
+      </Button>
+      <Lightbox
+        open={open}
+        onOpenChange={setOpen}
+        items={items}
+        index={index}
+        onIndexChange={setIndex}
+      />
+    </>
+  );
+}
 
 function ToastDemo() {
   const { push } = useToast();
@@ -74,6 +106,12 @@ export default function StyleguidePage() {
 
       <section className="space-y-4">
         <h2 className="display text-2xl text-paper">Buttons</h2>
+        <p className="text-sm text-paper-muted">
+          Desktop: pass <code className="text-spark-gold">magnetic</code> for a
+          spring pull toward the cursor. Disabled on touch and{" "}
+          <code className="text-spark-gold">prefers-reduced-motion</code>. Tap
+          targets are at least 44px.
+        </p>
         <div className="flex flex-wrap gap-3">
           <Button>Primary</Button>
           <Button variant="secondary" magnetic>
@@ -150,6 +188,16 @@ export default function StyleguidePage() {
       <section className="space-y-4">
         <h2 className="display text-2xl text-paper">Toast</h2>
         <ToastDemo />
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="display text-2xl text-paper">Lightbox</h2>
+        <p className="max-w-xl text-sm text-paper-muted">
+          Keyboard: Esc closes, Left/Right arrows move the gallery, focus stays
+          in the dialog. Touch: swipe horizontally. Used on Explore and Kindness
+          merch.
+        </p>
+        <LightboxDemo />
       </section>
     </div>
   );

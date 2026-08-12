@@ -8,6 +8,7 @@ import { Button } from "@/shared/ui/Button";
 import { useReducedMotion } from "@/hooks/useMedia";
 import { cn } from "@/shared/lib/cn";
 import type { AddKindnessInput } from "./useKindnessNotes";
+import { canLeaveComposeStep, clampKindnessBody } from "./composeValidation";
 import {
   KINDNESS_ANON,
   KINDNESS_MAX_BODY,
@@ -71,13 +72,9 @@ export function KindnessCompose({
   }, [open]);
 
   function goNext() {
-    if (step === 2) {
-      if (!body.trim()) {
-        setError("Write a few kind words first.");
-        return;
-      }
-      setError(null);
-      setStep(3);
+    const gate = canLeaveComposeStep(step, body);
+    if (!gate.ok) {
+      setError(gate.error ?? "Check this step.");
       return;
     }
     setError(null);
@@ -210,7 +207,7 @@ export function KindnessCompose({
                       }}
                       value={body}
                       maxLength={KINDNESS_MAX_BODY}
-                      onChange={(e) => setBody(e.target.value)}
+                      onChange={(e) => setBody(clampKindnessBody(e.target.value))}
                       rows={5}
                       placeholder="A short note another artist might need tonight…"
                       className="mt-2 w-full resize-none rounded-xl border border-line bg-ink/40 px-4 py-3 text-paper outline-none placeholder:text-paper-muted/50 focus:border-spark-teal"

@@ -42,7 +42,31 @@ pnpm build  # production build
 
 Fonts: **Clash Display** (display) · **Jost** (body). Theme key: `tap-theme`. All motion honors `prefers-reduced-motion`.
 
-Reusable chrome still lives in `src/components/` and re-exports Button/Chip from the design system where applicable.
+Reusable chrome still lives in `src/components/` and re-exports Button from the design system. Prefer `@/design-system` for new UI. Magnetic buttons: desktop only.
+
+### Keyboard matrix (manual a11y)
+
+| Surface | Keys |
+|---------|------|
+| Lightbox | `Esc` close · `←`/`→` gallery · focus trap in dialog |
+| Tabs (schedule views, styleguide) | `←`/`→` move · `Home`/`End` when implemented in Tabs |
+| Accordion (schedule events) | `Enter`/`Space` toggle · focus on header |
+| Kindness filters | radiogroup / tablist · arrow or click |
+| Kindness compose | `Esc` close · focus moves to first field on open |
+| Create publish | Confirm modal required — no auto-post |
+| Nav / Donate | Tab order · visible `:focus-visible` ring (teal) |
+
+### Lighthouse (mobile)
+
+```bash
+pnpm build && pnpm start -- -p 3000
+# other terminal:
+pnpm lighthouse:mobile          # writes lighthouse-reports/
+pnpm lighthouse:gate            # exit 1 if A11y/SEO/BP < 95 or Perf < 80
+LH_BASE_URL=https://theartistpost.fluxlab.agency pnpm lighthouse:mobile
+```
+
+Perf target is honest: **≥80** mobile simulated (hero imagery + motion); Accessibility / Best Practices / SEO gate at **≥95**.
 
 ## Content adapters
 
@@ -50,6 +74,7 @@ Reusable chrome still lives in `src/components/` and re-exports Button/Chip from
 import { content } from "@/lib/content";
 
 const events = await content.getEvents();
+const artists = await content.getArtists();
 const chapters = await content.getChapters();
 ```
 
@@ -105,4 +130,5 @@ Details: [`deploy/README.md`](deploy/README.md) · Postgres: [`deploy/vps-postgr
 ## Specs
 
 - Design: `docs/superpowers/specs/2026-08-06-gallery-night-redesign.md`
+- Awwwards audit: `docs/superpowers/specs/2026-08-12-awwwards-upgrade-audit.md`
 - Plan: `docs/superpowers/plans/2026-08-06-gallery-night-redesign.md`

@@ -1,5 +1,5 @@
 /* The Artist Post — shell offline cache */
-const CACHE = "tap-shell-v2";
+const CACHE = "tap-shell-v3";
 const SHELL = [
   "/",
   "/about",

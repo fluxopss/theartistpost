@@ -10,6 +10,5 @@ export const MOCK_SESSION_USER: SessionUser = {
   email: "guest@theartistpost.org",
   handle: "studioguest",
   role: "ARTIST",
-  image:
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80",
+  image: "/brand/logo.webp",
 };

@@ -17,8 +17,7 @@ const artists = [
     name: "Luna Voss",
     handle: "lunavoss",
     bio: "Light sculptor exploring grain, glare, and late-night city hush.",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    avatarUrl: "/brand/logo.webp",
     socialLinks: {
       website: "https://example.com/luna",
       instagram: "https://instagram.com/lunavoss",
@@ -29,8 +28,7 @@ const artists = [
     name: "Kai Chan",
     handle: "kaichan",
     bio: "Spatial designer building soft architectures for restless screens.",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    avatarUrl: "/brand/logo.webp",
     socialLinks: {
       behance: "https://behance.net/kaichan",
       twitter: "https://x.com/kaichan",
@@ -41,8 +39,7 @@ const artists = [
     name: "Mira Noir",
     handle: "miranoir",
     bio: "Collage poet stitching archival dust into luminous sequences.",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
+    avatarUrl: "/brand/logo.webp",
     socialLinks: {
       website: "https://example.com/mira",
       instagram: "https://instagram.com/miranoir",
@@ -70,8 +67,7 @@ const posts: SeedPost[] = [
     slug: "midnight-filament",
     description:
       "A field study of electric threads drifting through velvet air.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "IMAGE",
     featured: false,
     viewCount: 1842,
@@ -84,8 +80,7 @@ const posts: SeedPost[] = [
     title: "Soft Architectures",
     slug: "soft-architectures",
     description: "Rooms that refuse corners.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "IMAGE",
     featured: false,
     viewCount: 1320,
@@ -98,8 +93,7 @@ const posts: SeedPost[] = [
     title: "Archive Bloom",
     slug: "archive-bloom",
     description: "Torn paper memories reassembled into a garden.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1614850715649-1d0106293bd1?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "IMAGE",
     featured: false,
     viewCount: 980,
@@ -112,8 +106,7 @@ const posts: SeedPost[] = [
     title: "Orbit Studies",
     slug: "orbit-studies",
     description: "Small moons practicing patience.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "CANVAS",
     featured: false,
     viewCount: 2211,
@@ -126,8 +119,7 @@ const posts: SeedPost[] = [
     title: "Signal Garden",
     slug: "signal-garden",
     description: "Broadcast flora growing through cracked glass.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "IMAGE",
     featured: false,
     viewCount: 640,
@@ -140,8 +132,7 @@ const posts: SeedPost[] = [
     title: "Paper Tide",
     slug: "paper-tide",
     description: "Folded horizons that refuse to stay still.",
-    mediaUrl:
-      "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl: "/brand/coming-soon.webp",
     mediaType: "IMAGE",
     featured: false,
     viewCount: 512,

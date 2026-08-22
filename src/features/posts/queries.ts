@@ -1,4 +1,5 @@
 import type { Post, Prisma, Tag, User, ArtistProfile } from "@prisma/client";
+import { assets } from "@/content/site";
 import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { getPrisma } from "@/shared/lib/prisma";
 import {
@@ -36,7 +37,9 @@ function mapArtist(
     handle: author.artistProfile?.handle ?? "unknown",
     name: author.name,
     bio: author.artistProfile?.bio,
-    avatarUrl: author.artistProfile?.avatarUrl ?? author.image,
+    avatarUrl: sanitizeAvatarUrl(
+      author.artistProfile?.avatarUrl ?? author.image,
+    ),
     socialLinks:
       (author.artistProfile?.socialLinks as SocialLinks | null) ?? null,
   };
@@ -61,13 +64,20 @@ function mapPostSummary(post: PostWithRelations): PostSummary {
   };
 }
 
-const BROKEN_MEDIA = "photo-1634017839464";
-const FALLBACK_MEDIA =
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80";
+function isStockPlaceholder(url: string) {
+  return (
+    url.includes("images.unsplash.com") || url.includes("img1.wsimg.com")
+  );
+}
 
 function sanitizeMediaUrl(url: string | null): string | null {
   if (!url) return url;
-  return url.includes(BROKEN_MEDIA) ? FALLBACK_MEDIA : url;
+  return isStockPlaceholder(url) ? assets.comingSoon : url;
+}
+
+function sanitizeAvatarUrl(url: string | null): string | null {
+  if (!url) return url;
+  return isStockPlaceholder(url) ? assets.logo : url;
 }
 
 function mapPostDetail(post: PostWithRelations): PostDetail {
@@ -82,7 +92,7 @@ function mapPostDetail(post: PostWithRelations): PostDetail {
         author: {
           id: c.user.id,
           name: c.user.name,
-          image: c.user.image,
+          image: sanitizeAvatarUrl(c.user.image),
         },
       })) ?? [],
   };
@@ -235,7 +245,7 @@ export async function getArtistByHandle(
         handle: profile.handle,
         name: profile.user.name,
         bio: profile.bio,
-        avatarUrl: profile.avatarUrl ?? profile.user.image,
+        avatarUrl: sanitizeAvatarUrl(profile.avatarUrl ?? profile.user.image),
         socialLinks: (profile.socialLinks as SocialLinks | null) ?? null,
         posts: profile.user.posts.map(mapPostSummary),
       };

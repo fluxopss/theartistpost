@@ -102,7 +102,8 @@ Copy `.env.example` → `.env`:
 
 | Path                                          | Purpose                                               |
 | --------------------------------------------- | ----------------------------------------------------- |
-| `/`                                           | Hero, featured artists, Hacienda, contact / subscribe |
+| `/`                                           | Hero, mantra, Get Involved doors, kindness, Hacienda |
+| `/get-involved`                               | Participation hall — five doors + inquiry form       |
 | `/about`                                      | Mission & nonprofit                                   |
 | `/artist-schedule`                            | List · month · agenda + onboarding wizard             |
 | `/event/[id]`                                 | Event detail + JSON-LD                                |

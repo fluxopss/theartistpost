@@ -5,14 +5,20 @@
 
 export const site = {
   name: "The Artist Post",
+  mark: "The Artist Post®",
   legalName: "The Artist Post INC",
   nonprofitLine: "The Artist Post Inc. is a Nonprofit 501(c)(3) Organization.",
   ein: "85-2609788",
   venmo: "@theartistpost",
-  tagline: "Explore the latest in local arts, music, theater, and culture",
-  headline: "Arts & Entertainment Hub",
+  kindnessMark: "Kindness Always®",
+  shine: "BE KIND, SHINE BRIGHT!",
+  tagline:
+    "The Artist Post® connects artists, small businesses, and communities by providing free opportunities for local creatives to showcase, sell, and grow through kindness and collaboration.",
+  headline: "Get Involved",
+  heroSupport:
+    "Free opportunities for local creatives to showcase, sell, and grow through kindness and collaboration.",
   metaDescription:
-    "Explore diverse artist posts promoting creativity and collaboration within the art community.",
+    "The Artist Post® connects artists, small businesses, and communities through free showcase space, kindness, and collaboration in West Palm Beach.",
   aboutMetaDescription:
     "Support local artists through our community-driven platform, dedicated to arts and culture advocacy.",
   twitterHandle: "@TheArtistPost",
@@ -65,21 +71,29 @@ export const assets = {
   kindnessTrademark: "/brand/kindness-trademark.webp",
   loveAll: "/brand/love-all.webp",
   supportersMap: "/brand/supporters-map.webp",
-  merch: [
+  merchLockup: "/merch/tap-merch-site.webp",
+  merchPhotos: [
     "/merch/img-1605.webp",
     "/merch/img-5690.webp",
     "/merch/gallery.webp",
-    "/merch/tap-merch-site.webp",
   ],
+  donations: "/brand/donations-appreciated.webp",
 } as const;
+
+/** Official TAP mantra from client trademark sheet. */
+export const mantra = [
+  { lead: "Love", rest: "ALL" },
+  { lead: "Dream", rest: "TOGETHER" },
+  { lead: "Create", rest: "AS ONE", mark: "™" },
+] as const;
 
 export const navMarketing = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/artist-schedule", label: "Artist Schedule" },
+  { href: "/get-involved", label: "Get Involved" },
+  { href: "/artist-schedule", label: "Schedule" },
   { href: "/kindness-always", label: "Kindness Always" },
-  { href: "/supporters", label: "Supporters" },
   { href: "/explore", label: "Explore" },
+  { href: "/about", label: "About" },
 ] as const;
 
 export const navApp = [] as const;
@@ -97,6 +111,11 @@ export type AppTabIcon = (typeof appTabs)[number]["icon"];
 
 /** More menu — secondary destinations */
 export const moreMenu = [
+  {
+    href: "/get-involved",
+    label: "Get Involved",
+    description: "Showcase, partner, volunteer, give",
+  },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
   { href: "/supporters", label: "Supporters", description: "Chapters & legal" },
   { href: "/create", label: "Create", description: "Compose a scene" },
@@ -115,6 +134,20 @@ export const moreMenu = [
 ] as const;
 
 export const copy = {
+  involve: {
+    kicker: "Participation first",
+    title: "Get Involved",
+    lead: "The first move is not a purchase — it is showing up. Choose the door that fits you.",
+    shine: site.shine,
+    formTitle: "Tell us how you want to show up",
+    formBody:
+      "Robbie reads these. No account required. We will follow up about space, partnership, or volunteering.",
+    success:
+      "Received — thank you. If you booked space, keep the agreement tab open and we will send a scheduling link after approval.",
+    spaceAgreement: "Review & sign the artist agreement",
+    spaceAfter:
+      "After the signed agreement is approved, you receive a scheduling link.",
+  },
   home: {
     haciendaTitle: "The Artist Post @ The Hacienda",
     haciendaBody:
@@ -135,12 +168,22 @@ export const copy = {
   about: {
     title: "About",
     mission:
-      "The Artist Post is a community-driven platform dedicated to supporting and advocating for local artists and small businesses. We create real opportunities for creatives to be seen, heard, and supported, without the usual barriers. Through curated events, pop-up activations, and collaborative spaces, we connect artists directly with their communities. From showcasing original work to offering donation-based retail opportunities, our goal is to help artists turn their passion into visibility, connection, and growth.",
+      "The Artist Post® is a community-driven platform dedicated to supporting and advocating for local artists and small businesses. We create real opportunities for creatives to be seen, heard, and supported, without the usual barriers. Through curated events, pop-up activations, and collaborative spaces, we connect artists directly with their communities. From showcasing original work to offering donation-based retail opportunities, our goal is to help artists turn their passion into visibility, connection, and growth.",
     proceeds:
       "All Proceeds Raised Go Towards Local Arts, the Artists, the Venues, and Local Community Events.",
     instagramCta: "Follow me on Instagram",
     donateCta: "Donate",
     partnerLabel: "Partner",
+    marksKicker: "Registered marks",
+    marksTitle: "The house has a name",
+    marksBody:
+      "The Artist Post®, Kindness Always®, and Love | ALL · Dream | TOGETHER · Create | AS ONE™ travel with the work. BE KIND, SHINE BRIGHT!",
+    supportTitle: "Toward a permanent home",
+    supportBody:
+      "Your donations help keep our space going and build toward a physical location in the future. Every bit helps us grow closer to a permanent home for art and creativity.",
+    liveRoomTitle: "The live room",
+    liveRoomBody:
+      "Hacienda on Clematis is where TAP meets people in the room — rotating showcases, donation-based merch, and a space built to connect.",
   },
   schedule: {
     title: "Artist Schedule",

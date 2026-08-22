@@ -4,6 +4,9 @@ import { assets, copy, links, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { SectionReveal } from "@/components/SectionReveal";
+import { AboutMarks } from "@/features/about/AboutMarks";
+import { AboutHacienda } from "@/features/about/AboutHacienda";
+import { AboutSupport } from "@/features/about/AboutSupport";
 
 export const metadata: Metadata = {
   title: "About",
@@ -42,7 +45,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <PageShell className="space-y-8">
+      <PageShell className="space-y-12">
         <SectionReveal>
           <p className="max-w-3xl text-base leading-relaxed text-paper-muted sm:text-lg">
             {copy.about.mission}
@@ -52,6 +55,10 @@ export default function AboutPage() {
           </p>
           <p className="mt-2 text-sm text-paper-muted">{copy.about.proceeds}</p>
         </SectionReveal>
+
+        <AboutMarks />
+        <AboutHacienda />
+        <AboutSupport />
 
         <SectionReveal className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-line bg-surface-glass p-5">
@@ -66,9 +73,16 @@ export default function AboutPage() {
 
         <SectionReveal className="flex flex-col gap-3 sm:flex-row">
           <ButtonLink
+            href="/get-involved"
+            className="rounded-full !bg-spark-coral !text-ink sm:min-w-[180px]"
+          >
+            Get Involved
+          </ButtonLink>
+          <ButtonLink
             href={links.donate}
             external
-            className="rounded-full !bg-spark-coral !text-ink sm:min-w-[180px]"
+            variant="outline"
+            className="rounded-full"
           >
             {copy.about.donateCta}
           </ButtonLink>

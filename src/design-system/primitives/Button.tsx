@@ -68,7 +68,10 @@ export function ButtonLink({
   children,
   external,
   magnetic = false,
-}: CommonProps & { href: string; external?: boolean }) {
+}: CommonProps & {
+  href: string;
+  external?: boolean;
+}) {
   const reduce = useReducedMotion();
   const touch = useIsTouchDevice();
   const classNames = cn(

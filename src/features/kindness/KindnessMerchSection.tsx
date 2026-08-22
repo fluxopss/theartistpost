@@ -13,7 +13,7 @@ import { SectionReveal } from "@/components/SectionReveal";
 export function KindnessMerchSection() {
   const items: LightboxItem[] = useMemo(
     () =>
-      assets.merch.map((src) => ({
+      assets.merchPhotos.map((src) => ({
         src,
         alt: "Kindness Always merch",
         title: "Kindness Always merch",
@@ -55,7 +55,19 @@ export function KindnessMerchSection() {
         </a>
       </SectionReveal>
 
-      <SectionReveal className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <SectionReveal className="mt-10">
+        <div className="overflow-hidden rounded-3xl border border-line bg-paper p-4 sm:p-8">
+          <Image
+            src={assets.merchLockup}
+            alt="The Artist Post®, Kindness Always®, and Love All merch"
+            width={1200}
+            height={480}
+            className="mx-auto h-auto w-full max-w-4xl object-contain"
+          />
+        </div>
+      </SectionReveal>
+
+      <SectionReveal className="mt-6 grid grid-cols-3 gap-3">
         {items.map((item, i) => (
           <button
             key={item.src}
@@ -72,7 +84,7 @@ export function KindnessMerchSection() {
               alt={item.alt}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 50vw, 25vw"
+              sizes="(max-width: 768px) 33vw, 20vw"
             />
           </button>
         ))}

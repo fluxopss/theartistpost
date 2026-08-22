@@ -9,7 +9,7 @@ export function HaciendaShowcase() {
       <article className="grid overflow-hidden rounded-3xl border border-line bg-surface-glass md:grid-cols-2">
         <div className="relative aspect-[16/11] overflow-hidden md:aspect-auto md:min-h-[360px]">
           <Image
-            src={assets.haciendaSm}
+            src={assets.hacienda}
             alt="The Artist Post at The Hacienda"
             fill
             unoptimized
@@ -39,10 +39,10 @@ export function HaciendaShowcase() {
               Get Directions
             </a>
             <a
-              href="/about"
+              href="/get-involved?door=space"
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-line-strong px-5 py-2.5 text-sm font-semibold text-paper transition hover:border-spark-teal hover:text-spark-teal"
             >
-              About the mission
+              Book an artist space
             </a>
           </div>
         </div>

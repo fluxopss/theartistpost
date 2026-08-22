@@ -9,6 +9,7 @@ import { assets, links, navMarketing, site } from "@/content/site";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ButtonLink } from "@/shared/ui/Button";
 import { cn } from "@/shared/lib/cn";
+import { TrackClick } from "@/components/TrackClick";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -53,7 +54,7 @@ export function NavBar() {
               className="h-10 w-10 object-contain sm:h-11 sm:w-11"
             />
             <span className="display hidden text-base text-paper sm:block md:text-lg">
-              {site.name}
+              {site.mark}
             </span>
           </Link>
 
@@ -86,6 +87,7 @@ export function NavBar() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle className="hidden sm:inline-flex" />
+            <TrackClick event="cta_donate" payload={{ source: "nav" }}>
             <ButtonLink
               href={links.donate}
               external
@@ -93,9 +95,10 @@ export function NavBar() {
               variant="secondary"
               className="gap-1.5 rounded-full !bg-spark-coral !text-ink hover:brightness-110"
             >
-              <HeartHandshake className="h-4 w-4" aria-hidden />
-              Donate
-            </ButtonLink>
+                <HeartHandshake className="h-4 w-4" aria-hidden />
+                Donate
+              </ButtonLink>
+            </TrackClick>
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-glass text-paper xl:hidden"
@@ -120,7 +123,7 @@ export function NavBar() {
         >
           <div className="flex h-[var(--nav-height)] items-center justify-between px-4">
             <span className="display text-lg text-paper-on-dark">
-              {site.name}
+              {site.mark}
             </span>
             <div className="flex items-center gap-2">
               <ThemeToggle />
@@ -148,6 +151,7 @@ export function NavBar() {
                 {link.label}
               </Link>
             ))}
+            <TrackClick event="cta_donate" payload={{ source: "nav-mobile" }}>
             <ButtonLink
               href={links.donate}
               external
@@ -156,6 +160,7 @@ export function NavBar() {
             >
               Donate
             </ButtonLink>
+            </TrackClick>
           </nav>
         </div>
       ) : null}

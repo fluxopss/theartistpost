@@ -7,7 +7,7 @@ export function organizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "NonprofitOrganization",
     name: site.legalName,
-    alternateName: site.name,
+    alternateName: site.mark,
     url: SITE_URL,
     email: site.email,
     telephone: site.phone,
@@ -30,6 +30,7 @@ export function organizationJsonLd() {
       addressCountry: site.address.country,
     },
     sameAs: Object.values(links.social),
+    slogan: site.tagline,
   };
 }
 

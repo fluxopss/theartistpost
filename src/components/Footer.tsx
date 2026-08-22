@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { assets, links, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
+import { TrackClick } from "@/components/TrackClick";
 
 type SocialKey = keyof typeof links.social;
 
@@ -119,12 +120,14 @@ export function Footer() {
               height={48}
               className="h-12 w-12 object-contain"
             />
-            <p className="display text-xl text-paper">{site.legalName}</p>
+            <p className="display text-xl text-paper">{site.mark}</p>
           </div>
+          <p className="mt-1 text-xs text-paper-muted">{site.legalName}</p>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-paper-muted">
             {site.tagline}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
+            <TrackClick event="cta_donate" payload={{ source: "footer" }}>
             <ButtonLink
               href={links.donate}
               external
@@ -133,6 +136,7 @@ export function Footer() {
             >
               Donate
             </ButtonLink>
+            </TrackClick>
             <ButtonLink
               href={`mailto:${site.email}`}
               size="sm"
@@ -198,6 +202,14 @@ export function Footer() {
             ))}
           </ul>
           <p className="mt-5 text-sm">
+            <Link
+              href="/get-involved"
+              className="text-paper hover:text-spark-teal"
+            >
+              Get Involved
+            </Link>
+          </p>
+          <p className="mt-2 text-sm">
             <Link
               href="/supporters"
               className="text-paper hover:text-spark-teal"

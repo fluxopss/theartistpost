@@ -45,7 +45,7 @@ export function HomeHero() {
         </div>
 
         <p className="hero-enter hero-enter-kicker mt-7 text-xs font-semibold uppercase tracking-[0.32em] text-spark-coral motion-reduce:animate-none sm:text-sm">
-          {site.name}
+          {site.mark}
         </p>
 
         <h1 className="display mt-4 max-w-4xl text-[clamp(2.6rem,8vw,5.25rem)] text-paper-on-dark">
@@ -65,21 +65,21 @@ export function HomeHero() {
         </h1>
 
         <p className="hero-enter hero-enter-copy mx-auto mt-5 max-w-xl text-base text-paper-on-dark/78 motion-reduce:animate-none sm:text-lg">
-          West Palm Beach arts hub — freedom to create, courage to uplift.
+          {site.heroSupport}
         </p>
 
         <div className="hero-enter hero-enter-cta mt-10 flex w-full max-w-md flex-col gap-3 motion-reduce:animate-none sm:max-w-none sm:flex-row sm:justify-center">
           <Link
-            href="/kindness-always"
+            href="/get-involved"
             className="inline-flex min-h-12 items-center justify-center rounded-full bg-spark-coral px-6 py-3 text-base font-semibold text-ink shadow-[0_0_36px_rgba(255,107,91,0.35)] transition hover:brightness-110"
           >
-            Leave a Kindness
+            Get Involved
           </Link>
           <Link
-            href="/explore"
+            href="/kindness-always"
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-line-on-dark px-6 py-3 text-base font-semibold text-paper-on-dark transition hover:bg-white/10"
           >
-            Explore the Wall
+            Leave a Kindness
           </Link>
         </div>
       </div>

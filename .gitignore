@@ -49,3 +49,6 @@ next-env.d.ts
 /public/uploads/*
 !/public/uploads/.gitkeep
 !/public/uploads/.gitignore
+
+# Portal originals (optimized copies live in /public/brand)
+/public/intake/

@@ -7,6 +7,7 @@ import { AppShell } from "@/shared/ui/AppShell";
 import { Providers } from "@/shared/ui/Providers";
 import { SITE_URL } from "@/shared/lib/constants";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
+import { PulseBeacon } from "@/components/seo/PulseBeacon";
 import "./globals.css";
 
 const jost = Jost({
@@ -102,6 +103,7 @@ export default async function RootLayout({
         <Providers user={user}>
           <AppShell>{children}</AppShell>
         </Providers>
+        <PulseBeacon />
       </body>
     </html>
   );

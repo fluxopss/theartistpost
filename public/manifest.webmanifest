@@ -1,12 +1,26 @@
 {
   "name": "The Artist Post",
   "short_name": "Artist Post",
-  "description": "Local arts & entertainment hub for West Palm Beach — The Artist Post at Hacienda.",
+  "description": "West Palm Beach arts hub — free showcase space, kindness, and collaboration.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#031A37",
   "theme_color": "#031A37",
   "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Get Involved",
+      "short_name": "Involve",
+      "description": "Book space, partner, volunteer, or give.",
+      "url": "/get-involved"
+    },
+    {
+      "name": "Kindness Always",
+      "short_name": "Kindness",
+      "description": "Leave a spark for another artist.",
+      "url": "/kindness-always"
+    }
+  ],
   "icons": [
     {
       "src": "/brand/icon-192.png",

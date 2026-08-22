@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { assets } from "@/content/site";
+import { assets, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
 
 type KindnessHeroProps = {
@@ -19,27 +19,33 @@ export function KindnessHero({ onLeaveNote }: KindnessHeroProps) {
       </div>
 
       <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
-        <div className="hero-enter flex items-center gap-4 motion-reduce:animate-none">
+        <div className="hero-enter flex w-full flex-col items-center gap-5 motion-reduce:animate-none sm:flex-row sm:items-end sm:justify-center">
           <Image
             src={assets.kindnessTrademark}
-            alt="Kindness Always"
-            width={96}
-            height={96}
-            className="h-20 w-20 rounded-full object-cover ring-2 ring-spark-coral/40 sm:h-24 sm:w-24"
+            alt={site.kindnessMark}
+            width={280}
+            height={280}
+            className="h-40 w-auto object-contain sm:h-48"
             priority
           />
-          <Image
-            src={assets.loveAll}
-            alt="Love All"
-            width={160}
-            height={64}
-            className="h-12 w-auto object-contain sm:h-14"
-          />
+          <div className="rounded-2xl bg-paper px-5 py-4">
+            <Image
+              src={assets.loveAll}
+              alt="Love | ALL · Dream | TOGETHER · Create | AS ONE"
+              width={280}
+              height={120}
+              className="h-16 w-auto object-contain sm:h-20"
+            />
+          </div>
         </div>
 
         <h1 className="display hero-enter hero-enter-kicker mt-8 text-[clamp(2.4rem,8vw,4.5rem)] text-paper-on-dark motion-reduce:animate-none">
           Kindness Always
         </h1>
+
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-spark-gold">
+          {site.shine}
+        </p>
 
         <p className="mt-5 max-w-xl text-base leading-relaxed text-paper-on-dark/75 sm:text-lg">
           Leave a spark for another artist — creativity grows when we are kind.

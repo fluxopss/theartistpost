@@ -1,0 +1,28 @@
+{
+  "appId": "org.theartistpost.app",
+  "appName": "The Artist Post",
+  "webDir": "public",
+  "server": {
+    "url": "https://theartistpost.org",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scheme": "The Artist Post",
+    "backgroundColor": "#031A37"
+  },
+  "android": {
+    "backgroundColor": "#031A37",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "backgroundColor": "#031A37",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#031A37"
+    }
+  }
+}

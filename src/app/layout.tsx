@@ -41,6 +41,11 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: site.name,
+    startupImage: [assets.coverOg],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
   },
   icons: {
     icon: [
@@ -73,7 +78,7 @@ export const viewport: Viewport = {
   ],
 };
 
-const themeInit = `(function(){try{var t=localStorage.getItem('tap-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
+const themeInit = `(function(){try{var t=localStorage.getItem('tap-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');if(localStorage.getItem('tap-motion')==='\"reduce\"')document.documentElement.classList.add('reduce-motion');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
 
 export default async function RootLayout({
   children,

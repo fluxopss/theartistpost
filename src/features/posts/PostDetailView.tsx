@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { PostDetail } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { LikeButton } from "@/shared/ui/LikeButton";
+import { SavePostButton } from "@/features/app/SaveButton";
+import { CommentComposer } from "@/features/app/CommentComposer";
 
 export function PostDetailView({ post }: { post: PostDetail }) {
   return (
@@ -47,7 +49,15 @@ export function PostDetailView({ post }: { post: PostDetail }) {
 
       <div className="mx-auto max-w-[var(--content-max)] space-y-6 px-4 py-8 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
-          <LikeButton initialCount={post.likeCount} />
+          <LikeButton id={post.id} initialCount={post.likeCount} />
+          <SavePostButton
+            post={{
+              id: post.id,
+              slug: post.slug,
+              title: post.title,
+              artist: post.artist.name,
+            }}
+          />
           <span className="text-xs text-paper-muted">
             {post.viewCount} views
           </span>
@@ -65,26 +75,14 @@ export function PostDetailView({ post }: { post: PostDetail }) {
           {post.description}
         </p>
 
-        <section>
-          <h2 className="display text-xl text-ink">Comments</h2>
-          <ul className="mt-3 space-y-3">
-            {post.comments.length === 0 ? (
-              <li className="text-sm text-paper-muted">No comments yet.</li>
-            ) : (
-              post.comments.map((comment) => (
-                <li
-                  key={comment.id}
-                  className="rounded-xl border border-line bg-surface-muted p-3"
-                >
-                  <p className="text-sm text-ink">{comment.body}</p>
-                  <p className="mt-1 text-[11px] text-paper-muted">
-                    {comment.author.name}
-                  </p>
-                </li>
-              ))
-            )}
-          </ul>
-        </section>
+        <CommentComposer
+          postId={post.id}
+          existing={post.comments.map((comment) => ({
+            id: comment.id,
+            body: comment.body,
+            author: comment.author.name,
+          }))}
+        />
       </div>
     </article>
   );

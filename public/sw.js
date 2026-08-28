@@ -1,11 +1,18 @@
-/* The Artist Post — shell offline cache */
-const CACHE = "tap-shell-v3";
+/* The Artist Post — app shell offline cache */
+const CACHE = "tap-shell-v4";
+const OFFLINE = "/offline";
 const SHELL = [
   "/",
   "/about",
+  "/explore",
+  "/artist-schedule",
+  "/kindness-always",
+  "/more",
+  "/offline",
   "/manifest.webmanifest",
   "/brand/logo.webp",
   "/brand/icon-192.png",
+  "/brand/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -33,11 +40,33 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || caches.match(OFFLINE);
+        }),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetched = fetch(request)
         .then((response) => {
-          if (response.ok && request.url.startsWith(self.location.origin)) {
+          if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE).then((cache) => cache.put(request, clone));
           }

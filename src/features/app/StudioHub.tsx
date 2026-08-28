@@ -48,7 +48,7 @@ const destinations = [
 
 export function StudioHub() {
   const standalone = useStandalone();
-  const [name, setName] = useState(site.name);
+  const [name, setName] = useState<string>(site.name);
   const [savedCount, setSavedCount] = useState(0);
 
   useEffect(() => {

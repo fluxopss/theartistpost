@@ -2,7 +2,9 @@ export type AnalyticsEvent =
   | "cta_call"
   | "cta_involve"
   | "cta_donate"
-  | "involve_submit";
+  | "involve_submit"
+  | "subscribe_submit"
+  | "app_install";
 
 type EventPayload = Record<string, string | number | boolean | undefined>;
 

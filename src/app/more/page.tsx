@@ -1,6 +1,17 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { PageShell } from "@/shared/ui/PageShell";
+import { StudioHub } from "@/features/app/StudioHub";
 
-/** App “More” menu removed — send visitors to About. */
+export const metadata: Metadata = {
+  title: "Studio",
+  description:
+    "Your Artist Post studio — install the app, visit Hacienda, and keep the nights that move you.",
+};
+
 export default function MorePage() {
-  redirect("/about");
+  return (
+    <PageShell className="!pt-8">
+      <StudioHub />
+    </PageShell>
+  );
 }

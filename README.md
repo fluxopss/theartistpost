@@ -12,7 +12,8 @@ Live brand: [theartistpost.org](https://theartistpost.org)
 - **Design system** — `src/design-system/` primitives (Button, Card, Chip, Modal, Accordion, Tabs, Toast, Skeleton, Lightbox)
 - **Content service** — `src/lib/content/` (seed adapter now; Supabase stub ready)
 - **Prisma** + PostgreSQL for Explore / Create (fixtures fallback)
-- **PWA** — `public/manifest.webmanifest` + `public/sw.js`
+- **PWA / web app** — installable standalone shell, offline fallback, Studio tab bar
+- **App Store path** — Capacitor wrapper of the live site (`docs/app-store.md`)
 
 ## Quick start
 
@@ -111,6 +112,10 @@ Copy `.env.example` → `.env`:
 | `/supporters`                                 | Chapters map/grid + start a chapter                   |
 | `/explore`                                    | The Wall — filters, inertia pan, gallery lightbox     |
 | `/create`, `/post/[slug]`, `/artist/[handle]` | Community product surfaces                            |
+| `/more`                                       | Studio hub — install, visit, saved, roadmap           |
+| `/settings`, `/saved`                         | Device studio + kept works/nights                     |
+| `/privacy`, `/terms`, `/support`              | App Store legal + help                                |
+| `/offline`                                    | PWA fallback                                          |
 | `/styleguide`                                 | Design system reference                               |
 | `/sitemap.xml`, `/robots.txt`                 | SEO                                                   |
 

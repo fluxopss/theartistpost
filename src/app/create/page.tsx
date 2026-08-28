@@ -26,7 +26,8 @@ export default function CreatePage() {
       <h1 className="display mt-1 text-3xl text-paper">Compose a scene</h1>
       <p className="mt-2 mb-6 text-sm text-paper-muted">
         Multi-step form — basics, media upload, story, look, review. Nothing
-        posts until you confirm.
+        posts until you confirm. Published as the device studio until artist
+        accounts open.
       </p>
       <CreatePostWizard />
     </PageShell>

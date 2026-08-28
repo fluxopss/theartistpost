@@ -5,8 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { cn } from "@/shared/lib/cn";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { site } from "@/content/site";
+import { parseSubscribeEmail } from "@/features/app/subscribe";
+import { trackEvent } from "@/lib/analytics";
 
 export function SubscribeForm({ className }: { className?: string }) {
   const [email, setEmail] = useState("");
@@ -15,16 +16,37 @@ export function SubscribeForm({ className }: { className?: string }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!EMAIL_RE.test(email.trim())) {
-      setError("Enter a valid email address.");
+    const parsed = parseSubscribeEmail(email);
+    if (!parsed.ok) {
+      setError(parsed.error);
       return;
     }
     setError(null);
     setStatus("loading");
-    // Client-side capture until GHL/webhook is wired
-    await new Promise((r) => setTimeout(r, 700));
-    setStatus("success");
-    setEmail("");
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: parsed.email }),
+      });
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string }
+        | null;
+      if (!response.ok || !data?.ok) {
+        setError(
+          data?.error ||
+            `We could not add that just now. Email ${site.email} and we will put you on the list.`,
+        );
+        setStatus("idle");
+        return;
+      }
+      trackEvent("subscribe_submit", { source: "home" });
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setError(`Network dropped. Email ${site.email} and we will catch you.`);
+      setStatus("idle");
+    }
   }
 
   return (

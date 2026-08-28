@@ -1,8 +1,8 @@
 import type { SessionUser } from "@/features/auth/types";
 
 /**
- * Mock signed-in artist for local development.
- * TODO: Replace with NextAuth session once auth is wired.
+ * Device studio identity for Create until NextAuth exists.
+ * Surface copy must say this is on-device, not a signed-in account.
  */
 export const MOCK_SESSION_USER: SessionUser = {
   id: "user-mock-artist",

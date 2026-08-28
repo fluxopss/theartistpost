@@ -2,8 +2,8 @@ import { MOCK_SESSION_USER } from "@/features/auth/mock-user";
 import type { AuthAdapter, SessionUser } from "@/features/auth/types";
 
 /**
- * Always returns a mock artist session in v1.
- * TODO: NextAuth — replace body with real session lookup.
+ * Device studio session for Create in v1.
+ * TODO: NextAuth — replace body with a real session lookup.
  */
 export const mockAuthAdapter: AuthAdapter = {
   async getSession(): Promise<SessionUser | null> {

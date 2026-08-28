@@ -25,7 +25,7 @@ export function ArtistProfileView({ artist }: { artist: ArtistDetail }) {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-spark-coral">
             @{artist.handle}
           </p>
-          <h1 className="display mt-1 text-2xl text-ink">{artist.name}</h1>
+          <h1 className="display mt-1 text-2xl text-paper">{artist.name}</h1>
         </div>
       </header>
 
@@ -44,7 +44,7 @@ export function ArtistProfileView({ artist }: { artist: ArtistDetail }) {
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-semibold capitalize text-ink"
+                  className="inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-semibold capitalize text-paper"
                 >
                   {key}
                 </a>
@@ -55,7 +55,7 @@ export function ArtistProfileView({ artist }: { artist: ArtistDetail }) {
       ) : null}
 
       <section className="mt-8 space-y-4">
-        <h2 className="display text-xl text-ink">On the wall</h2>
+        <h2 className="display text-xl text-paper">On the wall</h2>
         {artist.posts.length === 0 ? (
           <p className="text-sm text-paper-muted">No posts yet.</p>
         ) : (

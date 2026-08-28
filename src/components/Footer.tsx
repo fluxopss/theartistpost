@@ -217,10 +217,21 @@ export function Footer() {
               Supporters & chapters
             </Link>
           </p>
+          <p className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            <Link href="/privacy" className="text-paper-muted hover:text-spark-teal">
+              Privacy
+            </Link>
+            <Link href="/terms" className="text-paper-muted hover:text-spark-teal">
+              Terms
+            </Link>
+            <Link href="/support" className="text-paper-muted hover:text-spark-teal">
+              Support
+            </Link>
+          </p>
         </div>
       </div>
       <div className="border-t border-line py-4 text-center text-xs text-paper-muted">
-        © 2026 The Artist Post Inc - All Rights Reserved.
+        {site.copyright}
       </div>
     </footer>
   );

@@ -96,20 +96,18 @@ export const navMarketing = [
   { href: "/about", label: "About" },
 ] as const;
 
-export const navApp = [] as const;
-
-/** @deprecated App tabs removed — site uses standard header nav. */
+/** Native-feeling mobile tab bar — primary product destinations. */
 export const appTabs = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/explore", label: "Explore", icon: "explore" },
   { href: "/artist-schedule", label: "Schedule", icon: "schedule" },
-  { href: "/kindness-always", label: "Merch", icon: "merch" },
-  { href: "/about", label: "About", icon: "more" },
+  { href: "/kindness-always", label: "Kindness", icon: "kindness" },
+  { href: "/more", label: "Studio", icon: "studio" },
 ] as const;
 
 export type AppTabIcon = (typeof appTabs)[number]["icon"];
 
-/** More menu — secondary destinations */
+/** Studio hub — secondary destinations */
 export const moreMenu = [
   {
     href: "/get-involved",
@@ -117,8 +115,10 @@ export const moreMenu = [
     description: "Showcase, partner, volunteer, give",
   },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
-  { href: "/supporters", label: "Supporters", description: "Chapters & legal" },
+  { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
   { href: "/create", label: "Create", description: "Compose a scene" },
+  { href: "/saved", label: "Saved", description: "Works and nights you kept" },
+  { href: "/settings", label: "Settings", description: "Theme, studio, data" },
   {
     href: "mailto:Robbie@theartistpost.org",
     label: "Contact",
@@ -132,6 +132,29 @@ export const moreMenu = [
     external: true,
   },
 ] as const;
+
+export const appCopy = {
+  studioKicker: "Your studio",
+  studioTitle: "The house in your pocket",
+  studioLead:
+    "A living gallery for West Palm Beach — install it, leave a spark, and keep the nights that move you.",
+  guestLine: "On this device until artist accounts open.",
+  comingNextTitle: "Designed next",
+  comingNext: [
+    {
+      title: "Artist accounts",
+      body: "Sign in to publish under your name, sync likes, and carry a studio across devices.",
+    },
+    {
+      title: "Live Hacienda lineup",
+      body: "Real portraits and confirmed nights land here the moment Robbie provides them — we will not invent artists.",
+    },
+    {
+      title: "Native reminders",
+      body: "The App Store wrapper can tap the OS for calendar and quiet event pings. The web app already saves nights locally.",
+    },
+  ],
+} as const;
 
 export const copy = {
   involve: {

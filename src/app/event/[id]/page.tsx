@@ -7,6 +7,7 @@ import { JsonLd, eventJsonLd } from "@/lib/seo/json-ld";
 import { googleCalendarUrl } from "@/lib/schedule/calendar";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
+import { SaveEventButton } from "@/features/app/SaveButton";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -86,6 +87,14 @@ export default async function EventPage({ params }: Props) {
           {event.description}
         </p>
         <div className="flex flex-wrap gap-3">
+          <SaveEventButton
+            event={{
+              id: event.id,
+              title: event.title,
+              venue: event.venue,
+              start: event.start,
+            }}
+          />
           <ButtonLink
             href={googleCalendarUrl(event)}
             external

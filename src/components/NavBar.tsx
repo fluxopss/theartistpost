@@ -141,7 +141,7 @@ export function NavBar() {
             className="flex flex-1 flex-col justify-center gap-2 px-6 pb-16"
             aria-label="Mobile"
           >
-            {navMarketing.map((link) => (
+            {[...navMarketing, { href: "/more", label: "Studio" }].map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

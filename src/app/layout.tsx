@@ -98,7 +98,7 @@ export default async function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="/brand/cover-opt.webp"
+          href="/brand/logo-3d.webp"
           fetchPriority="high"
         />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />

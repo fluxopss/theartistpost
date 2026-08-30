@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { involveDoors } from "@/content/involve";
 import { assets, copy } from "@/content/site";
@@ -33,5 +35,15 @@ describe("house voice", () => {
       "Volunteer",
       "Explore Events",
     ]);
+  });
+
+  it("does not crop the low-res community collage as the hero backdrop", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "src/features/house/HouseHero.tsx"),
+      "utf8",
+    );
+    expect(source).not.toMatch(/assets\.cover/);
+    expect(source).not.toMatch(/cover-opt/);
+    expect(source).toMatch(/house-entrance__wash/);
   });
 });

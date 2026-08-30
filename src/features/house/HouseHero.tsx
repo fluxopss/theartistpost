@@ -11,20 +11,11 @@ export function HouseHero() {
   return (
     <section className="house-entrance" aria-labelledby="house-headline">
       <LogoIntro />
-      <div className="house-entrance__stage">
-        <Image
-          src={assets.cover}
-          alt=""
-          fill
-          priority
-          unoptimized
-          fetchPriority="high"
-          className="object-cover object-[center_30%]"
-          sizes="100vw"
-        />
-        <div className="house-entrance__veil" aria-hidden />
-        <div className="house-entrance__grain" aria-hidden />
-        <div className="hero-mesh house-entrance__mesh" aria-hidden />
+      {/* Brand wash — the community collage is 6×3 tiles and blurs on mobile crop. */}
+      <div className="house-entrance__stage" aria-hidden>
+        <div className="house-entrance__wash" />
+        <div className="house-entrance__rings" />
+        <div className="house-entrance__grain" />
       </div>
 
       <div className="house-entrance__inner">
@@ -35,7 +26,8 @@ export function HouseHero() {
               alt={site.mark}
               width={280}
               height={284}
-              priority
+              preload
+              fetchPriority="high"
               className="house-entrance__mark"
             />
           </div>

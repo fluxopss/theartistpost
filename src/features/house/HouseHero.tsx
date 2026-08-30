@@ -27,6 +27,8 @@ export function HouseHero() {
               width={280}
               height={284}
               preload
+              unoptimized
+              loading="eager"
               fetchPriority="high"
               className="house-entrance__mark"
             />

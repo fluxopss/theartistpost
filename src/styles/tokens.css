@@ -1,28 +1,29 @@
 /**
- * Brand tokens — Gallery at Night
- * Dark default; light mode via [data-theme="light"]
+ * Brand tokens — a lit house for art
+ * Dark default (night gallery warmed by the claymorphic mark);
+ * light mode via [data-theme="light"] leans toward theartistpost.org.
  */
 :root,
 [data-theme="dark"] {
-  --ink: #020b1a;
-  --ink-elevated: #0a1f3d;
-  --ink-glass: rgba(10, 31, 61, 0.72);
-  --surface: #031a37;
-  --surface-muted: #0a2748;
-  --surface-hover: #12305a;
-  --surface-glass: rgba(8, 28, 56, 0.55);
-  --paper: #e8ecf4;
-  --paper-on-dark: #f4f6fa;
-  --paper-muted: #8b9bb3;
-  --line: rgba(232, 236, 244, 0.1);
-  --line-strong: rgba(232, 236, 244, 0.22);
-  --line-on-dark: rgba(232, 236, 244, 0.16);
+  --ink: #061422;
+  --ink-elevated: #0b2740;
+  --ink-glass: rgba(11, 39, 64, 0.72);
+  --surface: #071a2e;
+  --surface-muted: #0d2c48;
+  --surface-hover: #16385a;
+  --surface-glass: rgba(10, 36, 58, 0.55);
+  --paper: #f4f1ea;
+  --paper-on-dark: #fffaf3;
+  --paper-muted: #9aaeb8;
+  --line: rgba(255, 250, 243, 0.12);
+  --line-strong: rgba(255, 250, 243, 0.24);
+  --line-on-dark: rgba(255, 250, 243, 0.18);
 
-  --accent: #2a5a9e;
-  --accent-ink: #f4f6fa;
-  --accent-soft: rgba(46, 196, 182, 0.12);
-  --accent-secondary: #23406e;
-  --glow: rgba(46, 196, 182, 0.35);
+  --accent: #2ec4b6;
+  --accent-ink: #061422;
+  --accent-soft: rgba(46, 196, 182, 0.14);
+  --accent-secondary: #2a5a9e;
+  --glow: rgba(46, 196, 182, 0.42);
 
   --spark-coral: #ff6b5b;
   --spark-gold: #f0b429;
@@ -32,9 +33,9 @@
   --danger: #f07178;
   --success: #3dd68c;
 
-  --blob-1: rgba(255, 107, 91, 0.22);
-  --blob-2: rgba(46, 196, 182, 0.18);
-  --blob-3: rgba(240, 180, 41, 0.14);
+  --blob-1: rgba(255, 107, 91, 0.28);
+  --blob-2: rgba(46, 196, 182, 0.24);
+  --blob-3: rgba(240, 180, 41, 0.2);
 
   --font-display: var(--font-clash), "Clash Display", ui-sans-serif, sans-serif;
   --font-body: var(--font-jost), "Jost", sans-serif;
@@ -64,35 +65,35 @@
   --nav-height: 4rem;
   --content-max: 72rem;
   --glass-blur: 16px;
-  --shadow-glow: 0 0 40px rgba(46, 196, 182, 0.15);
+  --shadow-glow: 0 0 48px rgba(46, 196, 182, 0.22);
 }
 
 [data-theme="light"] {
-  --ink: #031a37;
-  --ink-elevated: #0a2748;
-  --ink-glass: rgba(255, 255, 255, 0.86);
-  --surface: #f3f5f9;
+  --ink: #1e2a38;
+  --ink-elevated: #2a3544;
+  --ink-glass: rgba(255, 252, 247, 0.88);
+  --surface: #faf6ef;
   --surface-muted: #ffffff;
-  --surface-hover: #e6ebf3;
-  --surface-glass: rgba(255, 255, 255, 0.72);
-  --paper: #031a37;
-  --paper-on-dark: #f4f6fa;
-  --paper-muted: #5a6b80;
-  --line: rgba(3, 26, 55, 0.1);
-  --line-strong: rgba(3, 26, 55, 0.2);
-  --line-on-dark: rgba(244, 246, 250, 0.2);
+  --surface-hover: #f3ebe0;
+  --surface-glass: rgba(255, 252, 247, 0.78);
+  --paper: #1e2a38;
+  --paper-on-dark: #fffaf3;
+  --paper-muted: #5c5348;
+  --line: rgba(30, 42, 56, 0.1);
+  --line-strong: rgba(30, 42, 56, 0.2);
+  --line-on-dark: rgba(255, 250, 243, 0.22);
 
-  --accent: #031a37;
-  --accent-ink: #f4f6fa;
-  --accent-soft: rgba(3, 26, 55, 0.06);
-  --accent-secondary: #1a4a7a;
-  --glow: rgba(35, 64, 110, 0.2);
+  --accent: #e85d4c;
+  --accent-ink: #fffaf3;
+  --accent-soft: rgba(255, 107, 91, 0.12);
+  --accent-secondary: #2ec4b6;
+  --glow: rgba(46, 196, 182, 0.22);
 
-  --blob-1: rgba(255, 107, 91, 0.12);
-  --blob-2: rgba(46, 196, 182, 0.1);
-  --blob-3: rgba(240, 180, 41, 0.1);
+  --blob-1: rgba(255, 107, 91, 0.16);
+  --blob-2: rgba(46, 196, 182, 0.14);
+  --blob-3: rgba(240, 180, 41, 0.14);
 
-  --shadow-glow: 0 8px 32px rgba(3, 26, 55, 0.08);
+  --shadow-glow: 0 8px 32px rgba(30, 42, 56, 0.08);
 }
 
 @theme inline {

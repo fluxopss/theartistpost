@@ -4,8 +4,10 @@ import { assets, copy, site } from "@/content/site";
 import { HouseDoors } from "./HouseDoors";
 import { LogoIntro } from "./LogoIntro";
 
-/** Server-rendered house entrance — LCP image stays CSS-free of Framer. */
+/** Server-rendered house entrance — original TAP voice sitting with the five doors. */
 export function HouseHero() {
+  const words = copy.house.headline.split(" ");
+
   return (
     <section className="house-entrance" aria-labelledby="house-headline">
       <LogoIntro />
@@ -22,27 +24,61 @@ export function HouseHero() {
         />
         <div className="house-entrance__veil" aria-hidden />
         <div className="house-entrance__grain" aria-hidden />
+        <div className="hero-mesh house-entrance__mesh" aria-hidden />
       </div>
 
       <div className="house-entrance__inner">
         <header className="house-entrance__intro">
-          <Image
-            src={assets.logo3d}
-            alt={site.mark}
-            width={160}
-            height={162}
-            className="house-entrance__mark"
-          />
-          <p className="house-entrance__kicker">{site.mark}</p>
+          <div className="hero-enter hero-enter-logo motion-reduce:animate-none">
+            <Image
+              src={assets.logo3d}
+              alt={site.mark}
+              width={280}
+              height={284}
+              priority
+              className="house-entrance__mark"
+            />
+          </div>
+          <p className="house-entrance__kicker hero-enter hero-enter-kicker motion-reduce:animate-none">
+            {site.mark}
+          </p>
+          <p className="house-entrance__hub">{copy.house.hub}</p>
           <h1 id="house-headline" className="house-entrance__headline display">
-            {copy.house.headline}
+            {words.map((word, i) => (
+              <span
+                key={word + i}
+                className="mr-[0.28em] inline-block overflow-hidden last:mr-0"
+              >
+                <span
+                  className="hero-enter-word inline-block motion-reduce:animate-none"
+                  style={{ animationDelay: `${0.2 + i * 0.09}s` }}
+                >
+                  {word}
+                </span>
+              </span>
+            ))}
           </h1>
-          <p className="house-entrance__support">{site.heroSupport}</p>
-          <p className="house-entrance__mantra">{copy.house.floorLine}</p>
+          <p className="house-entrance__support hero-enter hero-enter-copy motion-reduce:animate-none">
+            {site.heroSupport}
+          </p>
+          <div className="house-entrance__ctas hero-enter hero-enter-cta motion-reduce:animate-none">
+            <Link href="/get-involved" className="house-cta house-cta--primary">
+              {copy.house.ctaInvolve}
+            </Link>
+            <Link
+              href="/kindness-always"
+              className="house-cta house-cta--ghost"
+            >
+              {copy.house.ctaKindness}
+            </Link>
+          </div>
         </header>
 
-        <p className="house-entrance__doors-kicker">{copy.house.kicker}</p>
-        <HouseDoors />
+        <div className="house-entrance__doors">
+          <p className="house-entrance__doors-kicker">{copy.house.kicker}</p>
+          <p className="house-entrance__doors-lead">{copy.involve.lead}</p>
+          <HouseDoors />
+        </div>
 
         <div className="house-entrance__floor">
           <Link href="/explore" className="house-wall-opening">

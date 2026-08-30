@@ -1,8 +1,8 @@
 /**
  * House of Art — how existing routes become rooms.
  *
- * /                     Entrance hall. Five doors + wall opening.
- * /explore              The Wall. Hero product: living, zoomable gallery.
+ * /                     Entrance hall. Original TAP hero + five doors + wall opening.
+ * /explore              The Wall — explore local arts, music, theater, and culture.
  * /get-involved?door=   Door interiors — one world per path.
  *   space               Artists: apply, reserve free showcase, studio passport.
  *   partner             Venues & sponsors: packages, open a door for artists.

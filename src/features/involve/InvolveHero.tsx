@@ -18,6 +18,13 @@ export function InvolveHero() {
       </div>
 
       <div className="mx-auto flex min-h-[min(72dvh,720px)] max-w-[var(--content-max)] flex-col items-center justify-center px-4 pb-16 pt-24 text-center sm:px-6">
+        <Image
+          src={assets.logo3d}
+          alt=""
+          width={168}
+          height={170}
+          className="hero-enter hero-enter-logo mb-6 h-24 w-24 object-contain drop-shadow-[0_0_40px_rgba(46,196,182,0.35)] motion-reduce:animate-none sm:h-28 sm:w-28"
+        />
         <p className="hero-enter hero-enter-kicker text-xs font-semibold uppercase tracking-[0.32em] text-spark-coral motion-reduce:animate-none">
           {copy.involve.kicker}
         </p>

@@ -12,7 +12,7 @@ export function Atmosphere() {
         <div className="blob blob-1" />
         <div className="blob blob-2" />
         <div className="blob blob-3" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(42,90,158,0.18),_transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(46,196,182,0.16),_transparent_50%),radial-gradient(ellipse_at_80%_0%,_rgba(255,107,91,0.1),_transparent_42%)]" />
       </div>
       <div className="grain-overlay" aria-hidden />
     </>

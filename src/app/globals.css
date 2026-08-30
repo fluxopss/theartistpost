@@ -322,7 +322,7 @@ a {
   display: flex;
   min-height: 100dvh;
   flex-direction: column;
-  padding: 5.5rem 1rem 2.5rem;
+  padding: 4.75rem 1rem 1.25rem;
 }
 
 @media (min-width: 640px) {
@@ -339,8 +339,8 @@ a {
 
 .house-entrance__mark {
   margin-inline: auto;
-  height: 4.5rem;
-  width: 4.5rem;
+  height: 3.25rem;
+  width: 3.25rem;
   object-fit: contain;
   filter: drop-shadow(0 0 36px rgba(46, 196, 182, 0.35));
 }
@@ -355,17 +355,17 @@ a {
 }
 
 .house-entrance__headline {
-  margin-top: 0.75rem;
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  margin-top: 0.5rem;
+  font-size: clamp(2.1rem, 6.5vw, 4.1rem);
   color: var(--paper-on-dark);
 }
 
 .house-entrance__support {
-  margin: 1rem auto 0;
+  margin: 0.65rem auto 0;
   max-width: 34rem;
   color: color-mix(in srgb, var(--paper-on-dark) 78%, transparent);
-  font-size: 1.05rem;
-  line-height: 1.55;
+  font-size: 0.98rem;
+  line-height: 1.5;
 }
 
 .house-entrance__mantra {
@@ -378,7 +378,7 @@ a {
 }
 
 .house-entrance__doors-kicker {
-  margin: 2.25rem auto 0.75rem;
+  margin: 1.15rem auto 0.5rem;
   text-align: center;
   font-size: 0.65rem;
   font-weight: 600;
@@ -428,7 +428,7 @@ a {
 .house-door {
   position: relative;
   display: block;
-  min-height: 22rem;
+  min-height: 18rem;
   color: inherit;
   outline: none;
 }
@@ -436,7 +436,7 @@ a {
 .house-door__frame {
   position: relative;
   display: block;
-  height: 20.5rem;
+  height: 16.5rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--paper-on-dark) 18%, transparent);
   background: #140c08;

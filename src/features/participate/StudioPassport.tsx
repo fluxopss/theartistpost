@@ -1,28 +1,13 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import {
-  DEFAULT_STUDIO,
-  getStudio,
-  setStudio,
-  type StudioProfile,
-} from "@/features/app/storage";
+import { useState } from "react";
+import { DEFAULT_STUDIO, setStudio, type StudioProfile } from "@/features/app/storage";
 import { Button } from "@/shared/ui/Button";
-
-function subscribeStudio() {
-  return () => undefined;
-}
 
 /** Lightweight local studio — repeatable participation until native accounts. */
 export function StudioPassport() {
-  const stored = useSyncExternalStore(
-    subscribeStudio,
-    getStudio,
-    () => DEFAULT_STUDIO,
-  );
-  const [profile, setProfile] = useState<StudioProfile | null>(null);
+  const [profile, setProfile] = useState<StudioProfile>(DEFAULT_STUDIO);
   const [saved, setSaved] = useState(false);
-  const current = profile ?? stored;
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,7 +38,7 @@ export function StudioPassport() {
           <span className="mb-1.5 block text-paper-muted">How we call you</span>
           <input
             name="displayName"
-            defaultValue={current.displayName}
+            defaultValue={profile.displayName}
             maxLength={40}
             className="min-h-12 w-full rounded-full border border-line bg-surface-glass px-5 text-sm outline-none focus:border-spark-teal"
           />
@@ -62,7 +47,7 @@ export function StudioPassport() {
           <span className="mb-1.5 block text-paper-muted">City</span>
           <input
             name="city"
-            defaultValue={current.city ?? ""}
+            defaultValue={profile.city ?? ""}
             maxLength={80}
             className="min-h-12 w-full rounded-full border border-line bg-surface-glass px-5 text-sm outline-none focus:border-spark-teal"
           />
@@ -74,10 +59,10 @@ export function StudioPassport() {
         </Button>
         {saved ? (
           <p className="text-sm text-success" role="status">
-            Held on this device as @{current.handle}.
+            Held on this device as @{profile.handle}.
           </p>
         ) : (
-          <p className="text-sm text-paper-muted">@{current.handle}</p>
+          <p className="text-sm text-paper-muted">@{profile.handle}</p>
         )}
       </div>
     </form>

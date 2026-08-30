@@ -5,10 +5,10 @@ import { LivingWall } from "@/features/wall/LivingWall";
 
 export const metadata: Metadata = {
   title: "Explore · The Wall",
-  description: copy.wall.lead,
+  description: copy.house.exploreLine,
   openGraph: {
     title: "Explore · The Wall",
-    description: copy.wall.lead,
+    description: copy.house.exploreLine,
     images: [assets.coverOg],
   },
   twitter: {

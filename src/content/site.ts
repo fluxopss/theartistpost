@@ -198,15 +198,21 @@ export const copy = {
   house: {
     kicker: "Five doors. One house for art.",
     headline: "Creativity needs kindness",
+    hub: "Arts & Entertainment Hub",
+    exploreLine:
+      "Explore the latest in local arts, music, theater, and culture.",
     floorLine: "Love ALL. Dream TOGETHER. Create AS ONE.",
+    ctaInvolve: "Get Involved",
+    ctaKindness: "Leave a Kindness",
     wallCta: "Explore the Wall",
-    wallHint: "The living gallery — hang, zoom, leave a spark.",
+    wallHint:
+      "Explore the latest in local arts, music, theater, and culture.",
     enter: "Step through",
   },
   wall: {
     kicker: "The Wall",
-    title: "A house that hangs work",
-    lead: "Pan the plaster. Zoom a frame. Nothing here is an invented portrait — empty frames stay lit until a real artist is approved.",
+    title: "Explore local arts, music, theater, and culture",
+    lead: "The Wall is TAP’s living gallery in West Palm Beach — arts, music, theater, and culture on the plaster. Pan and zoom a frame. Nothing here is an invented portrait — empty frames stay lit until a real artist is approved.",
     preparingTitle: "The stage is being prepared",
     preparingBody:
       "Lights are up at Hacienda. Frames are hung and waiting for names. Nights are penciled. Kindness is already on the plaster.",

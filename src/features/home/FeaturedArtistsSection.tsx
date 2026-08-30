@@ -38,7 +38,7 @@ function EmptyStage() {
         </p>
       </div>
 
-      <div className="relative mt-10 overflow-hidden rounded-3xl border border-line bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,107,91,0.18),transparent_50%),radial-gradient(ellipse_at_80%_70%,rgba(46,196,182,0.16),transparent_45%),linear-gradient(160deg,#061428,#0a1f3d)]">
+      <div className="relative mt-10 overflow-hidden rounded-3xl border border-line bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,107,91,0.22),transparent_50%),radial-gradient(ellipse_at_80%_70%,rgba(46,196,182,0.2),transparent_45%),radial-gradient(ellipse_at_50%_100%,rgba(240,180,41,0.12),transparent_40%),linear-gradient(160deg,#0a2438,#0d3050)]">
         <div className="relative px-6 py-16 text-center sm:px-10 sm:py-20">
           <Sparkles
             className="mx-auto h-8 w-8 text-spark-gold"

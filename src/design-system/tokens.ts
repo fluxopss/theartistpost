@@ -4,14 +4,14 @@
  */
 
 export const colors = {
-  ink: "#020b1a",
-  inkElevated: "#0a1f3d",
-  surface: "#031a37",
-  surfaceMuted: "#0a2748",
-  paper: "#e8ecf4",
-  paperOnDark: "#f4f6fa",
-  paperMuted: "#8b9bb3",
-  accent: "#2a5a9e",
+  ink: "#061422",
+  inkElevated: "#0b2740",
+  surface: "#071a2e",
+  surfaceMuted: "#0d2c48",
+  paper: "#f4f1ea",
+  paperOnDark: "#fffaf3",
+  paperMuted: "#9aaeb8",
+  accent: "#2ec4b6",
   sparkCoral: "#ff6b5b",
   sparkGold: "#f0b429",
   sparkTeal: "#2ec4b6",

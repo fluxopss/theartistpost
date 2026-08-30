@@ -9,20 +9,20 @@
   "ios": {
     "contentInset": "automatic",
     "scheme": "The Artist Post",
-    "backgroundColor": "#031A37"
+    "backgroundColor": "#071A2E"
   },
   "android": {
-    "backgroundColor": "#031A37",
+    "backgroundColor": "#071A2E",
     "allowMixedContent": false
   },
   "plugins": {
     "SplashScreen": {
-      "backgroundColor": "#031A37",
+      "backgroundColor": "#071A2E",
       "showSpinner": false
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#031A37"
+      "backgroundColor": "#071A2E"
     }
   }
 }

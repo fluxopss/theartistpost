@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { assets, site } from "@/content/site";
-
-const HEADLINE = "Creativity needs kindness";
+import { assets, copy, site } from "@/content/site";
 
 /** Server hero — CSS only on the LCP path (no Framer, canvas, or magnetic CTAs). */
 export function HomeHero() {
@@ -49,7 +47,7 @@ export function HomeHero() {
         </p>
 
         <h1 className="display mt-4 max-w-4xl text-[clamp(2.6rem,8vw,5.25rem)] text-paper-on-dark">
-          {HEADLINE.split(" ").map((word, i) => (
+          {copy.house.headline.split(" ").map((word, i) => (
             <span
               key={word + i}
               className="mr-[0.28em] inline-block overflow-hidden last:mr-0"
@@ -73,13 +71,13 @@ export function HomeHero() {
             href="/get-involved"
             className="inline-flex min-h-12 items-center justify-center rounded-full bg-spark-coral px-6 py-3 text-base font-semibold text-ink shadow-[0_0_36px_rgba(255,107,91,0.35)] transition hover:brightness-110"
           >
-            Get Involved
+            {copy.house.ctaInvolve}
           </Link>
           <Link
             href="/kindness-always"
             className="inline-flex min-h-12 items-center justify-center rounded-full border border-line-on-dark px-6 py-3 text-base font-semibold text-paper-on-dark transition hover:bg-white/10"
           >
-            Leave a Kindness
+            {copy.house.ctaKindness}
           </Link>
         </div>
       </div>

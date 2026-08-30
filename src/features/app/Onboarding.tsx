@@ -21,7 +21,7 @@ const slides = [
   {
     kicker: "Five doors. One house.",
     title: "Explore. Spark. Show up.",
-    body: "Walk The Wall, leave a Kindness Always note, and choose a door — artist, partner, give, volunteer, or community. The first move is showing up.",
+    body: "Walk The Wall — local arts, music, theater, and culture — leave a Kindness Always note, and choose a door. The first move is showing up.",
   },
   {
     kicker: "Your studio",

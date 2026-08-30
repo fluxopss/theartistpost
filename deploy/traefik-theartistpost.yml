@@ -7,6 +7,13 @@ http:
       tls:
         certResolver: letsencrypt
       service: theartistpost
+    theartistpost-org:
+      rule: "Host(`theartistpost.org`) || Host(`www.theartistpost.org`)"
+      entrypoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: theartistpost
   services:
     theartistpost:
       loadBalancer:

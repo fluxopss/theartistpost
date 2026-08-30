@@ -25,7 +25,7 @@ npx cap sync ios
 npx cap open ios
 ```
 
-`capacitor.config.json` loads `https://theartistpost.org`. After a VPS deploy, TestFlight shows the live site.
+`capacitor.config.json` loads `https://theartistpost.fluxlab.agency` (the live Next app on the Flux VPS). Switch the wrap to `https://theartistpost.org` only after that apex DNS points at the VPS — the GoDaddy builder is still on the apex today. After a VPS deploy, TestFlight shows the live site.
 
 Bundle ID: `org.theartistpost.app`  
 Version: match `package.json` (`1.0.0`).

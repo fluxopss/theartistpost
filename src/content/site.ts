@@ -116,6 +116,7 @@ export const moreMenu = [
   },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
   { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
+  { href: "/install", label: "Get the app", description: "Home screen + App Store wrap" },
   { href: "/create", label: "Create", description: "Compose a scene" },
   { href: "/saved", label: "Saved", description: "Works and nights you kept" },
   { href: "/settings", label: "Settings", description: "Theme, studio, data" },
@@ -139,6 +140,23 @@ export const appCopy = {
   studioLead:
     "A living gallery for West Palm Beach — install it, leave a spark, and keep the nights that move you.",
   guestLine: "On this device until artist accounts open.",
+  installTitle: "Get the app",
+  installLead:
+    "The Artist Post is a real app — same house on your home screen, offline shell, and the binary Robbie wraps for the App Store.",
+  installBenefits: [
+    {
+      title: "Home-screen studio",
+      body: "Full-screen tabs for Home, Explore, Schedule, Kindness, and Studio. No invented artists — coming-soon stays honest.",
+    },
+    {
+      title: "Works offline",
+      body: "The last visit of Home, The Wall, Schedule, and Kindness stays on this device. Reconnect to write Robbie or subscribe.",
+    },
+    {
+      title: "One codebase",
+      body: "This site is the product. Capacitor wraps the live Flux VPS app — there is no second stack.",
+    },
+  ],
   comingNextTitle: "Designed next",
   comingNext: [
     {

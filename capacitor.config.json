@@ -3,7 +3,7 @@
   "appName": "The Artist Post",
   "webDir": "public",
   "server": {
-    "url": "https://theartistpost.org",
+    "url": "https://theartistpost.fluxlab.agency",
     "cleartext": false
   },
   "ios": {

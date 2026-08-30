@@ -1,5 +1,5 @@
 /* The Artist Post — app shell offline cache */
-const CACHE = "tap-shell-v4";
+const CACHE = "tap-shell-v5";
 const OFFLINE = "/offline";
 const SHELL = [
   "/",
@@ -8,6 +8,7 @@ const SHELL = [
   "/artist-schedule",
   "/kindness-always",
   "/more",
+  "/install",
   "/offline",
   "/manifest.webmanifest",
   "/brand/logo.webp",

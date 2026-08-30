@@ -13,7 +13,7 @@ Live brand: [theartistpost.org](https://theartistpost.org)
 - **Content service** — `src/lib/content/` (seed adapter now; Supabase stub ready)
 - **Prisma** + PostgreSQL for Explore / Create (fixtures fallback)
 - **PWA / web app** — installable standalone shell, offline fallback, Studio tab bar
-- **App Store path** — Capacitor wrapper of the live site (`docs/app-store.md`)
+- **App Store path** — Capacitor wrapper of the live VPS app (`docs/app-store.md`) · install at `/install`
 
 ## Quick start
 

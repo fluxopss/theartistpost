@@ -7,7 +7,15 @@ const TAB_PREFIXES: Record<string, string[]> = {
   "/explore": ["/explore", "/post", "/create", "/artist"],
   "/artist-schedule": ["/artist-schedule", "/event"],
   "/kindness-always": ["/kindness-always"],
-  "/more": ["/more", "/settings", "/saved", "/privacy", "/terms", "/support"],
+  "/more": [
+    "/more",
+    "/settings",
+    "/saved",
+    "/privacy",
+    "/terms",
+    "/support",
+    "/install",
+  ],
 };
 
 export function isTabActive(href: string, pathname: string): boolean {

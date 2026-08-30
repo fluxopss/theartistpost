@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { appCopy } from "@/content/site";
 import { isTabActive, tabForPath } from "@/features/app/nav";
 import { parseSubscribeEmail } from "@/features/app/subscribe";
 import {
@@ -26,7 +27,19 @@ describe("app tab matching", () => {
     expect(isTabActive("/explore", "/post/hello")).toBe(true);
     expect(isTabActive("/artist-schedule", "/event/night-1")).toBe(true);
     expect(isTabActive("/more", "/settings")).toBe(true);
+    expect(isTabActive("/more", "/install")).toBe(true);
     expect(tabForPath("/privacy")?.href).toBe("/more");
+    expect(tabForPath("/install")?.href).toBe("/more");
+  });
+});
+
+describe("install copy", () => {
+  it("describes the home-screen app without inventing artists", () => {
+    expect(appCopy.installTitle).toMatch(/app/i);
+    expect(appCopy.installBenefits.length).toBeGreaterThanOrEqual(3);
+    expect(
+      appCopy.installBenefits.some((item) => /invent/i.test(item.body)),
+    ).toBe(true);
   });
 });
 

@@ -177,11 +177,17 @@ export function StudioHub() {
           <div className="flex items-start gap-3">
             <Download className="h-5 w-5 text-spark-teal" aria-hidden />
             <div>
-              <p className="font-semibold text-paper">Install the web app</p>
+              <p className="font-semibold text-paper">Install the app</p>
               <p className="mt-1 text-sm text-paper-muted">
                 Add The Artist Post to your home screen for a full-screen studio.
                 The same site becomes the App Store binary via Capacitor.
               </p>
+              <Link
+                href="/install"
+                className="mt-3 inline-flex text-sm font-semibold text-spark-teal hover:underline"
+              >
+                Get the app
+              </Link>
             </div>
           </div>
         </section>

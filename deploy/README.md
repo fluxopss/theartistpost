@@ -6,13 +6,15 @@
 
 - App path: `/var/www/theartistpost`
 - PM2 name: `theartistpost` (port **3013**)
-- Traefik: `/docker/traefik/dynamic/theartistpost.yml`
-- Temp URL: https://theartistpost.fluxlab.agency
+- Traefik: `/docker/traefik/dynamic/theartistpost.yml` (repo copy: `deploy/traefik-theartistpost.yml`)
+- Live app URL: https://theartistpost.fluxlab.agency
+- Apex `theartistpost.org` is still GoDaddy Website Builder — Traefik is ready for that host when DNS moves to the VPS
 - Postgres: Docker `theartistpost-postgres` on `127.0.0.1:5433`
+- GitHub Actions: `.github/workflows/vps-ship.yml` (needs `VPS_SSH_KEY`, `VPS_HOST`, `VPS_USER`)
 
 ## Deploy (from Flux Hub)
 
-**Preferred:** push `main` to `fluxopss/theartistpost`. VPS auto-updates within ~3 minutes via `redeploy-sites` (see Flux-Labs-HQ `brain/vps-autodeploy.md`).
+**Preferred:** push `main` to `fluxopss/theartistpost`. VPS auto-updates within ~3 minutes via `redeploy-sites` (see Flux-Labs-HQ `brain/vps-autodeploy.md`). A push to `main` also runs **Ship The Artist Post to VPS**. The Flux master MCP ship (`flux-ghl-mcp`) redeploys this app after the MCP health check.
 
 ```bash
 # force now

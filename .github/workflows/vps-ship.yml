@@ -1,0 +1,67 @@
+name: Ship The Artist Post to VPS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  ship:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          if [ -z "$VPS_SSH_KEY" ]; then
+            echo "::error::VPS_SSH_KEY is not set. Add the Flux VPS deploy private key, then rerun."
+            exit 1
+          fi
+          key="${VPS_SSH_KEY//$'\r'/}"
+          key="${key//\\n/$'\n'}"
+          printf '%s\n' "$key" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+          HOST="${{ secrets.VPS_HOST || vars.VPS_HOST }}"
+          USER="${{ secrets.VPS_USER || vars.VPS_USER || 'deploy' }}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST is not set as a repo secret or variable."
+            exit 1
+          fi
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+      - name: Pull, build, restart
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$USER@$HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          if command -v deploy-site >/dev/null 2>&1; then
+            deploy-site theartistpost
+          else
+            cd /var/www/theartistpost
+            git pull --ff-only
+            pnpm install --frozen-lockfile
+            pnpm build
+            pm2 restart theartistpost
+          fi
+          curl -fsS --max-time 15 http://127.0.0.1:3013/ >/dev/null
+          REMOTE

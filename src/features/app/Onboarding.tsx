@@ -19,9 +19,9 @@ const slides = [
     body: "The Artist Post is a living gallery — free showcase space, kindness, and a house for local creatives at Hacienda on Clematis.",
   },
   {
-    kicker: "Three doors",
+    kicker: "Five doors. One house.",
     title: "Explore. Spark. Show up.",
-    body: "Walk The Wall, leave a Kindness Always note, and book space without an account. The first move is showing up.",
+    body: "Walk The Wall, leave a Kindness Always note, and choose a door — artist, partner, give, volunteer, or community. The first move is showing up.",
   },
   {
     kicker: "Your studio",

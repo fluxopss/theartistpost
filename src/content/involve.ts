@@ -19,6 +19,7 @@ export type InvolveDoor = {
   kicker: string;
   summary: string;
   detail: string;
+  invitation: string;
   image: string;
   imageAlt: string;
   spark: InvolveSpark;
@@ -36,6 +37,7 @@ export const involveDoors: InvolveDoor[] = [
     title: "Book an Artist Space",
     kicker: "Artists",
     summary: "Reserve a free showcase opportunity.",
+    invitation: "The live room is lit. Step through to reserve a free showcase.",
     detail:
       "Hacienda is TAP’s live creative space on Clematis. Review the agreement, get approved, then receive a scheduling link. Showcase is free — kindness and collaboration are the cost of entry.",
     image: assets.haciendaHero,
@@ -56,6 +58,7 @@ export const involveDoors: InvolveDoor[] = [
     title: "Become a Partner",
     kicker: "Venues & sponsors",
     summary: "Businesses, venues, and sponsors who open doors.",
+    invitation: "Have a room, a storefront, or a night to underwrite? Open it.",
     detail:
       "TAP grows by activating space with artists — not by selling a stack of services. If you have a room, a storefront, a stage, or want to sponsor a chapter, start here.",
     image: assets.partnerSubCulture,
@@ -76,6 +79,7 @@ export const involveDoors: InvolveDoor[] = [
     title: "Support the Mission",
     kicker: "Give",
     summary: "Donate or shop merchandise that funds local arts.",
+    invitation: "See what a gift actually funds — then give or wear the work.",
     detail:
       "Donations keep the Hacienda space going and build toward a permanent home for art. PayPal and Venmo are live. Kindness Always merch is donation-based purpose you can wear.",
     image: assets.donations,
@@ -92,6 +96,7 @@ export const involveDoors: InvolveDoor[] = [
     title: "Volunteer",
     kicker: "Hands & hearts",
     summary: "Help spread kindness and support local artists.",
+    invitation: "Hands and hearts — pick a mission and we will match you.",
     detail:
       "Hold space at showcases, welcome visitors, leave a spark on the kindness wall, or help a chapter stand up. Tell us how you can show up — we will match you to the work.",
     image: assets.kindnessTrademark,
@@ -112,6 +117,7 @@ export const involveDoors: InvolveDoor[] = [
     title: "Explore Events",
     kicker: "Community",
     summary: "Upcoming showcases and community gatherings.",
+    invitation: "Walk the nights on Clematis. Leave a spark if you come.",
     detail:
       "The calendar is the living wall of who is in the space. Come support scheduled local artisans at Hacienda — or apply for a slot of your own.",
     image: assets.comingSoon,
@@ -168,6 +174,10 @@ export function involveImageAspectClass(fit: InvolveDoor["imageFit"]): string {
       return _exhaustive;
     }
   }
+}
+
+export function doorHref(id: InvolveDoorId): string {
+  return `/get-involved?door=${id}`;
 }
 
 export function doorById(id: InvolveDoorId): InvolveDoor {

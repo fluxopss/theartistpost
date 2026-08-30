@@ -6,6 +6,7 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { SectionReveal } from "@/components/SectionReveal";
 import { AboutMarks } from "@/features/about/AboutMarks";
 import { AboutHacienda } from "@/features/about/AboutHacienda";
+import { AboutHistory } from "@/features/about/AboutHistory";
 import { AboutSupport } from "@/features/about/AboutSupport";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function AboutPage() {
           <p className="mt-2 text-sm text-paper-muted">{copy.about.proceeds}</p>
         </SectionReveal>
 
+        <AboutHistory />
         <AboutMarks />
         <AboutHacienda />
         <AboutSupport />
@@ -72,6 +74,13 @@ export default function AboutPage() {
         </SectionReveal>
 
         <SectionReveal className="flex flex-col gap-3 sm:flex-row">
+          <ButtonLink
+            href="/history"
+            variant="outline"
+            className="rounded-full"
+          >
+            The Artist Post History
+          </ButtonLink>
           <ButtonLink
             href="/get-involved"
             className="rounded-full !bg-spark-coral !text-ink sm:min-w-[180px]"

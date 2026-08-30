@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import { LazyWhenVisible } from "@/components/LazyWhenVisible";
 
-const KindnessBridge = dynamic(
+const AmbientKindness = dynamic(
   () =>
-    import("@/features/home/KindnessBridge").then((m) => ({
-      default: m.KindnessBridge,
+    import("@/features/kindness/AmbientKindness").then((m) => ({
+      default: m.AmbientKindness,
     })),
   { ssr: false },
 );
@@ -14,7 +14,7 @@ const KindnessBridge = dynamic(
 export function HomeKindnessDeferred() {
   return (
     <LazyWhenVisible minHeight={420}>
-      <KindnessBridge />
+      <AmbientKindness />
     </LazyWhenVisible>
   );
 }

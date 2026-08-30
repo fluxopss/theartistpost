@@ -9,6 +9,7 @@ import {
   KINDNESS_STORAGE_KEY,
   type KindnessMedium,
   type KindnessNote,
+  type KindnessPinKind,
   type KindnessSpark,
 } from "./types";
 
@@ -54,6 +55,8 @@ export type AddKindnessInput = {
   fromLabel?: string;
   medium: KindnessMedium;
   spark: KindnessSpark;
+  pinKind?: KindnessPinKind;
+  pinLabel?: string;
 };
 
 export function useKindnessNotes() {
@@ -83,6 +86,8 @@ export function useKindnessNotes() {
       spark: input.spark,
       createdAt: new Date().toISOString(),
       source: "local",
+      pinKind: input.pinKind,
+      pinLabel: input.pinLabel,
     };
 
     setLocal((prev) => {

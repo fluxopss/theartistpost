@@ -36,7 +36,7 @@ export function HomeHero() {
       <div className="mx-auto flex min-h-[min(100dvh,920px)] max-w-[var(--content-max)] flex-col items-center justify-center px-4 pb-24 pt-20 text-center sm:px-6">
         <div className="hero-enter hero-enter-logo motion-reduce:animate-none">
           <Image
-            src={assets.logo}
+            src={assets.logo3d}
             alt={site.name}
             width={168}
             height={168}

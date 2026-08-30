@@ -36,6 +36,9 @@ export const site = {
     "https://www.google.com/maps/search/?api=1&query=522+Clematis+Street+West+Palm+Beach+FL",
   hoursToday: "09:00 am – 09:30 pm",
   copyright: "Copyright © 2026 The Artist Post Inc - All Rights Reserved.",
+  founded: "2014",
+  foundedMonth: "2014-12",
+  founder: "Robbie Alvarez",
 } as const;
 
 export const links = {
@@ -57,6 +60,7 @@ export const links = {
 
 export const assets = {
   logo: "/brand/logo.webp",
+  logo3d: "/brand/logo-3d.webp",
   favicon: "/brand/favicon-64.png",
   icon192: "/brand/icon-192.png",
   icon512: "/brand/icon-512.png",
@@ -92,14 +96,15 @@ export const navMarketing = [
   { href: "/get-involved", label: "Get Involved" },
   { href: "/artist-schedule", label: "Schedule" },
   { href: "/kindness-always", label: "Kindness Always" },
-  { href: "/explore", label: "Explore" },
+  { href: "/explore", label: "The Wall" },
   { href: "/about", label: "About" },
+  { href: "/history", label: "History" },
 ] as const;
 
 /** Native-feeling mobile tab bar — primary product destinations. */
 export const appTabs = [
   { href: "/", label: "Home", icon: "home" },
-  { href: "/explore", label: "Explore", icon: "explore" },
+  { href: "/explore", label: "The Wall", icon: "explore" },
   { href: "/artist-schedule", label: "Schedule", icon: "schedule" },
   { href: "/kindness-always", label: "Kindness", icon: "kindness" },
   { href: "/more", label: "Studio", icon: "studio" },
@@ -115,6 +120,7 @@ export const moreMenu = [
     description: "Showcase, partner, volunteer, give",
   },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
+  { href: "/history", label: "History", description: "The Artist Post History" },
   { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
   { href: "/install", label: "Get the app", description: "Home screen + App Store wrap" },
   { href: "/create", label: "Create", description: "Compose a scene" },
@@ -188,6 +194,35 @@ export const copy = {
     spaceAgreement: "Review & sign the artist agreement",
     spaceAfter:
       "After the signed agreement is approved, you receive a scheduling link.",
+  },
+  house: {
+    kicker: "Five doors. One house for art.",
+    headline: "Creativity needs kindness",
+    floorLine: "Love ALL. Dream TOGETHER. Create AS ONE.",
+    wallCta: "Explore the Wall",
+    wallHint: "The living gallery — hang, zoom, leave a spark.",
+    enter: "Step through",
+  },
+  wall: {
+    kicker: "The Wall",
+    title: "A house that hangs work",
+    lead: "Pan the plaster. Zoom a frame. Nothing here is an invented portrait — empty frames stay lit until a real artist is approved.",
+    preparingTitle: "The stage is being prepared",
+    preparingBody:
+      "Lights are up at Hacienda. Frames are hung and waiting for names. Nights are penciled. Kindness is already on the plaster.",
+    quietTitle: "This lane is still being hung",
+    quietBody:
+      "Nothing matches that filter yet. The wall is still a room — try another medium, or reserve a frame of your own.",
+    reservedTitle: "Waiting for a name",
+    reservedBody:
+      "This frame is hung and lit. When an artist is approved, their portrait and story land here — never a placeholder face.",
+    bookFrame: "Request this frame",
+    filters: {
+      medium: "Medium",
+      neighborhood: "Neighborhood",
+      availability: "Availability",
+      date: "Showcase",
+    },
   },
   home: {
     haciendaTitle: "The Artist Post @ The Hacienda",

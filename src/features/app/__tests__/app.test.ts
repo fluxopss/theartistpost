@@ -30,6 +30,8 @@ describe("app tab matching", () => {
     expect(isTabActive("/more", "/install")).toBe(true);
     expect(tabForPath("/privacy")?.href).toBe("/more");
     expect(tabForPath("/install")?.href).toBe("/more");
+    expect(tabForPath("/history")?.href).toBe("/more");
+    expect(tabForPath("/about")?.href).toBe("/more");
   });
 });
 

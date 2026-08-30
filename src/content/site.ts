@@ -36,6 +36,9 @@ export const site = {
     "https://www.google.com/maps/search/?api=1&query=522+Clematis+Street+West+Palm+Beach+FL",
   hoursToday: "09:00 am – 09:30 pm",
   copyright: "Copyright © 2026 The Artist Post Inc - All Rights Reserved.",
+  founded: "2014",
+  foundedMonth: "2014-12",
+  founder: "Robbie Alvarez",
 } as const;
 
 export const links = {
@@ -57,6 +60,7 @@ export const links = {
 
 export const assets = {
   logo: "/brand/logo.webp",
+  logo3d: "/brand/logo-3d.webp",
   favicon: "/brand/favicon-64.png",
   icon192: "/brand/icon-192.png",
   icon512: "/brand/icon-512.png",
@@ -94,6 +98,7 @@ export const navMarketing = [
   { href: "/kindness-always", label: "Kindness Always" },
   { href: "/explore", label: "The Wall" },
   { href: "/about", label: "About" },
+  { href: "/history", label: "History" },
 ] as const;
 
 /** Native-feeling mobile tab bar — primary product destinations. */
@@ -115,6 +120,7 @@ export const moreMenu = [
     description: "Showcase, partner, volunteer, give",
   },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
+  { href: "/history", label: "History", description: "The Artist Post History" },
   { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
   { href: "/install", label: "Get the app", description: "Home screen + App Store wrap" },
   { href: "/create", label: "Create", description: "Compose a scene" },

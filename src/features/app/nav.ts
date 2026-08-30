@@ -15,6 +15,10 @@ const TAB_PREFIXES: Record<string, string[]> = {
     "/terms",
     "/support",
     "/install",
+    "/about",
+    "/history",
+    "/supporters",
+    "/get-involved",
   ],
 };
 

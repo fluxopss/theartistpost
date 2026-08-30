@@ -47,7 +47,7 @@ export function NavBar() {
         <div className="mx-auto flex h-[var(--nav-height)] max-w-[var(--content-max)] items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-3" aria-label="Home">
             <Image
-              src={assets.logo}
+              src={assets.logo3d}
               alt=""
               width={44}
               height={44}

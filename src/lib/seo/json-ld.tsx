@@ -1,4 +1,4 @@
-import { links, site } from "@/content/site";
+import { assets, links, site } from "@/content/site";
 import { SITE_URL } from "@/shared/lib/constants";
 import type { ContentEvent } from "@/lib/content";
 
@@ -12,6 +12,12 @@ export function organizationJsonLd() {
     email: site.email,
     telephone: site.phone,
     taxID: site.ein,
+    foundingDate: site.foundedMonth,
+    founder: {
+      "@type": "Person",
+      name: site.founder,
+    },
+    logo: `${SITE_URL.replace(/\/$/, "")}${assets.logo3d}`,
     foundingLocation: {
       "@type": "Place",
       address: {

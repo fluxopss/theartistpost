@@ -114,7 +114,7 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-3">
             <Image
-              src={assets.logo}
+              src={assets.logo3d}
               alt=""
               width={48}
               height={48}
@@ -202,6 +202,11 @@ export function Footer() {
             ))}
           </ul>
           <p className="mt-5 text-sm">
+            <Link href="/history" className="text-paper hover:text-spark-teal">
+              The Artist Post History
+            </Link>
+          </p>
+          <p className="mt-2 text-sm">
             <Link
               href="/get-involved"
               className="text-paper hover:text-spark-teal"

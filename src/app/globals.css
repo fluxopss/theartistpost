@@ -339,10 +339,17 @@ a {
 
 .house-entrance__mark {
   margin-inline: auto;
-  height: 3.25rem;
-  width: 3.25rem;
+  height: 5.25rem;
+  width: 5.25rem;
   object-fit: contain;
   filter: drop-shadow(0 0 36px rgba(46, 196, 182, 0.35));
+}
+
+@media (min-width: 640px) {
+  .house-entrance__mark {
+    height: 6rem;
+    width: 6rem;
+  }
 }
 
 .house-entrance__kicker {
@@ -737,5 +744,180 @@ html.reduce-motion .house-door.is-open .house-door__leaf {
 
 .kindness-count {
   font-variant-numeric: tabular-nums;
+}
+
+/* ——— 3D logo intro ——— */
+
+html.logo-intro-active {
+  overflow: hidden;
+}
+
+.logo-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 1.5rem 1.25rem 2rem;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(46, 196, 182, 0.16), transparent 42%),
+    radial-gradient(ellipse at 50% 100%, rgba(240, 180, 41, 0.08), transparent 40%),
+    #020b1a;
+  perspective: 1400px;
+  animation: logo-intro-veil 0.45s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+.logo-intro--out {
+  animation: logo-intro-leave 0.7s ease both;
+  pointer-events: none;
+}
+
+.logo-intro__glow {
+  position: absolute;
+  inset: 18% 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(46, 196, 182, 0.22), transparent 68%);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.logo-intro__stage {
+  position: relative;
+  width: min(22rem, 78vw);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  animation: logo-intro-orbit 2.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.logo-intro__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.logo-intro__ring--outer {
+  inset: -7%;
+  border: 1px solid rgba(46, 196, 182, 0.35);
+  transform: translateZ(-56px);
+  animation: logo-intro-ring 2.6s ease-out both;
+}
+
+.logo-intro__ring--inner {
+  inset: 6%;
+  border: 1px solid rgba(240, 180, 41, 0.22);
+  transform: translateZ(-28px);
+  animation: logo-intro-ring 2.2s 0.12s ease-out both;
+}
+
+.logo-intro__mark {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 48px rgba(46, 196, 182, 0.28));
+}
+
+.logo-intro__kicker {
+  margin-top: 1.6rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--spark-coral);
+  animation: logo-intro-copy 0.8s 1.1s both;
+}
+
+.logo-intro__wordmark {
+  margin-top: 0.45rem;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  color: var(--paper-on-dark);
+  animation: logo-intro-copy 0.8s 1.25s both;
+}
+
+.logo-intro__skip {
+  margin-top: 1.4rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--paper-on-dark) 28%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--paper-on-dark) 82%, transparent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: logo-intro-copy 0.7s 1.55s both;
+}
+
+.logo-intro__skip:hover,
+.logo-intro__skip:focus-visible {
+  color: var(--paper-on-dark);
+  border-color: var(--spark-teal);
+}
+
+.logo-history-hero {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(46, 196, 182, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(2, 11, 26, 0.2), transparent);
+  pointer-events: none;
+}
+
+.logo-history-mark {
+  transform-style: preserve-3d;
+  animation: logo-intro-orbit 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 36px rgba(46, 196, 182, 0.22));
+}
+
+@keyframes logo-intro-veil {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes logo-intro-leave {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes logo-intro-orbit {
+  from {
+    opacity: 0;
+    transform: rotateY(-32deg) rotateX(18deg) translateZ(-140px) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(-6deg) rotateX(4deg) translateZ(0) scale(1);
+  }
+}
+
+@keyframes logo-intro-ring {
+  from {
+    opacity: 0;
+    transform: translateZ(-80px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes logo-intro-copy {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 

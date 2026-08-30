@@ -4,7 +4,7 @@ import { SectionReveal } from "@/components/SectionReveal";
 
 const marks = [
   {
-    src: assets.logo,
+    src: assets.logo3d,
     alt: site.mark,
     plate: "bg-paper",
   },

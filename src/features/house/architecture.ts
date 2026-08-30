@@ -12,6 +12,8 @@
  * /artist-schedule      Editorial spatial calendar (Hacienda / Clematis).
  * /kindness-always      Kindness field — notes float, pin, collect.
  * /supporters           Chapters nationwide.
+ * /history              The Artist Post History — sourced public record.
+ * /about                Mission, marks, live room.
  * /more                 Studio hub (lightweight local account).
  *
  * Do not invent artist identities. Empty rooms stay cinematic.
@@ -26,6 +28,7 @@ export const HOUSE_ROOMS = [
   { id: "kindness", href: "/kindness-always", label: "Kindness Always" },
   { id: "involve", href: "/get-involved", label: "The doors" },
   { id: "supporters", href: "/supporters", label: "Chapters" },
+  { id: "history", href: "/history", label: "History" },
   { id: "studio", href: "/more", label: "Studio" },
 ] as const;
 

@@ -2,11 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
 import { HouseDoors } from "./HouseDoors";
+import { LogoIntro } from "./LogoIntro";
 
 /** Server-rendered house entrance — LCP image stays CSS-free of Framer. */
 export function HouseHero() {
   return (
     <section className="house-entrance" aria-labelledby="house-headline">
+      <LogoIntro />
       <div className="house-entrance__stage">
         <Image
           src={assets.cover}
@@ -25,10 +27,10 @@ export function HouseHero() {
       <div className="house-entrance__inner">
         <header className="house-entrance__intro">
           <Image
-            src={assets.logo}
-            alt=""
-            width={96}
-            height={96}
+            src={assets.logo3d}
+            alt={site.mark}
+            width={160}
+            height={162}
             className="house-entrance__mark"
           />
           <p className="house-entrance__kicker">{site.mark}</p>

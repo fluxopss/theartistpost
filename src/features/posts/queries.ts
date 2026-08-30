@@ -2,12 +2,7 @@ import type { Post, Prisma, Tag, User, ArtistProfile } from "@prisma/client";
 import { assets } from "@/content/site";
 import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { getPrisma } from "@/shared/lib/prisma";
-import {
-  fixturePosts,
-  fixtureTags,
-  getFixtureArtist,
-  toSummary,
-} from "@/features/posts/fixtures";
+import { fixturePosts, toSummary } from "@/features/posts/fixtures";
 import type {
   ArtistDetail,
   PostDetail,
@@ -167,27 +162,7 @@ export async function getPosts(options?: {
         nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
       };
     },
-    () => {
-      let list = fixturePosts.filter((p) => p.status === "PUBLISHED");
-      if (options?.tag) {
-        list = list.filter((p) => p.tags.some((t) => t.slug === options.tag));
-      }
-      list = [...list].sort((a, b) =>
-        (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
-      );
-
-      let start = 0;
-      if (options?.cursor) {
-        const idx = list.findIndex((p) => p.id === options.cursor);
-        start = idx >= 0 ? idx + 1 : 0;
-      }
-      const slice = list.slice(start, start + take);
-      const next = list[start + take];
-      return {
-        items: slice.map(toSummary),
-        nextCursor: next ? (slice[slice.length - 1]?.id ?? null) : null,
-      };
-    },
+    () => ({ items: [], nextCursor: null }),
   );
 }
 
@@ -211,7 +186,7 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
       });
       return post ? mapPostDetail(post) : null;
     },
-    () => fixturePosts.find((p) => p.slug === slug) ?? null,
+    () => null,
   );
 }
 
@@ -250,7 +225,7 @@ export async function getArtistByHandle(
         posts: profile.user.posts.map(mapPostSummary),
       };
     },
-    () => getFixtureArtist(handle),
+    () => null,
   );
 }
 
@@ -261,6 +236,6 @@ export async function getAllTags(): Promise<TagSummary[]> {
       const tags = await prisma.tag.findMany({ orderBy: { name: "asc" } });
       return tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug }));
     },
-    () => fixtureTags,
+    () => [],
   );
 }

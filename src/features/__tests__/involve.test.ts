@@ -5,6 +5,7 @@ import {
 } from "@/features/involve/validation";
 import {
   doorById,
+  doorHref,
   INVOLVE_DOOR_IDS,
   isInvolveDoorId,
 } from "@/content/involve";
@@ -24,6 +25,8 @@ describe("involve doors", () => {
     expect(doorById("support").image).toContain("donations-appreciated");
     expect(doorById("support").imageFit).toBe("contain");
     expect(doorById("volunteer").image).toContain("kindness-trademark");
+    expect(doorById("space").invitation).toMatch(/showcase/i);
+    expect(doorHref("space")).toBe("/get-involved?door=space");
   });
 });
 

@@ -7,6 +7,8 @@ export type KindnessMedium =
 
 export type KindnessSpark = "coral" | "gold" | "teal";
 
+export type KindnessPinKind = "house" | "wall" | "event" | "artist";
+
 export type KindnessNote = {
   id: string;
   body: string;
@@ -15,6 +17,8 @@ export type KindnessNote = {
   spark: KindnessSpark;
   createdAt: string;
   source: "seed" | "local";
+  pinKind?: KindnessPinKind;
+  pinLabel?: string;
 };
 
 export type KindnessFilter = "all" | KindnessMedium;

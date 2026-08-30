@@ -16,6 +16,7 @@ import {
   SPARK_HEX,
   SPARK_LABELS,
   type KindnessMedium,
+  type KindnessPinKind,
   type KindnessSpark,
 } from "./types";
 
@@ -53,6 +54,7 @@ export function KindnessCompose({
   const [body, setBody] = useState("");
   const [fromLabel, setFromLabel] = useState("");
   const [spark, setSpark] = useState<KindnessSpark>("teal");
+  const [pinKind, setPinKind] = useState<KindnessPinKind>("house");
   const [error, setError] = useState<string | null>(null);
   const [releasing, setReleasing] = useState(false);
 
@@ -64,6 +66,7 @@ export function KindnessCompose({
         setBody("");
         setFromLabel("");
         setSpark("teal");
+        setPinKind("house");
         setError(null);
         setReleasing(false);
       }, 200);
@@ -87,6 +90,15 @@ export function KindnessCompose({
       fromLabel: fromLabel.trim() || KINDNESS_ANON,
       medium,
       spark,
+      pinKind,
+      pinLabel:
+        pinKind === "wall"
+          ? "The Wall"
+          : pinKind === "event"
+            ? "A Hacienda night"
+            : pinKind === "artist"
+              ? "An artist frame"
+              : "The house",
     });
     if (!result.ok) {
       setError(result.error ?? "Couldn’t release that note.");
@@ -240,6 +252,32 @@ export function KindnessCompose({
                   exit={reduce ? undefined : { opacity: 0, x: -16 }}
                   className="space-y-4"
                 >
+                  <p className="text-sm text-paper-muted">Pin this spark</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        ["house", "The house"],
+                        ["wall", "The Wall"],
+                        ["event", "A night"],
+                        ["artist", "A frame"],
+                      ] as const
+                    ).map(([id, label]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setPinKind(id)}
+                        className={cn(
+                          "rounded-full border px-3.5 py-2 text-sm font-semibold transition",
+                          pinKind === id
+                            ? "border-spark-gold bg-spark-gold/15 text-spark-gold"
+                            : "border-line text-paper-muted hover:border-line-strong hover:text-paper",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
                   <p className="text-sm text-paper-muted">Choose your spark</p>
                   <div className="flex flex-wrap gap-3">
                     {sparkOptions.map((s) => (

@@ -92,14 +92,14 @@ export const navMarketing = [
   { href: "/get-involved", label: "Get Involved" },
   { href: "/artist-schedule", label: "Schedule" },
   { href: "/kindness-always", label: "Kindness Always" },
-  { href: "/explore", label: "Explore" },
+  { href: "/explore", label: "The Wall" },
   { href: "/about", label: "About" },
 ] as const;
 
 /** Native-feeling mobile tab bar — primary product destinations. */
 export const appTabs = [
   { href: "/", label: "Home", icon: "home" },
-  { href: "/explore", label: "Explore", icon: "explore" },
+  { href: "/explore", label: "The Wall", icon: "explore" },
   { href: "/artist-schedule", label: "Schedule", icon: "schedule" },
   { href: "/kindness-always", label: "Kindness", icon: "kindness" },
   { href: "/more", label: "Studio", icon: "studio" },
@@ -188,6 +188,35 @@ export const copy = {
     spaceAgreement: "Review & sign the artist agreement",
     spaceAfter:
       "After the signed agreement is approved, you receive a scheduling link.",
+  },
+  house: {
+    kicker: "Five doors. One house for art.",
+    headline: "Creativity needs kindness",
+    floorLine: "Love ALL. Dream TOGETHER. Create AS ONE.",
+    wallCta: "Explore the Wall",
+    wallHint: "The living gallery — hang, zoom, leave a spark.",
+    enter: "Step through",
+  },
+  wall: {
+    kicker: "The Wall",
+    title: "A house that hangs work",
+    lead: "Pan the plaster. Zoom a frame. Nothing here is an invented portrait — empty frames stay lit until a real artist is approved.",
+    preparingTitle: "The stage is being prepared",
+    preparingBody:
+      "Lights are up at Hacienda. Frames are hung and waiting for names. Nights are penciled. Kindness is already on the plaster.",
+    quietTitle: "This lane is still being hung",
+    quietBody:
+      "Nothing matches that filter yet. The wall is still a room — try another medium, or reserve a frame of your own.",
+    reservedTitle: "Waiting for a name",
+    reservedBody:
+      "This frame is hung and lit. When an artist is approved, their portrait and story land here — never a placeholder face.",
+    bookFrame: "Request this frame",
+    filters: {
+      medium: "Medium",
+      neighborhood: "Neighborhood",
+      availability: "Availability",
+      date: "Showcase",
+    },
   },
   home: {
     haciendaTitle: "The Artist Post @ The Hacienda",

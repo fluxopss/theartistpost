@@ -28,7 +28,10 @@ export function KindnessContent() {
 
   return (
     <div className="space-y-14">
-      <KindnessHero onLeaveNote={() => setComposeOpen(true)} />
+      <KindnessHero
+        onLeaveNote={() => setComposeOpen(true)}
+        noteCount={hydrated ? notes.length : 0}
+      />
 
       {storageError ? (
         <p

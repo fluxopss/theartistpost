@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { assets, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
+import { KindnessCount } from "./KindnessCount";
 
 type KindnessHeroProps = {
   onLeaveNote: () => void;
+  noteCount?: number;
 };
 
-export function KindnessHero({ onLeaveNote }: KindnessHeroProps) {
+export function KindnessHero({ onLeaveNote, noteCount = 0 }: KindnessHeroProps) {
   return (
     <section className="relative isolate overflow-hidden rounded-2xl border border-line bg-ink px-5 py-14 sm:px-10 sm:py-20">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -49,6 +51,9 @@ export function KindnessHero({ onLeaveNote }: KindnessHeroProps) {
 
         <p className="mt-5 max-w-xl text-base leading-relaxed text-paper-on-dark/75 sm:text-lg">
           Leave a spark for another artist — creativity grows when we are kind.
+        </p>
+        <p className="mt-4 text-sm font-semibold text-spark-gold">
+          <KindnessCount value={noteCount} /> notes already in the room
         </p>
 
         <div className="hero-enter hero-enter-cta mt-10 motion-reduce:animate-none">

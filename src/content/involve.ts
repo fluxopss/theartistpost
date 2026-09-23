@@ -125,8 +125,8 @@ export const involveDoors: InvolveDoor[] = [
     spark: "coral",
     imageFit: "contain",
     collectsInquiry: false,
-    primary: { href: "/artist-schedule", label: "Open the schedule" },
-    secondary: { href: "/explore", label: "Explore the wall" },
+    primary: { href: "/night", label: "Hold a seat" },
+    secondary: { href: "/artist-schedule", label: "Open the schedule" },
   },
 ];
 

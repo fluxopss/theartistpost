@@ -19,6 +19,7 @@ import {
   whatThisFunds,
 } from "@/features/participate/content";
 import { StudioPassport } from "@/features/participate/StudioPassport";
+import { scheduleLabel } from "@/features/night/program";
 import type { ContentEvent } from "@/lib/content";
 
 function inquiryIntent(id: InvolveDoorId): InvolveIntent | null {
@@ -237,12 +238,15 @@ function EventsWorld({ events }: { events: ContentEvent[] }) {
           className="block rounded-2xl border border-line bg-ink/20 px-4 py-4 transition hover:border-spark-teal"
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-coral">
-            {event.comingSoon ? "Being prepared" : event.medium}
+            {scheduleLabel(event)}
           </p>
           <h3 className="display mt-1 text-lg text-paper">{event.title}</h3>
           <p className="mt-1 text-sm text-paper-muted">{event.venue}</p>
         </a>
       ))}
+      <ButtonLink href="/night" className="rounded-full">
+        Hold a seat
+      </ButtonLink>
       <ButtonLink
         href="/kindness-always"
         variant="outline"

@@ -5,7 +5,7 @@ export type AppTab = (typeof appTabs)[number];
 const TAB_PREFIXES: Record<string, string[]> = {
   "/": ["/"],
   "/explore": ["/explore", "/post", "/create", "/artist"],
-  "/artist-schedule": ["/artist-schedule", "/event"],
+  "/artist-schedule": ["/artist-schedule", "/event", "/night"],
   "/kindness-always": ["/kindness-always"],
   "/more": [
     "/more",

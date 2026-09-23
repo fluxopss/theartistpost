@@ -57,7 +57,7 @@ export const events: ScheduleEvent[] = [
     end: "2026-09-26T21:00:00-04:00",
     venue: "Hacienda · 522 Clematis Street",
     description:
-      "Merch, conversation, and intentional kindness — all proceeds support local arts.",
+      "The next community night at Hacienda — merch, conversation, and intentional kindness. All proceeds support local arts. Artist names stay off this card until they are approved.",
     comingSoon: true,
   },
 ];

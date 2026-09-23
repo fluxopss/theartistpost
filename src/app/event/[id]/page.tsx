@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { assets } from "@/content/site";
+import { assets, copy } from "@/content/site";
 import { content } from "@/lib/content";
 import { JsonLd, eventJsonLd } from "@/lib/seo/json-ld";
 import { googleCalendarUrl } from "@/lib/schedule/calendar";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 import { SaveEventButton } from "@/features/app/SaveButton";
+import { featuredNight, scheduleLabel } from "@/features/night/program";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -43,8 +44,11 @@ export default async function EventPage({ params }: Props) {
   const event = await content.getEventById(id);
   if (!event) notFound();
 
+  const night = featuredNight(await content.getEvents());
+  const holding = night?.id === event.id;
   const start = new Date(event.start);
   const end = new Date(event.end);
+  const when: Intl.DateTimeFormatOptions = { timeZone: "America/New_York" };
 
   return (
     <>
@@ -58,14 +62,14 @@ export default async function EventPage({ params }: Props) {
         </Link>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
-            {event.medium}
-            {event.comingSoon ? " · Coming soon" : ""}
+            {scheduleLabel(event)}
           </p>
           <h1 className="display mt-3 text-4xl text-paper sm:text-5xl">
             {event.title}
           </h1>
           <p className="mt-4 text-sm text-paper-muted">
             {start.toLocaleString("en-US", {
+              ...when,
               weekday: "long",
               month: "long",
               day: "numeric",
@@ -75,6 +79,7 @@ export default async function EventPage({ params }: Props) {
             })}{" "}
             –{" "}
             {end.toLocaleTimeString("en-US", {
+              ...when,
               hour: "numeric",
               minute: "2-digit",
             })}
@@ -87,6 +92,11 @@ export default async function EventPage({ params }: Props) {
           {event.description}
         </p>
         <div className="flex flex-wrap gap-3">
+          {holding ? (
+            <ButtonLink href="/night" className="rounded-full">
+              {copy.night.hold}
+            </ButtonLink>
+          ) : null}
           <SaveEventButton
             event={{
               id: event.id,

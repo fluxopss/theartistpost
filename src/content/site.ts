@@ -119,6 +119,11 @@ export const moreMenu = [
     label: "Get Involved",
     description: "Showcase, partner, volunteer, give",
   },
+  {
+    href: "/night",
+    label: "The next night",
+    description: "Hold a seat and carry a pass",
+  },
   { href: "/about", label: "About", description: "Mission & nonprofit" },
   { href: "/history", label: "History", description: "The Artist Post History" },
   { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
@@ -208,6 +213,28 @@ export const copy = {
     wallHint:
       "Explore the latest in local arts, music, theater, and culture.",
     enter: "Step through",
+  },
+  night: {
+    kicker: "The next night",
+    hold: "Hold a seat",
+    admit: "Admit one",
+    lineup:
+      "Artist names stay off this card until they are approved. The room, the kindness, and the merch are already here.",
+    sent: "Robbie has your seat. Show this pass at the door.",
+    device:
+      "Held on this device. Robbie gets the list when the house can reach him.",
+    sparksNote: "Sparks you pin stay on this phone until the shared wall opens.",
+    stamp: "Press the seal",
+    stampReady: "Ink is on the pass. Put your name under it.",
+    tear: "Tear the stub",
+    torn: "Stub open",
+    floorLead: "Tap a room to light it. This phone remembers the walk.",
+    floorDone: "You walked the whole floor.",
+    toss: "Toss it on the plaster",
+    emptyTitle: "The next night has not been hung",
+    emptyBody:
+      "When Robbie posts a night at Hacienda, the pass, the floor, and the door live here. Until then, the house is still open.",
+    shareLead: "I’m holding a seat at The Artist Post",
   },
   wall: {
     kicker: "The Wall",

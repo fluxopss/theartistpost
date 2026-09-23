@@ -69,10 +69,14 @@ export function eventJsonLd(event: ContentEvent) {
       taxID: site.ein,
       url: SITE_URL,
     },
-    performer: {
-      "@type": "PerformingGroup",
-      name: event.artist,
-    },
+    ...(!event.comingSoon && event.artist.trim().toUpperCase() !== "TBA"
+      ? {
+          performer: {
+            "@type": "PerformingGroup",
+            name: event.artist,
+          },
+        }
+      : {}),
   };
 }
 

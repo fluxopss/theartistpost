@@ -2,11 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
 import type { ContentEvent } from "@/lib/content";
+import { featuredNight, scheduleLabel } from "@/features/night/program";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 
 export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
   const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(site.address.full)}&output=embed`;
+  const night = featuredNight(events);
 
   return (
     <section className="relative overflow-hidden border-b border-line">
@@ -32,6 +34,14 @@ export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
         <p className="mt-3 max-w-xl text-sm text-paper-muted sm:text-base">
           {copy.schedule.status} {copy.schedule.supportLine}
         </p>
+        {night ? (
+          <Link
+            href="/night"
+            className="mt-6 inline-flex min-h-12 items-center rounded-full bg-spark-coral px-5 text-sm font-semibold text-ink"
+          >
+            {copy.night.hold} · {night.title}
+          </Link>
+        ) : null}
 
         <div className="mt-10 grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
           <ol className="relative space-y-4 border-l border-spark-gold/40 pl-5">
@@ -51,7 +61,8 @@ export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
                       month: "short",
                       day: "numeric",
                     })}
-                    {event.comingSoon ? " · Being prepared" : ""}
+                    {" · "}
+                    {scheduleLabel(event)}
                   </p>
                   <h2 className="display mt-1 text-xl text-paper">{event.title}</h2>
                   <p className="mt-1 text-sm text-paper-muted">{event.venue}</p>

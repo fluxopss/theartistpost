@@ -18,6 +18,7 @@ import {
   sameDay,
 } from "@/lib/schedule/calendar";
 import { copy, links } from "@/content/site";
+import { nightPhase, scheduleLabel } from "@/features/night/program";
 import { Accordion } from "@/design-system/primitives/Accordion";
 import { Button, ButtonLink } from "@/design-system/primitives/Button";
 import { Tabs } from "@/design-system/primitives/Tabs";
@@ -78,7 +79,8 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
       <span>
         <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-gold">
           {event.medium}
-          {event.comingSoon ? " · Coming soon" : ""}
+          {" · "}
+          {scheduleLabel(event)}
         </span>
         <span className="display mt-1 block text-xl text-paper sm:text-2xl">
           {event.title}
@@ -374,6 +376,14 @@ function EventActions({ event }: { event: ContentEvent }) {
         >
           Event details
         </Link>
+        {nightPhase(event) !== "closed" ? (
+          <Link
+            href="/night"
+            className="inline-flex min-h-11 items-center rounded-full bg-spark-coral px-4 py-2 text-sm font-semibold text-ink"
+          >
+            Hold a seat
+          </Link>
+        ) : null}
       </div>
     </>
   );

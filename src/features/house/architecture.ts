@@ -9,6 +9,7 @@
  *   support             Give: donate/shop with visible “what this funds.”
  *   volunteer           Hands & hearts: join missions.
  *   events              Community: calendar, map, leave kindness.
+ * /night                The next night — pass, floor, and a seat Robbie can read.
  * /artist-schedule      Editorial spatial calendar (Hacienda / Clematis).
  * /kindness-always      Kindness field — notes float, pin, collect.
  * /supporters           Chapters nationwide.

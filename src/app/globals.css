@@ -1142,3 +1142,688 @@ html.logo-intro-active {
   }
 }
 
+/* The next night — a paper pass you can carry into Hacienda. */
+.opening-door {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 107, 91, 0.16), transparent 46%),
+    radial-gradient(ellipse at 90% 80%, rgba(46, 196, 182, 0.12), transparent 42%);
+}
+
+.opening-door__inner {
+  display: grid;
+  gap: 2rem;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 4rem;
+}
+
+@media (min-width: 900px) {
+  .opening-door__inner {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: center;
+    padding: 4.5rem 1.5rem 5rem;
+  }
+}
+
+.opening-door__kicker,
+.night-room__kicker {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--spark-gold);
+}
+
+.opening-door__title,
+.night-room__title {
+  margin-top: 0.75rem;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 0.95;
+  color: var(--paper);
+}
+
+.opening-door__lead,
+.night-room__lead {
+  margin-top: 1rem;
+  max-width: 36rem;
+  color: var(--paper-muted);
+  line-height: 1.6;
+}
+
+.opening-door__beats {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.opening-door__beats li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.opening-door__beats span {
+  color: var(--spark-coral);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.night-room {
+  position: relative;
+  overflow: hidden;
+}
+
+.night-room__wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(240, 180, 41, 0.18), transparent 42%),
+    radial-gradient(ellipse at 0% 80%, rgba(255, 107, 91, 0.14), transparent 40%),
+    linear-gradient(180deg, rgba(6, 20, 34, 0.2), transparent 30%);
+  pointer-events: none;
+}
+
+.night-room__inner {
+  position: relative;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.25rem 5rem;
+}
+
+.night-clock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.night-clock span {
+  min-width: 4.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 1rem;
+  padding: 0.55rem 0.8rem 0.45rem;
+  color: var(--paper-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.night-clock strong {
+  display: block;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.night-ticket {
+  position: relative;
+  display: block;
+  margin-top: 2rem;
+  color: #1a120c;
+  background: #f6f1e7;
+  border-radius: 1.35rem;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(26, 18, 12, 0.08);
+  text-decoration: none;
+}
+
+.night-ticket--invite {
+  margin-top: 0;
+  transition: transform 280ms var(--ease-out);
+}
+
+.night-ticket--invite:hover {
+  transform: translateY(-3px) rotate(-0.4deg);
+}
+
+.night-ticket__face {
+  display: grid;
+  grid-template-columns: 5.75rem minmax(0, 1fr);
+  gap: 0.85rem 1rem;
+  align-items: start;
+  padding: 1.15rem 1.05rem 1rem;
+}
+
+.night-ticket__perf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6.55rem;
+  border-left: 1px dashed rgba(26, 18, 12, 0.28);
+  pointer-events: none;
+}
+
+.night-ticket__when {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.night-ticket__dow,
+.night-ticket__mon,
+.night-ticket__brand,
+.night-ticket__hours,
+.night-ticket__venue {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.night-ticket__dow {
+  color: #c4523a;
+}
+
+.night-ticket__day {
+  font-size: 2.6rem;
+  line-height: 0.9;
+}
+
+.night-ticket__mon,
+.night-ticket__hours,
+.night-ticket__venue,
+.night-ticket__guest {
+  color: rgba(26, 18, 12, 0.72);
+}
+
+.night-ticket__rule {
+  display: none;
+}
+
+.night-ticket__meta {
+  min-width: 0;
+}
+
+.night-ticket__event {
+  margin-top: 0.2rem;
+  font-size: clamp(1.2rem, 4.2vw, 1.7rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.night-ticket__hours,
+.night-ticket__venue,
+.night-ticket__guest {
+  margin-top: 0.25rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.night-ticket__guest span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #c4523a;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.night-ticket__guest--open {
+  font-style: italic;
+}
+
+.night-stamp {
+  grid-column: 2;
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 4.6rem;
+  height: 4.6rem;
+  margin-top: 0.35rem;
+  border: 2px solid #c4523a;
+  border-radius: 999px;
+  color: #c4523a;
+  background: transparent;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.15;
+  transform: rotate(-12deg);
+  box-shadow: inset 0 0 0 1px rgba(196, 82, 58, 0.35);
+  cursor: pointer;
+}
+
+.night-stamp.is-inked {
+  background: rgba(196, 82, 58, 0.14);
+}
+
+.night-stamp.is-inking {
+  animation: stamp-ink 0.56s var(--ease-spring);
+}
+
+.night-ticket--invite .night-stamp {
+  animation: stamp-idle 3.4s ease-in-out infinite;
+  cursor: inherit;
+}
+
+@keyframes stamp-idle {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(-7deg);
+  }
+}
+
+@keyframes stamp-ink {
+  0% {
+    transform: rotate(-18deg) scale(1.28);
+  }
+  55% {
+    transform: rotate(-8deg) scale(0.9);
+  }
+  100% {
+    transform: rotate(-12deg) scale(1);
+  }
+}
+
+.night-tear {
+  display: block;
+  width: calc(100% - 1.4rem);
+  margin: 0 0.7rem;
+  border: 0;
+  border-top: 1px dashed rgba(26, 18, 12, 0.35);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 8px,
+    rgba(26, 18, 12, 0.08) 8px,
+    rgba(26, 18, 12, 0.08) 9px
+  );
+  color: #c4523a;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.4rem;
+  cursor: grab;
+}
+
+.night-ticket.is-torn .night-tear {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.night-ticket.is-torn .night-ticket__stub {
+  animation: stub-tear 0.45s var(--ease-out);
+}
+
+@keyframes stub-tear {
+  from {
+    transform: translateY(-6px) rotate(-0.4deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.night-stamp--live {
+  border-color: #0e7c72;
+  color: #0e7c72;
+  box-shadow: inset 0 0 0 1px rgba(14, 124, 114, 0.35);
+}
+
+.night-stamp--closed {
+  border-color: rgba(26, 18, 12, 0.35);
+  color: rgba(26, 18, 12, 0.45);
+}
+
+.night-ticket__foot {
+  border-top: 1px dashed rgba(26, 18, 12, 0.22);
+  padding: 0.75rem 1rem 0.85rem 8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: #c4523a;
+}
+
+.night-ticket__stub {
+  border-top: 1px dashed rgba(26, 18, 12, 0.22);
+  padding: 1.1rem 1.1rem 1.25rem;
+}
+
+.night-ticket__code {
+  font-size: 2rem;
+  letter-spacing: 0.14em;
+}
+
+.night-ticket__status,
+.night-ticket__note {
+  margin-top: 0.35rem;
+  color: rgba(26, 18, 12, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.night-ticket__error {
+  margin-top: 0.6rem;
+  color: #9d2c2c;
+  font-size: 0.88rem;
+}
+
+.night-ticket__actions,
+.night-floor__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.night-ticket .house-cta--ghost,
+.night-ticket__ghost {
+  border-color: rgba(26, 18, 12, 0.28);
+  color: #1a120c;
+  background: transparent;
+}
+
+.night-ticket .house-cta--ghost:hover,
+.night-ticket__ghost:hover {
+  background: rgba(26, 18, 12, 0.06);
+}
+
+.night-form,
+.night-sparks form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.night-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.night-field input {
+  min-height: 2.8rem;
+  border: 1px solid rgba(26, 18, 12, 0.2);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0 0.9rem;
+  color: #1a120c;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.night-field input:focus {
+  outline: 2px solid #0e7c72;
+  outline-offset: 2px;
+}
+
+.night-party {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.night-party legend {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.night-party__row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.night-party__row button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 18, 12, 0.25);
+  background: transparent;
+  font-weight: 700;
+}
+
+.night-party__row button.is-on {
+  background: #1a120c;
+  color: #f6f1e7;
+  border-color: #1a120c;
+  animation: seat-pop 0.28s var(--ease-spring);
+}
+
+@keyframes seat-pop {
+  0% {
+    transform: scale(0.86);
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.night-honeypot {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+
+.night-floor,
+.night-sparks {
+  margin-top: 2.5rem;
+}
+
+.night-floor h2,
+.night-sparks h2 {
+  font-size: 2rem;
+  color: var(--paper);
+}
+
+.night-floor ol {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.night-floor li {
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  padding: 0;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.night-floor li button {
+  display: block;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.night-floor li.is-lit {
+  border-color: rgba(240, 180, 41, 0.6);
+  box-shadow: 0 0 28px rgba(240, 180, 41, 0.16);
+}
+
+.night-bulb {
+  float: right;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.15rem;
+  border-radius: 999px;
+  border: 1px solid var(--spark-gold);
+}
+
+.night-floor li.is-lit .night-bulb {
+  background: var(--spark-gold);
+  box-shadow: 0 0 10px var(--spark-gold);
+}
+
+.night-floor .night-bulbs {
+  display: flex;
+  gap: 0.45rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.night-floor .night-bulbs li {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--spark-gold);
+  background: transparent;
+  box-shadow: none;
+}
+
+.night-floor .night-bulbs li.is-lit {
+  background: var(--spark-gold);
+}
+
+.night-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.night-sparks li {
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  padding: 0.95rem 1rem;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.night-sparks li.is-landing {
+  animation: spark-land 0.55s var(--ease-spring);
+}
+
+@keyframes spark-land {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.night-floor li p:first-of-type {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--spark-teal);
+}
+
+.night-floor h3 {
+  margin-top: 0.25rem;
+  font-size: 1.35rem;
+}
+
+.night-floor li p:last-child,
+.night-sparks > p {
+  margin-top: 0.35rem;
+  color: var(--paper-muted);
+  line-height: 1.5;
+}
+
+.night-floor__links a {
+  color: var(--spark-teal);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.night-sparks > p {
+  margin-top: 0.5rem;
+}
+
+.night-sparks ul {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.night-sparks li p {
+  color: var(--paper);
+}
+
+.night-sparks li span,
+.night-sparks__empty {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--paper-muted);
+  font-size: 0.82rem;
+}
+
+.night-sparks .night-field,
+.night-sparks .night-ticket__error {
+  color: var(--paper);
+}
+
+.night-sparks .night-field input {
+  background: var(--surface-glass);
+  color: var(--paper);
+  border-color: var(--line-strong);
+}
+
+.night-ticket__actions .house-cta,
+.night-floor__links a {
+  flex: 1 1 9rem;
+}
+
+@media (max-width: 720px) {
+  .night-ticket__face {
+    grid-template-columns: 4.7rem minmax(0, 1fr);
+  }
+
+  .night-ticket__perf {
+    left: 5.35rem;
+  }
+
+  .night-ticket__day {
+    font-size: 2.1rem;
+  }
+
+  .night-stamp {
+    width: 4.1rem;
+    height: 4.1rem;
+  }
+
+  .night-ticket__foot {
+    padding-left: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .night-ticket--invite:hover {
+    transform: none;
+  }
+}
+
+

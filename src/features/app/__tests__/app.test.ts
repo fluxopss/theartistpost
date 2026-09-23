@@ -26,6 +26,7 @@ describe("app tab matching", () => {
   it("groups product routes under their tab", () => {
     expect(isTabActive("/explore", "/post/hello")).toBe(true);
     expect(isTabActive("/artist-schedule", "/event/night-1")).toBe(true);
+    expect(isTabActive("/artist-schedule", "/night")).toBe(true);
     expect(isTabActive("/more", "/settings")).toBe(true);
     expect(isTabActive("/more", "/install")).toBe(true);
     expect(tabForPath("/privacy")?.href).toBe("/more");

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
+  Ticket,
   Compass,
   Download,
   HeartHandshake,
@@ -20,6 +21,12 @@ import { useStandalone } from "@/features/app/useDisplayMode";
 import { useEffect, useState } from "react";
 
 const destinations = [
+  {
+    href: "/night",
+    label: "The next night",
+    detail: "Hold a seat, carry a pass, walk the floor.",
+    icon: Ticket,
+  },
   {
     href: "/explore",
     label: "The Wall",

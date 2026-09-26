@@ -147,9 +147,9 @@ export const moreMenu = [
 
 export const appCopy = {
   studioKicker: "Your studio",
-  studioTitle: "The house in your pocket",
+  studioTitle: "TAP, in your pocket",
   studioLead:
-    "A living gallery for West Palm Beach — install it, leave a spark, and keep the nights that move you.",
+    "The 2016 TAP app put musicians, photographers, dancers, filmmakers, actors, comedians, and models on one stage. This is that stage — photographs, video, and sound — with a live room on Clematis.",
   guestLine: "On this device until artist accounts open.",
   installTitle: "Get the app",
   installLead:
@@ -222,7 +222,7 @@ export const copy = {
       "Artist names stay off this card until they are approved. The room, the kindness, and the merch are already here.",
     sent: "Robbie has your seat. Show this pass at the door.",
     device:
-      "Held on this device. Robbie gets the list when the house can reach him.",
+      "Your seat was not sent to Robbie. Try again in a moment.",
     sparksNote: "Sparks you pin stay on this phone until the shared wall opens.",
     stamp: "Press the seal",
     stampReady: "Ink is on the pass. Put your name under it.",

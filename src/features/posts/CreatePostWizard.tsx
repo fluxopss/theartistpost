@@ -2,10 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { create } from "zustand";
 import { z } from "zod";
 import { createPostAction } from "@/features/posts/actions";
+import { mediaGap, mediaKindLabel } from "@/features/posts/mediaRule";
 import {
   assertPublishConfirmed,
   isReviewStep,
@@ -62,20 +62,20 @@ const stepSchemas = [
     tags: z.string().optional(),
     visibility: z.enum(["DRAFT", "PUBLISHED"]),
   }),
-  z.object({
-    mediaUrl: z
-      .string()
-      .refine(
-        (v) =>
-          !v ||
-          v.startsWith("/") ||
-          v.startsWith("https://") ||
-          v.startsWith("http://"),
-        "Enter a valid media URL or upload an image",
-      )
-      .optional(),
-    mediaType: z.enum(["IMAGE", "VIDEO", "EMBED", "CANVAS"]),
-  }),
+  z
+    .object({
+      mediaUrl: z.string(),
+      mediaType: z.enum(["IMAGE", "VIDEO", "EMBED", "CANVAS"]),
+    })
+    .superRefine((value, ctx) => {
+      const gap = mediaGap(value.mediaUrl);
+      if (!gap) return;
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: gap,
+        path: ["mediaUrl"],
+      });
+    }),
   z.object({
     description: z.string().max(4000).optional(),
   }),
@@ -230,22 +230,14 @@ export function CreatePostWizard() {
         ))}
       </ol>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -16 }}
-          transition={{ duration: 0.28 }}
-          className="rounded-2xl border border-line bg-surface p-4"
-        >
+      <div className="rounded-2xl border border-line bg-surface p-4">
           {step === 0 ? (
             <fieldset className="space-y-4">
               <legend className="display mb-2 text-2xl">Name the scene</legend>
               <label className="block text-sm text-paper-muted">
                 Title
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.title}
                   onChange={(e) => draft.setField("title", e.target.value)}
                   required
@@ -254,7 +246,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Tags (comma separated)
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.tags}
                   onChange={(e) => draft.setField("tags", e.target.value)}
                   placeholder="neon, motion"
@@ -263,7 +255,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Visibility
                 <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.visibility}
                   onChange={(e) =>
                     draft.setField(
@@ -281,17 +273,53 @@ export function CreatePostWizard() {
 
           {step === 1 ? (
             <fieldset className="space-y-4">
-              <legend className="display mb-2 text-2xl">Media</legend>
-              <label className="block text-sm text-paper-muted">
-                Upload image
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="mt-2 block w-full text-sm text-paper file:mr-3 file:rounded-full file:border-0 file:bg-spark-teal file:px-4 file:py-2 file:text-sm file:font-semibold file:!text-[#020b1a]"
-                  disabled={uploading || pending}
-                  onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
-                />
-              </label>
+              <legend className="display mb-2 text-2xl">The work itself</legend>
+              <p className="text-sm text-paper-muted">
+                Photograph, video, or sound. A TAP post is the work, so this step needs a file or a link.
+              </p>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="What kind of work">
+                {(
+                  [
+                    ["IMAGE", "Photograph"],
+                    ["VIDEO", "Video"],
+                    ["EMBED", "Sound"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={draft.mediaType === id}
+                    className={cn(
+                      "min-h-11 rounded-full px-4 text-base font-semibold",
+                      draft.mediaType === id
+                        ? "bg-spark-coral text-ink"
+                        : "border border-line bg-surface-muted text-paper",
+                    )}
+                    onClick={() => {
+                      draft.setField("mediaType", id);
+                      if (id !== "IMAGE") {
+                        draft.setField("mediaUrl", "");
+                        setPreview(null);
+                      }
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {draft.mediaType === "IMAGE" ? (
+                <label className="block text-sm text-paper-muted">
+                  Upload a photograph
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="mt-2 block w-full text-base text-paper file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-spark-teal file:px-4 file:py-2 file:text-sm file:font-semibold file:!text-[#020b1a]"
+                    disabled={uploading || pending}
+                    onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              ) : null}
               {(preview || draft.mediaUrl) && draft.mediaType === "IMAGE" ? (
                 <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line bg-ink">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -308,34 +336,24 @@ export function CreatePostWizard() {
                 </p>
               ) : null}
               <label className="block text-sm text-paper-muted">
-                Or paste a media URL
+                {draft.mediaType === "VIDEO"
+                  ? "Video link"
+                  : draft.mediaType === "EMBED"
+                    ? "Sound link"
+                    : "Photograph link"}
                 <input
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.mediaUrl}
                   onChange={(e) => {
                     draft.setField("mediaUrl", e.target.value);
                     setPreview(null);
                   }}
-                  placeholder="https://… or /uploads/…"
-                />
-              </label>
-              <label className="block text-sm text-paper-muted">
-                Type
-                <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
-                  value={draft.mediaType}
-                  onChange={(e) =>
-                    draft.setField(
-                      "mediaType",
-                      e.target.value as Draft["mediaType"],
-                    )
+                  placeholder={
+                    draft.mediaType === "EMBED"
+                      ? "https://… or /uploads/track.mp3"
+                      : "https://… or /uploads/file"
                   }
-                >
-                  <option value="IMAGE">Image</option>
-                  <option value="VIDEO">Video</option>
-                  <option value="EMBED">Embed</option>
-                  <option value="CANVAS">Canvas</option>
-                </select>
+                />
               </label>
             </fieldset>
           ) : null}
@@ -346,7 +364,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Story
                 <textarea
-                  className="mt-1 min-h-36 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-ink"
+                  className="mt-1 min-h-36 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.description}
                   onChange={(e) =>
                     draft.setField("description", e.target.value)
@@ -373,7 +391,7 @@ export function CreatePostWizard() {
               <label className="block text-sm text-paper-muted">
                 Layout style
                 <select
-                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-paper"
+                  className="mt-1 w-full rounded-md border border-line bg-surface-muted px-3 py-2 text-base text-paper"
                   value={draft.layoutStyle}
                   onChange={(e) =>
                     draft.setField(
@@ -406,7 +424,7 @@ export function CreatePostWizard() {
                 <div>
                   <dt className="text-paper">Media</dt>
                   <dd>
-                    {draft.mediaType}
+                    {mediaKindLabel(draft.mediaType)}
                     {draft.mediaUrl ? ` · ${draft.mediaUrl}` : ""}
                   </dd>
                 </div>
@@ -436,8 +454,7 @@ export function CreatePostWizard() {
               {message}
             </p>
           ) : null}
-        </motion.div>
-      </AnimatePresence>
+        </div>
 
       <div
         className="fixed inset-x-0 z-40 mx-auto flex w-full max-w-[var(--app-frame-max)] gap-2 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-md md:left-1/2 md:-translate-x-1/2"

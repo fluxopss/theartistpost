@@ -3,6 +3,7 @@ import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
 import type { ContentEvent } from "@/lib/content";
 import { featuredNight, scheduleLabel } from "@/features/night/program";
+import { GenreRail } from "@/features/stage/GenreRail";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 
@@ -34,6 +35,7 @@ export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
         <p className="mt-3 max-w-xl text-sm text-paper-muted sm:text-base">
           {copy.schedule.status} {copy.schedule.supportLine}
         </p>
+        <GenreRail />
         {night ? (
           <Link
             href="/night"

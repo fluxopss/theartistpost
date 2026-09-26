@@ -45,7 +45,14 @@ function writeJson(key: string, value: unknown) {
 
 export function getNightPass(eventId: string): NightPass | null {
   const stored = readJson<NightPass | null>(NIGHT_PASS_KEY, null);
-  if (!stored || stored.eventId !== eventId || !stored.code) return null;
+  if (
+    !stored ||
+    stored.eventId !== eventId ||
+    !stored.code ||
+    !stored.delivered
+  ) {
+    return null;
+  }
   return stored;
 }
 

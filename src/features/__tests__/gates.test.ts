@@ -51,7 +51,8 @@ describe("create publish gate", () => {
     expect(result.error).toMatch(/confirm/i);
   });
 
-  it("allows publish after confirmation", () => {
+  it("client confirm gate still passes locally (server create stays closed)", () => {
+    // UI confirm helper only — createPostAction refuses writes in trustLock tests.
     expect(assertPublishConfirmed(true).ok).toBe(true);
   });
 

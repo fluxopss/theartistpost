@@ -30,7 +30,7 @@ import {
   nightPhase,
   stampWord,
 } from "@/features/night/program";
-import { parseNightRsvp, passCode } from "@/features/night/rsvp";
+import { parseNightRsvp } from "@/features/night/rsvp";
 
 type RsvpResponse = {
   ok?: boolean;
@@ -105,7 +105,7 @@ export function NightRoom({ event }: { event: ContentEvent }) {
       }),
     });
     const data = (await response.json()) as RsvpResponse;
-    if (!response.ok || !data.ok || !data.code) {
+    if (!response.ok || !data.ok) {
       throw new Error(data.error || "Could not hold that seat.");
     }
     return data;
@@ -184,47 +184,28 @@ export function NightRoom({ event }: { event: ContentEvent }) {
     setPending(true);
     try {
       const data = await sendSeat(parsed.data);
+      if (!data.delivered || !data.code) {
+        setError(data.error || copy.night.device);
+        return;
+      }
       remember({
         eventId: event.id,
         name: parsed.data.name,
         email: parsed.data.email,
         party: parsed.data.party,
         note: parsed.data.note?.trim() ?? "",
-        code: data.code!,
-        delivered: Boolean(data.delivered),
+        code: data.code,
+        delivered: true,
         savedAt: new Date().toISOString(),
       });
     } catch (err) {
-      if (err instanceof TypeError) {
-        remember({
-          eventId: event.id,
-          name: name.trim(),
-          email: email.trim(),
-          party,
-          note: note.trim(),
-          code: passCode(event.id, email),
-          delivered: false,
-          savedAt: new Date().toISOString(),
-        });
-        setError(copy.night.device);
-      } else {
-        setError(err instanceof Error ? err.message : "Could not hold that seat.");
-      }
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function retryDelivery() {
-    if (!pass) return;
-    setPending(true);
-    setError("");
-    try {
-      const data = await sendSeat(pass);
-      remember({ ...pass, code: data.code ?? pass.code, delivered: Boolean(data.delivered) });
-      if (!data.delivered) setError(copy.night.device);
-    } catch {
-      setError(copy.night.device);
+      setError(
+        err instanceof TypeError
+          ? copy.night.device
+          : err instanceof Error
+            ? err.message
+            : "Could not hold that seat.",
+      );
     } finally {
       setPending(false);
     }
@@ -354,9 +335,7 @@ export function NightRoom({ event }: { event: ContentEvent }) {
             {pass ? (
               <>
                 <p className="night-ticket__code display">{pass.code}</p>
-                <p className="night-ticket__status">
-                  {pass.delivered ? copy.night.sent : copy.night.device}
-                </p>
+                <p className="night-ticket__status">{copy.night.sent}</p>
                 {pass.note ? <p className="night-ticket__note">{pass.note}</p> : null}
                 {error ? (
                   <p className="night-ticket__error" role="alert">
@@ -364,16 +343,6 @@ export function NightRoom({ event }: { event: ContentEvent }) {
                   </p>
                 ) : null}
                 <div className="night-ticket__actions">
-                  {!pass.delivered ? (
-                    <button
-                      type="button"
-                      className="house-cta house-cta--primary"
-                      onClick={retryDelivery}
-                      disabled={pending}
-                    >
-                      {pending ? "Sending…" : "Send to Robbie"}
-                    </button>
-                  ) : null}
                   <a
                     className="house-cta house-cta--ghost night-ticket__ghost"
                     href={googleCalendarUrl(event)}

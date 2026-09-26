@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { assets, copy, site } from "@/content/site";
+import { GenreRail } from "@/features/stage/GenreRail";
 
 export function InvolveHero() {
   return (
@@ -37,6 +38,7 @@ export function InvolveHero() {
         <p className="mt-8 text-[10px] font-semibold uppercase tracking-[0.28em] text-spark-gold">
           {copy.involve.shine}
         </p>
+        <GenreRail variant="strip" className="mt-6" />
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
+import { GenreRail } from "@/features/stage/GenreRail";
 import { HouseDoors } from "./HouseDoors";
 import { LogoIntro } from "./LogoIntro";
 
@@ -67,6 +68,8 @@ export function HouseHero() {
             </Link>
           </div>
         </header>
+
+        <GenreRail />
 
         <div className="house-entrance__doors">
           <p className="house-entrance__doors-kicker">{copy.house.kicker}</p>

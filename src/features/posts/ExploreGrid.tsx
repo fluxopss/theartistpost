@@ -13,6 +13,7 @@ import {
 } from "react";
 import { ZoomIn, ZoomOut } from "lucide-react";
 import type { PostSummary, TagSummary } from "@/features/posts/types";
+import { mediaKindLabel } from "@/features/posts/mediaRule";
 import { TagChip } from "@/shared/ui/TagChip";
 import { Button, ButtonLink } from "@/shared/ui/Button";
 import type { LightboxItem } from "@/design-system/primitives/Lightbox";
@@ -63,12 +64,14 @@ export function ExploreGrid({
 
   const lightboxItems: LightboxItem[] = useMemo(
     () =>
-      filtered.map((post) => ({
-        src: post.mediaUrl || assetsFallback,
-        alt: post.title,
-        title: post.title,
-        caption: `${post.artist.name}${post.tags[0] ? ` · ${post.tags[0].name}` : ""}`,
-      })),
+      filtered
+        .filter((post) => post.mediaType === "IMAGE" && post.mediaUrl)
+        .map((post) => ({
+          src: post.mediaUrl || assetsFallback,
+          alt: post.title,
+          title: post.title,
+          caption: `${post.artist.name}${post.tags[0] ? ` · ${post.tags[0].name}` : ""}`,
+        })),
     [filtered],
   );
 
@@ -231,11 +234,16 @@ export function ExploreGrid({
             width: `${100 / scale}%`,
           }}
         >
-          {filtered.map((post, i) => (
+          {filtered.map((post) => (
             <WallTile
               key={post.id}
               post={post}
-              onOpen={() => setLightboxIndex(i)}
+              onOpen={() => {
+                const index = filtered
+                  .filter((item) => item.mediaType === "IMAGE" && item.mediaUrl)
+                  .findIndex((item) => item.id === post.id);
+                if (index >= 0) setLightboxIndex(index);
+              }}
             />
           ))}
         </div>
@@ -288,39 +296,51 @@ export function ExploreGrid({
 const assetsFallback = "/brand/cover-opt.webp";
 
 function WallTile({ post, onOpen }: { post: PostSummary; onOpen: () => void }) {
+  const photo = post.mediaType === "IMAGE" && Boolean(post.mediaUrl);
+  const frame = (
+    <div className="relative aspect-[4/5] w-full">
+      {photo ? (
+        <Image
+          src={post.mediaUrl!}
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className="object-cover transition duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center bg-ink">
+          <span className="display text-2xl text-spark-gold">
+            {mediaKindLabel(post.mediaType)}
+          </span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent opacity-90" />
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <p className="display text-xl text-paper-on-dark">{post.title}</p>
+        <p className="mt-1 text-sm text-paper-on-dark/80">{post.artist.name}</p>
+      </div>
+    </div>
+  );
+
   return (
     <article className="mb-4 break-inside-avoid">
       <div className="group relative overflow-hidden rounded-2xl border border-line bg-surface-muted">
-        <button
-          type="button"
-          className="relative block min-h-11 w-full text-left"
-          onClick={onOpen}
-        >
-          <div className="relative aspect-[4/5] w-full">
-            {post.mediaUrl ? (
-              <Image
-                src={post.mediaUrl}
-                alt=""
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-cover transition duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center bg-accent-soft text-paper">
-                Canvas
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent opacity-90" />
-            <div className="absolute bottom-0 left-0 right-0 p-4">
-              <p className="display text-xl text-paper-on-dark">{post.title}</p>
-              <p className="mt-1 text-sm text-paper-on-dark/80">
-                {post.artist.name}
-              </p>
-            </div>
-          </div>
-          <span className="sr-only">Open {post.title} in lightbox</span>
-        </button>
+        {photo ? (
+          <button
+            type="button"
+            className="relative block min-h-11 w-full text-left"
+            onClick={onOpen}
+          >
+            {frame}
+            <span className="sr-only">Open {post.title} in lightbox</span>
+          </button>
+        ) : (
+          <Link href={`/post/${post.slug}`} className="relative block min-h-11 w-full text-left">
+            {frame}
+            <span className="sr-only">Open {post.title}</span>
+          </Link>
+        )}
         <div className="flex flex-wrap items-center gap-2 border-t border-line px-3 py-3">
           {post.tags.slice(0, 2).map((tag) => (
             <TagChip key={tag.id} name={tag.name} slug={tag.slug} />

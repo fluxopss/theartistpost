@@ -3,6 +3,7 @@ import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
 import { content } from "@/lib/content";
 import { NightRoom } from "@/features/night/NightRoom";
+import { GenreRail } from "@/features/stage/GenreRail";
 import { featuredNight } from "@/features/night/program";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
@@ -43,6 +44,7 @@ export default async function NightPage() {
         <p className="max-w-xl text-base leading-relaxed text-paper-muted">
           {copy.night.emptyBody}
         </p>
+        <GenreRail />
         <p className="text-sm text-paper">
           {site.address.full} · {site.hoursToday}
         </p>

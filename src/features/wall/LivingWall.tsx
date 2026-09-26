@@ -4,13 +4,17 @@ import Image from "next/image";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import { copy } from "@/content/site";
+import { GenreRail } from "@/features/stage/GenreRail";
+import { focusPan, LANE_FOCUS_SCALE, tapLane } from "@/features/stage/lanes";
 import { Chip } from "@/design-system/primitives/Chip";
 import { useReducedMotion } from "@/hooks/useMedia";
 import { cn } from "@/shared/lib/cn";
@@ -48,6 +52,10 @@ export function LivingWall({
 }) {
   const { notes } = useKindnessNotes();
   const reduce = useReducedMotion();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const laneId = searchParams.get("lane");
+  const lane = tapLane(laneId);
   const viewportRef = useRef<HTMLDivElement>(null);
   const drag = useRef({
     active: false,
@@ -75,6 +83,48 @@ export function LivingWall({
     () => filterWallPieces(pieces, filters),
     [pieces, filters],
   );
+
+  const piecesRef = useRef(pieces);
+  piecesRef.current = pieces;
+
+  useLayoutEffect(() => {
+    const active = tapLane(laneId);
+    if (!active) return;
+    setFilters({ ...DEFAULT_WALL_FILTERS, medium: active.medium });
+
+    const aim = () => {
+      const node = viewportRef.current;
+      if (!node) return false;
+      const view = node.getBoundingClientRect();
+      if (view.width < 40 || view.height < 40) return false;
+      const matches = piecesRef.current.filter(
+        (item) => item.medium === active.medium,
+      );
+      const piece =
+        matches.find((item) => item.kind === "artist") ??
+        matches.find((item) => item.kind === "reserved") ??
+        matches[0];
+      if (!piece) return false;
+      setScale(LANE_FOCUS_SCALE);
+      setPan(
+        focusPan(
+          piece,
+          { width: view.width, height: view.height },
+          LANE_FOCUS_SCALE,
+        ),
+      );
+      return true;
+    };
+
+    if (aim()) return;
+    const node = viewportRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (aim()) observer.disconnect();
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [laneId]);
 
   const applyZoom = useCallback((next: number, cx?: number, cy?: number) => {
     setScale((prev) => {
@@ -203,6 +253,12 @@ export function LivingWall({
             <p className="mt-2 max-w-xl text-sm text-paper-muted">
               {copy.wall.lead}
             </p>
+            <GenreRail variant="strip" className="!mx-0 !max-w-none" />
+            {lane ? (
+              <p className="mt-2 text-sm font-semibold text-spark-gold" role="status">
+                {lane.wallLine}
+              </p>
+            ) : null}
           </div>
           <div
             className="flex shrink-0 items-center gap-1"
@@ -252,9 +308,12 @@ export function LivingWall({
               { id: "kindness", label: "Kindness" },
             ]}
             value={filters.medium}
-            onChange={(id) =>
-              setFilters((f) => ({ ...f, medium: id as WallFilters["medium"] }))
-            }
+            onChange={(id) => {
+              setFilters((f) => ({ ...f, medium: id as WallFilters["medium"] }));
+              if (lane && id !== lane.medium) {
+                router.replace("/explore", { scroll: false });
+              }
+            }}
           />
           <FilterRow
             label={copy.wall.filters.neighborhood}
@@ -375,7 +434,7 @@ function FilterRow({
       <div
         role="radiogroup"
         aria-label={label}
-        className="flex flex-wrap gap-2"
+        className="chip-rail"
       >
         {items.map((item) => (
           <Chip

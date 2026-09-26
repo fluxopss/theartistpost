@@ -2,7 +2,11 @@ import type { Post, Prisma, Tag, User, ArtistProfile } from "@prisma/client";
 import { assets } from "@/content/site";
 import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { getPrisma } from "@/shared/lib/prisma";
-import { fixturePosts, toSummary } from "@/features/posts/fixtures";
+import {
+  isDeniedAuthorEmail,
+  isDeniedPostSlug,
+  publicCatalogWhere,
+} from "@/features/posts/denylist";
 import type {
   ArtistDetail,
   PostDetail,
@@ -98,8 +102,8 @@ async function withDb<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
   if (!prisma) return fallback();
   try {
     return await fn();
-  } catch {
-    // DB unreachable — keep the playground alive with fixtures
+  } catch (error) {
+    console.error("[posts.withDb]", error);
     return fallback();
   }
 }
@@ -109,7 +113,7 @@ export async function getFeaturedPosts(limit = 4): Promise<PostSummary[]> {
     async () => {
       const prisma = getPrisma()!;
       const posts = await prisma.post.findMany({
-        where: { status: "PUBLISHED", featured: true },
+        where: { ...publicCatalogWhere(), featured: true },
         orderBy: { publishedAt: "desc" },
         take: limit,
         include: {
@@ -120,11 +124,7 @@ export async function getFeaturedPosts(limit = 4): Promise<PostSummary[]> {
       });
       return posts.map(mapPostSummary);
     },
-    () =>
-      fixturePosts
-        .filter((p) => p.featured)
-        .slice(0, limit)
-        .map(toSummary),
+    () => [],
   );
 }
 
@@ -139,7 +139,7 @@ export async function getPosts(options?: {
     async () => {
       const prisma = getPrisma()!;
       const where: Prisma.PostWhereInput = {
-        status: "PUBLISHED",
+        ...publicCatalogWhere(),
         ...(options?.tag ? { tags: { some: { slug: options.tag } } } : {}),
       };
 
@@ -167,11 +167,16 @@ export async function getPosts(options?: {
 }
 
 export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
+  if (isDeniedPostSlug(slug)) return null;
+
   return withDb(
     async () => {
       const prisma = getPrisma()!;
-      const post = await prisma.post.findUnique({
-        where: { slug },
+      const post = await prisma.post.findFirst({
+        where: {
+          ...publicCatalogWhere(),
+          slug,
+        },
         include: {
           author: { include: { artistProfile: true } },
           tags: true,
@@ -184,7 +189,9 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
           },
         },
       });
-      return post ? mapPostDetail(post) : null;
+      if (!post) return null;
+      if (isDeniedAuthorEmail(post.author.email)) return null;
+      return mapPostDetail(post);
     },
     () => null,
   );
@@ -202,7 +209,7 @@ export async function getArtistByHandle(
           user: {
             include: {
               posts: {
-                where: { status: "PUBLISHED" },
+                where: publicCatalogWhere(),
                 orderBy: { publishedAt: "desc" },
                 include: {
                   author: { include: { artistProfile: true } },
@@ -215,6 +222,7 @@ export async function getArtistByHandle(
         },
       });
       if (!profile) return null;
+      if (isDeniedAuthorEmail(profile.user.email)) return null;
       return {
         id: profile.id,
         handle: profile.handle,

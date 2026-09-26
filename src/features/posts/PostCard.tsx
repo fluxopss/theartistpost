@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { mediaKindLabel } from "@/features/posts/mediaRule";
 import type { PostSummary } from "@/features/posts/types";
 import { TagChip } from "@/shared/ui/TagChip";
 import { cn } from "@/shared/lib/cn";
@@ -27,7 +28,7 @@ export function PostCard({
             featured ? "aspect-[4/5]" : "aspect-[5/4]",
           )}
         >
-          {post.mediaUrl ? (
+          {post.mediaType === "IMAGE" && post.mediaUrl ? (
             <Image
               src={post.mediaUrl}
               alt={post.title}
@@ -36,8 +37,10 @@ export function PostCard({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-accent-soft text-ink">
-              Canvas
+            <div className="flex h-full items-center justify-center bg-ink">
+              <span className="display text-2xl text-spark-gold">
+                {mediaKindLabel(post.mediaType)}
+              </span>
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />

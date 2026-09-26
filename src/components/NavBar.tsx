@@ -96,7 +96,7 @@ export function NavBar() {
               className="gap-1.5 rounded-full !bg-spark-coral !text-ink hover:brightness-110"
             >
                 <HeartHandshake className="h-4 w-4" aria-hidden />
-                Donate
+                <span className="max-[420px]:sr-only">Donate</span>
               </ButtonLink>
             </TrackClick>
             <button
@@ -137,29 +137,42 @@ export function NavBar() {
               </button>
             </div>
           </div>
-          <nav
-            className="flex flex-1 flex-col justify-center gap-2 px-6 pb-16"
-            aria-label="Mobile"
-          >
-            {[...navMarketing, { href: "/more", label: "Studio" }].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="display block border-b border-line-on-dark py-4 text-3xl text-paper-on-dark"
-                onClick={() => setOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <p className="px-4 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-spark-gold">
+            Pick a room
+          </p>
+          <nav className="tap-nav-board" aria-label="Mobile">
+            {[...navMarketing, { href: "/more", label: "Studio" }].map(
+              (link, index) => {
+                const active =
+                  link.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(link.href);
+                const tilt = ["-1.4deg", "1.2deg", "-0.6deg", "1.5deg"][
+                  index % 4
+                ];
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="tap-nav-card"
+                    style={{ ["--tilt" as string]: tilt }}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              },
+            )}
             <TrackClick event="cta_donate" payload={{ source: "nav-mobile" }}>
-            <ButtonLink
-              href={links.donate}
-              external
-              className="mt-8 w-full rounded-full !bg-spark-coral !text-ink"
-              size="lg"
-            >
-              Donate
-            </ButtonLink>
+              <ButtonLink
+                href={links.donate}
+                external
+                className="col-span-2 mt-1 w-full rounded-full !bg-spark-coral !text-ink"
+                size="lg"
+              >
+                Donate
+              </ButtonLink>
             </TrackClick>
           </nav>
         </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { assets, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
 import { KindnessCount } from "./KindnessCount";
+import { GenreRail } from "@/features/stage/GenreRail";
 
 type KindnessHeroProps = {
   onLeaveNote: () => void;
@@ -67,6 +68,7 @@ export function KindnessHero({ onLeaveNote, noteCount = 0 }: KindnessHeroProps) 
             Leave a note
           </Button>
         </div>
+        <GenreRail variant="strip" className="mt-8" />
       </div>
     </section>
   );

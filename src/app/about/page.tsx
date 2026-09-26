@@ -8,6 +8,7 @@ import { AboutMarks } from "@/features/about/AboutMarks";
 import { AboutHacienda } from "@/features/about/AboutHacienda";
 import { AboutHistory } from "@/features/about/AboutHistory";
 import { AboutSupport } from "@/features/about/AboutSupport";
+import { GenreRail } from "@/features/stage/GenreRail";
 
 export const metadata: Metadata = {
   title: "About",
@@ -55,6 +56,7 @@ export default function AboutPage() {
             {site.nonprofitLine}
           </p>
           <p className="mt-2 text-sm text-paper-muted">{copy.about.proceeds}</p>
+          <GenreRail className="mt-8" />
         </SectionReveal>
 
         <AboutHistory />

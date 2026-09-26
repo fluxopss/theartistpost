@@ -1,5 +1,5 @@
 /* The Artist Post — app shell offline cache */
-const CACHE = "tap-shell-v6";
+const CACHE = "tap-shell-v7";
 const OFFLINE = "/offline";
 const SHELL = [
   "/",
@@ -16,6 +16,10 @@ const SHELL = [
   "/brand/icon-192.png",
   "/brand/icon-512.png",
 ];
+
+function isUncacheablePath(pathname) {
+  return pathname.startsWith("/api/") || pathname.startsWith("/uploads/");
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,6 +49,11 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (isUncacheablePath(url.pathname)) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(

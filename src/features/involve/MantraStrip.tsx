@@ -12,11 +12,12 @@ export function MantraStrip({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="mx-auto grid max-w-[var(--content-max)] divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div className="mantra-rail">
         {mantra.map((line, i) => (
           <p
             key={line.rest}
-            className="px-4 py-6 text-center sm:px-6 sm:py-8"
+            className="mantra-card"
+            style={{ ["--tilt" as string]: ["-1.2deg", "0.8deg", "-0.6deg"][i] }}
           >
             <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-paper-muted">
               {line.lead}

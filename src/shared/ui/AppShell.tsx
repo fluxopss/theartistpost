@@ -11,7 +11,7 @@ import { Onboarding } from "@/features/app/Onboarding";
 /** Gallery-night chrome + native app shell on small screens. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col bg-surface text-paper pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="relative flex min-h-dvh flex-col bg-surface text-paper pb-[calc(6.25rem+env(safe-area-inset-bottom))] md:pb-0">
       <ScrollProgress />
       <Atmosphere />
       <CursorTrailLazy />

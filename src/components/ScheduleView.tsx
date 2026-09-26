@@ -15,7 +15,6 @@ import {
   downloadIcs,
   googleCalendarUrl,
   monthMatrix,
-  sameDay,
 } from "@/lib/schedule/calendar";
 import { copy, links } from "@/content/site";
 import { nightPhase, scheduleLabel } from "@/features/night/program";
@@ -27,7 +26,25 @@ import { cn } from "@/shared/lib/cn";
 
 type ViewMode = "list" | "calendar" | "agenda";
 
-function formatRange(event: ContentEvent) {
+/** Hacienda wall clock — always Eastern, never the process or browser zone. */
+const HACIENDA_TZ = "America/New_York";
+
+/** Calendar day key for an instant in America/New_York (YYYY-MM-DD). */
+export function easternDayKey(input: Date | string): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return d.toLocaleDateString("en-CA", { timeZone: HACIENDA_TZ });
+}
+
+function formatEasternTime(d: Date) {
+  return d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: HACIENDA_TZ,
+  });
+}
+
+/** List subtitle: date + range labeled Eastern. */
+export function formatRange(event: Pick<ContentEvent, "start" | "end">) {
   const start = new Date(event.start);
   const end = new Date(event.end);
   const date = start.toLocaleDateString("en-US", {
@@ -35,10 +52,27 @@ function formatRange(event: ContentEvent) {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: HACIENDA_TZ,
   });
-  const t = (d: Date) =>
-    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  return `${date} · ${t(start)} – ${t(end)}`;
+  return `${date} · ${formatEasternTime(start)} – ${formatEasternTime(end)} Eastern`;
+}
+
+/** Agenda row times under an Eastern day heading. */
+export function formatAgendaTimes(event: Pick<ContentEvent, "start" | "end">) {
+  const start = new Date(event.start);
+  const end = new Date(event.end);
+  return `${formatEasternTime(start)} – ${formatEasternTime(end)} Eastern`;
+}
+
+function formatDayHeading(dayKey: string, month: "short" | "long" = "short") {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const noonUtc = new Date(Date.UTC(y!, m! - 1, d!, 12));
+  return noonUtc.toLocaleDateString("en-US", {
+    weekday: "long",
+    month,
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export function ScheduleView({ events }: { events: ContentEvent[] }) {
@@ -54,7 +88,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
   const byDay = useMemo(() => {
     const map = new Map<string, ContentEvent[]>();
     for (const e of events) {
-      const key = new Date(e.start).toISOString().slice(0, 10);
+      const key = easternDayKey(e.start);
       const list = map.get(key) ?? [];
       list.push(e);
       map.set(key, list);
@@ -68,9 +102,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
   );
 
   const dayEvents = selectedDay
-    ? events.filter(
-        (e) => new Date(e.start).toISOString().slice(0, 10) === selectedDay,
-      )
+    ? events.filter((e) => easternDayKey(e.start) === selectedDay)
     : [];
 
   const accordionItems = events.map((event) => ({
@@ -121,11 +153,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
               className="rounded-2xl border border-line bg-surface-glass p-4"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-spark-coral">
-                {new Date(day + "T12:00:00").toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "short",
-                  day: "numeric",
-                })}
+                {formatDayHeading(day)}
               </p>
               <ul className="mt-3 space-y-3">
                 {dayEv.map((e) => (
@@ -140,10 +168,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
                       {e.title}
                     </Link>
                     <p className="mt-1 text-xs text-paper-muted">
-                      {new Date(e.start).toLocaleTimeString("en-US", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
+                      {formatAgendaTimes(e)}
                     </p>
                   </li>
                 ))}
@@ -201,9 +226,9 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
               if (!cell.date) {
                 return <div key={cell.key} className="min-h-16 rounded-lg" />;
               }
-              const key = cell.date.toISOString().slice(0, 10);
-              const hits = events.filter((e) =>
-                sameDay(new Date(e.start), cell.date!),
+              const key = easternDayKey(cell.date);
+              const hits = events.filter(
+                (e) => easternDayKey(e.start) === key,
               );
               const selected = selectedDay === key;
               return (
@@ -233,10 +258,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
           {selectedDay ? (
             <div className="mt-4 border-t border-line pt-4">
               <p className="text-sm font-semibold text-paper">
-                {new Date(selectedDay + "T12:00:00").toLocaleDateString(
-                  "en-US",
-                  { weekday: "long", month: "long", day: "numeric" },
-                )}
+                {formatDayHeading(selectedDay, "long")}
               </p>
               {dayEvents.length === 0 ? (
                 <p className="mt-2 text-sm text-paper-muted">No events this day.</p>

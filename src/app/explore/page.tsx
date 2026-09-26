@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { assets, copy } from "@/content/site";
 import { content } from "@/lib/content";
 import { LivingWall } from "@/features/wall/LivingWall";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Explore · The Wall",
@@ -23,5 +24,9 @@ export default async function ExplorePage() {
     content.getEvents(),
   ]);
 
-  return <LivingWall artists={artists} events={events} />;
+  return (
+    <Suspense fallback={null}>
+      <LivingWall artists={artists} events={events} />
+    </Suspense>
+  );
 }

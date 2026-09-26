@@ -55,9 +55,17 @@ export async function POST(request: Request) {
       page: "/night",
     });
 
+    if (!result.ok) {
+      return Response.json({
+        ok: true,
+        delivered: false,
+        error: "Your seat was not sent. Try again in a moment.",
+      });
+    }
+
     return Response.json({
       ok: true,
-      delivered: result.ok,
+      delivered: true,
       code,
     });
   } catch {

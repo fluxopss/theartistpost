@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   readLogoIntroForce,
   shouldPlayLogoIntro,
-} from "@/features/house/logoIntro";
+} from "@/features/house/logoIntroGate";
 
 describe("logo intro gate", () => {
   it("plays once per session unless forced", () => {

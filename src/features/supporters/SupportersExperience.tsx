@@ -11,6 +11,7 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { SectionReveal } from "@/components/SectionReveal";
 import { Chip } from "@/design-system/primitives/Chip";
 import { Card } from "@/design-system/primitives/Card";
+import { GenreRail } from "@/features/stage/GenreRail";
 
 const STATUS_LABEL: Record<ContentChapter["status"], string> = {
   active: "Active",
@@ -52,6 +53,7 @@ export function SupportersExperience({
           <p className="mt-4 max-w-2xl text-sm text-paper-muted sm:text-base">
             {copy.supporters.expansion}
           </p>
+          <GenreRail />
         </PageShell>
       </section>
 
@@ -72,7 +74,7 @@ export function SupportersExperience({
             />
           </label>
           <div
-            className="flex flex-wrap gap-2"
+            className="chip-rail"
             role="radiogroup"
             aria-label="Filter by chapter status"
           >

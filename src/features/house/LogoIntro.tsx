@@ -8,7 +8,7 @@ import {
   readLogoIntroForce,
   readReduceMotion,
   shouldPlayLogoIntro,
-} from "./logoIntro";
+} from "./logoIntroGate";
 
 type Phase = "idle" | "play" | "out";
 

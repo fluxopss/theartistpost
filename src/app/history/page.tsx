@@ -3,6 +3,7 @@ import Image from "next/image";
 import { history, historyMetaDescription } from "@/content/history";
 import { assets, site } from "@/content/site";
 import { AboutHistory } from "@/features/about/AboutHistory";
+import { GenreRail } from "@/features/stage/GenreRail";
 import { ButtonLink } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 
@@ -42,6 +43,7 @@ export default function HistoryPage() {
           <h1 className="display mt-3 text-4xl text-paper sm:text-6xl">
             {history.title}
           </h1>
+          <GenreRail />
         </div>
       </section>
 

@@ -17,6 +17,7 @@ import {
 import { appCopy, assets, links, moreMenu, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { getSaves, getStudio } from "@/features/app/storage";
+import { GenreRail } from "@/features/stage/GenreRail";
 import { useStandalone } from "@/features/app/useDisplayMode";
 import { useEffect, useState } from "react";
 
@@ -87,6 +88,7 @@ export function StudioHub() {
             <p className="mt-3 max-w-md text-sm leading-relaxed text-paper-on-dark/80">
               {appCopy.studioLead}
             </p>
+            <GenreRail variant="strip" className="!mx-0" />
             <p className="mt-4 text-sm text-spark-teal">
               {name} · {appCopy.guestLine}
             </p>
@@ -139,7 +141,7 @@ export function StudioHub() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex h-full gap-3 rounded-2xl border border-line bg-surface-glass p-4 transition hover:border-spark-teal"
+                className="flex h-full gap-3 rounded-2xl border border-line bg-surface-glass p-4 transition active:scale-[0.98] hover:border-spark-teal"
               >
                 <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-spark-teal" aria-hidden />
                 <span>

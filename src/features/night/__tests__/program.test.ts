@@ -11,6 +11,12 @@ import {
   stampWord,
 } from "@/features/night/program";
 import { isNightHoneypot, parseNightRsvp, passCode } from "@/features/night/rsvp";
+import {
+  getNightPass,
+  NIGHT_PASS_KEY,
+  saveNightPass,
+  type NightPass,
+} from "@/features/night/pass";
 
 const NOW = new Date("2026-09-22T15:00:00-04:00");
 
@@ -86,5 +92,30 @@ describe("night rsvp", () => {
     );
     expect(isNightHoneypot("http://spam")).toBe(true);
     expect(isNightHoneypot("")).toBe(false);
+  });
+
+  it("keeps door language only for a delivered seat", () => {
+    expect(copy.night.sent).toMatch(/Show this pass at the door/);
+    expect(copy.night.device).toMatch(/not sent/i);
+    expect(copy.night.device).not.toMatch(/Show this pass at the door/);
+    expect(copy.night.device).not.toMatch(/Held on this device/i);
+  });
+
+  it("does not surface an undelivered local pass as a door pass", () => {
+    const undelivered: NightPass = {
+      eventId: "e4",
+      name: "Ada",
+      email: "ada@example.com",
+      party: 1,
+      note: "",
+      code: "TAP-FAKE",
+      delivered: false,
+      savedAt: new Date().toISOString(),
+    };
+    saveNightPass(undelivered);
+    expect(getNightPass("e4")).toBeNull();
+    saveNightPass({ ...undelivered, delivered: true });
+    expect(getNightPass("e4")?.code).toBe("TAP-FAKE");
+    localStorage.removeItem(NIGHT_PASS_KEY);
   });
 });

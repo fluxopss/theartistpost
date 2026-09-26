@@ -222,6 +222,7 @@ export async function getArtistByHandle(
         },
       });
       if (!profile) return null;
+      if (!profile.approved) return null;
       if (isDeniedAuthorEmail(profile.user.email)) return null;
       return {
         id: profile.id,

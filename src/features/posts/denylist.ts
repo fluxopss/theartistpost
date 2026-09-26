@@ -28,11 +28,17 @@ export function isDeniedAuthorEmail(email: string): boolean {
   return deniedEmailSet.has(email.trim().toLowerCase());
 }
 
-/** Public catalog filter: published only, no seed rows, no guest author. */
+/**
+ * Public catalog filter: published only, no seed rows, no guest author,
+ * and author ArtistProfile.approved = true when a profile exists.
+ */
 export function publicCatalogWhere() {
   return {
     status: "PUBLISHED" as const,
     slug: { notIn: [...DENIED_POST_SLUGS] },
-    author: { email: { notIn: [...DENIED_AUTHOR_EMAILS] } },
+    author: {
+      email: { notIn: [...DENIED_AUTHOR_EMAILS] },
+      artistProfile: { is: { approved: true } },
+    },
   };
 }

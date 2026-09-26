@@ -34,7 +34,7 @@ type DraftStore = Draft & {
 const initial: Draft = {
   title: "",
   tags: "",
-  visibility: "PUBLISHED",
+  visibility: "DRAFT",
   mediaUrl: "",
   mediaType: "IMAGE",
   description: "",
@@ -192,17 +192,9 @@ export function CreatePostWizard() {
 
       draft.reset();
       setPreview(null);
-      if (result.mode === "fixture") {
-        const msg =
-          result.message ??
-          "Draft accepted locally. Connect Postgres to persist and open the post.";
-        setMessage(msg);
-        toast({ title: "Saved locally", description: msg, tone: "success" });
-        return;
-      }
       setMessage("Post created — opening scene…");
       toast({
-        title: "Published",
+        title: draft.visibility === "PUBLISHED" ? "Published" : "Draft saved",
         description: "Opening your scene…",
         tone: "success",
       });

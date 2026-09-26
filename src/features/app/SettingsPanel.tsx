@@ -146,6 +146,21 @@ export function SettingsPanel() {
           Clear local studio
         </Button>
       </section>
+
+      <section className="space-y-3">
+        <h2 className="display text-2xl text-paper">Account deletion</h2>
+        <p className="text-sm text-paper-muted">
+          Artist accounts are invite-only. In-app deletion lands with real
+          sign-in. Until then, email{" "}
+          <a
+            href="mailto:Robbie@theartistpost.org?subject=Delete%20my%20Artist%20Post%20account"
+            className="text-spark-teal underline-offset-2 hover:underline"
+          >
+            Robbie@theartistpost.org
+          </a>{" "}
+          to request removal of an invited account and its drafts.
+        </p>
+      </section>
     </div>
   );
 }

@@ -39,7 +39,9 @@ export default function CreatePage() {
           unlocks for draft submissions.
         </p>
         <p className="mt-3 text-xs text-paper-muted">
-          Upload and publish endpoints refuse writes while this lock is on.
+          Upload and publish endpoints refuse mock and anonymous writes. An
+          operator invites approved artists with OPERATOR_SECRET; passwordless
+          sign-in lands after a transactional email provider is wired.
         </p>
       </div>
     </PageShell>

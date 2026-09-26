@@ -1,40 +1,47 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { MOCK_SESSION_USER } from "@/features/auth/mock-user";
+import { createContext, useContext, useMemo, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { signOutAction } from "@/features/auth/actions";
 import type { SessionUser } from "@/features/auth/types";
 
 type AuthContextValue = {
   user: SessionUser | null;
   isAuthenticated: boolean;
-  /** TODO: NextAuth — wire real sign-in / sign-out */
   signIn: () => void;
   signOut: () => void;
+  signingOut: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({
   children,
-  initialUser = MOCK_SESSION_USER,
+  initialUser = null,
 }: {
   children: ReactNode;
   initialUser?: SessionUser | null;
 }) {
+  const router = useRouter();
+  const [signingOut, startTransition] = useTransition();
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user: initialUser,
       isAuthenticated: Boolean(initialUser),
       signIn: () => {
-        // TODO: NextAuth — redirect to provider sign-in
-        console.info("[auth] signIn stub — wire NextAuth");
+        router.push("/join");
       },
       signOut: () => {
-        // TODO: NextAuth — call signOut()
-        console.info("[auth] signOut stub — wire NextAuth");
+        startTransition(async () => {
+          await signOutAction();
+          router.refresh();
+          router.push("/join");
+        });
       },
+      signingOut,
     }),
-    [initialUser],
+    [initialUser, router, signingOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

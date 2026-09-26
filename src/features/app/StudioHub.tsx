@@ -13,15 +13,23 @@ import {
   Settings,
   Sparkles,
   Bookmark,
+  DoorOpen,
 } from "lucide-react";
 import { appCopy, assets, links, moreMenu, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { getSaves, getStudio } from "@/features/app/storage";
+import { useSession } from "@/features/auth/AuthProvider";
 import { GenreRail } from "@/features/stage/GenreRail";
 import { useStandalone } from "@/features/app/useDisplayMode";
 import { useEffect, useState } from "react";
 
 const destinations = [
+  {
+    href: "/join",
+    label: "Join",
+    detail: "Member door or open the studio as an artist.",
+    icon: DoorOpen,
+  },
   {
     href: "/night",
     label: "The next night",
@@ -56,14 +64,25 @@ const destinations = [
 
 export function StudioHub() {
   const standalone = useStandalone();
+  const { user, isAuthenticated } = useSession();
   const [name, setName] = useState<string>(site.name);
   const [savedCount, setSavedCount] = useState(0);
 
   useEffect(() => {
-    setName(getStudio().displayName);
+    if (isAuthenticated && user) {
+      setName(user.name);
+    } else {
+      setName(getStudio().displayName);
+    }
     const library = getSaves();
     setSavedCount(library.posts.length + library.events.length);
-  }, []);
+  }, [isAuthenticated, user]);
+
+  const sessionLine = !isAuthenticated || !user
+    ? appCopy.guestLine
+    : user.role === "ARTIST" || user.role === "ADMIN"
+      ? appCopy.sessionArtistLine
+      : appCopy.sessionMemberLine;
 
   return (
     <div className="space-y-8">
@@ -90,8 +109,16 @@ export function StudioHub() {
             </p>
             <GenreRail variant="strip" className="!mx-0" />
             <p className="mt-4 text-sm text-spark-teal">
-              {name} · {appCopy.guestLine}
+              {name} · {sessionLine}
             </p>
+            {!isAuthenticated ? (
+              <Link
+                href="/join"
+                className="mt-3 inline-flex text-sm font-semibold text-spark-coral hover:underline"
+              >
+                Open the join doors →
+              </Link>
+            ) : null}
           </div>
         </div>
       </header>

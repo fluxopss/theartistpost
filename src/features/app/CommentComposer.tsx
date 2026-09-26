@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
+import { useSession } from "@/features/auth/AuthProvider";
+import { createCommentAction } from "@/features/posts/engagement";
 import {
   addComment,
   getComments,
   getStudio,
   type LocalComment,
 } from "@/features/app/storage";
+
+type DisplayComment = {
+  id: string;
+  body: string;
+  author: string;
+  local: boolean;
+};
 
 export function CommentComposer({
   postId,
@@ -16,18 +26,50 @@ export function CommentComposer({
   postId: string;
   existing: { id: string; body: string; author: string }[];
 }) {
+  const { user, isAuthenticated } = useSession();
+  const signedIn = isAuthenticated && Boolean(user);
   const [local, setLocal] = useState<LocalComment[]>([]);
+  const [serverExtra, setServerExtra] = useState<DisplayComment[]>([]);
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [author, setAuthor] = useState("Studio Guest");
+  const [author, setAuthor] = useState("Guest");
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    setLocal(getComments(postId));
-    setAuthor(getStudio().displayName);
-  }, [postId]);
+    if (!signedIn) {
+      setLocal(getComments(postId));
+      setAuthor(getStudio().displayName);
+    } else {
+      setLocal([]);
+      setAuthor(user!.name);
+    }
+  }, [postId, signedIn, user]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    if (signedIn) {
+      startTransition(async () => {
+        const result = await createCommentAction({ postId, body });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setServerExtra((prev) => [
+          ...prev,
+          {
+            id: result.comment.id,
+            body: result.comment.body,
+            author: result.comment.author,
+            local: false,
+          },
+        ]);
+        setBody("");
+      });
+      return;
+    }
+
     const result = addComment(postId, body, author);
     if ("error" in result) {
       setError(result.error);
@@ -35,16 +77,16 @@ export function CommentComposer({
     }
     setLocal((prev) => [...prev, result]);
     setBody("");
-    setError(null);
   }
 
-  const all = [
+  const all: DisplayComment[] = [
     ...existing.map((comment) => ({
       id: comment.id,
       body: comment.body,
       author: comment.author,
       local: false,
     })),
+    ...serverExtra,
     ...local.map((comment) => ({
       id: comment.id,
       body: comment.body,
@@ -82,7 +124,11 @@ export function CommentComposer({
             onChange={(e) => setBody(e.target.value)}
             maxLength={280}
             rows={3}
-            placeholder={`A note from ${author}…`}
+            placeholder={
+              signedIn
+                ? `A note from ${author}…`
+                : "Join to leave a note on the Wall…"
+            }
             className="w-full rounded-2xl border border-line bg-surface-glass px-4 py-3 text-sm text-paper outline-none focus:border-spark-teal"
           />
         </label>
@@ -90,14 +136,48 @@ export function CommentComposer({
           <p className="text-sm text-danger" role="alert">
             {error}
           </p>
+        ) : signedIn ? (
+          <p className="text-xs text-paper-muted">
+            Notes from {author} land on the shared Wall.
+          </p>
         ) : (
           <p className="text-xs text-paper-muted">
-            Comments stay on this device until artist accounts open.
+            Signed-out notes stay on this device.{" "}
+            <Link
+              href="/join?door=member"
+              className="font-semibold text-spark-teal underline-offset-2 hover:underline"
+            >
+              Join as a member
+            </Link>{" "}
+            to leave a real comment.
           </p>
         )}
-        <Button type="submit" size="sm" className="rounded-full">
-          Leave a note
-        </Button>
+        {signedIn ? (
+          <Button
+            type="submit"
+            size="sm"
+            disabled={pending}
+            className="rounded-full"
+          >
+            {pending ? "Sending…" : "Leave a note"}
+          </Button>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" size="sm" variant="outline" className="rounded-full">
+              Save on this device
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-full"
+              onClick={() => {
+                window.location.href = "/join?door=member";
+              }}
+            >
+              Join to post publicly
+            </Button>
+          </div>
+        )}
       </form>
     </section>
   );

@@ -1,17 +1,17 @@
-import { MOCK_SESSION_USER } from "@/features/auth/mock-user";
+import { readSessionFromCookie } from "@/features/auth/sessionCookie";
 import type { AuthAdapter, SessionUser } from "@/features/auth/types";
 
 /**
- * Device studio session for Create in v1.
- * TODO: NextAuth — replace body with a real session lookup.
+ * Signed httpOnly cookie session.
+ * Anonymous browse: null. Writes must never treat Studio Guest as signed-in.
  */
-export const mockAuthAdapter: AuthAdapter = {
+export const cookieAuthAdapter: AuthAdapter = {
   async getSession(): Promise<SessionUser | null> {
-    return MOCK_SESSION_USER;
+    return readSessionFromCookie();
   },
 };
 
-export const authAdapter: AuthAdapter = mockAuthAdapter;
+export const authAdapter: AuthAdapter = cookieAuthAdapter;
 
 export async function getSession() {
   return authAdapter.getSession();

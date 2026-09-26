@@ -115,6 +115,11 @@ export type AppTabIcon = (typeof appTabs)[number]["icon"];
 /** Studio hub — secondary destinations */
 export const moreMenu = [
   {
+    href: "/join",
+    label: "Join",
+    description: "Member door or open the studio",
+  },
+  {
     href: "/get-involved",
     label: "Get Involved",
     description: "Showcase, partner, volunteer, give",
@@ -150,7 +155,9 @@ export const appCopy = {
   studioTitle: "TAP, in your pocket",
   studioLead:
     "The 2016 TAP app put musicians, photographers, dancers, filmmakers, actors, comedians, and models on one stage. This is that stage — photographs, video, and sound — with a live room on Clematis.",
-  guestLine: "On this device until artist accounts open.",
+  guestLine: "Browse as a guest — join to respond on the Wall.",
+  sessionMemberLine: "Member pass active on this device.",
+  sessionArtistLine: "Studio session open — publish waits on approval.",
   installTitle: "Get the app",
   installLead:
     "The Artist Post is a real app — same house on your home screen, offline shell, and the binary Robbie wraps for the App Store.",
@@ -171,8 +178,8 @@ export const appCopy = {
   comingNextTitle: "Designed next",
   comingNext: [
     {
-      title: "Artist accounts",
-      body: "Sign in to publish under your name, sync likes, and carry a studio across devices.",
+      title: "Magic-link sign-in",
+      body: "Passwordless email verification so the same studio follows you across devices.",
     },
     {
       title: "Live Hacienda lineup",

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/shared/ui/Button";
 import { useToast } from "@/design-system/primitives/Toast";
+import { useSession } from "@/features/auth/AuthProvider";
 import {
   applyMotionPreference,
   clearLocalAppData,
@@ -17,6 +19,7 @@ import {
 export function SettingsPanel() {
   const { theme, setTheme, mounted } = useTheme();
   const { push } = useToast();
+  const { user, isAuthenticated, signOut, signingOut } = useSession();
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [motion, setMotion] = useState<MotionPreference>("system");
@@ -58,11 +61,52 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-8">
+      <section className="space-y-3">
+        <h2 className="display text-2xl text-paper">Session</h2>
+        {isAuthenticated && user ? (
+          <>
+            <p className="text-sm text-paper-muted">
+              Signed in as <span className="text-paper">{user.name}</span>
+              {user.handle ? ` (@${user.handle})` : ""} · {user.role.toLowerCase()}
+              {user.role === "ARTIST"
+                ? " · Create stays closed until approved"
+                : ""}
+            </p>
+            <p className="text-xs text-paper-muted">{user.email}</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full"
+              disabled={signingOut}
+              onClick={() => signOut()}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-paper-muted">
+              No account session on this device. Browse freely, or join to leave
+              real comments and open a pending studio.
+            </p>
+            <Button
+              type="button"
+              className="rounded-full !bg-spark-teal !text-[#020b1a]"
+              onClick={() => {
+                window.location.href = "/join";
+              }}
+            >
+              Open the join doors
+            </Button>
+          </>
+        )}
+      </section>
+
       <form onSubmit={saveStudio} className="space-y-4">
-        <h2 className="display text-2xl text-paper">Studio identity</h2>
+        <h2 className="display text-2xl text-paper">On-device name</h2>
         <p className="text-sm text-paper-muted">
-          Used for kindness notes and comments on this device. Artist accounts
-          are designed next — we will not pretend you are signed in.
+          Used for local kindness notes and device-only comments when you are
+          signed out. Your account name above is separate.
         </p>
         <label className="block">
           <span className="text-xs font-semibold text-paper-muted">
@@ -88,7 +132,7 @@ export function SettingsPanel() {
           />
         </label>
         <Button type="submit" className="rounded-full !bg-spark-teal !text-[#020b1a]">
-          Save studio
+          Save on-device name
         </Button>
       </form>
 
@@ -139,8 +183,8 @@ export function SettingsPanel() {
       <section className="space-y-3">
         <h2 className="display text-2xl text-paper">This device</h2>
         <p className="text-sm text-paper-muted">
-          Kindness notes, likes, comments, and saved nights live in local
-          storage. Clearing them cannot be undone.
+          Kindness notes, local likes, device comments, and saved nights live in
+          local storage. Clearing them cannot be undone. Sign-out is separate.
         </p>
         <Button type="button" variant="outline" className="rounded-full" onClick={reset}>
           Clear local studio
@@ -150,15 +194,18 @@ export function SettingsPanel() {
       <section className="space-y-3">
         <h2 className="display text-2xl text-paper">Account deletion</h2>
         <p className="text-sm text-paper-muted">
-          Artist accounts are invite-only. In-app deletion lands with real
-          sign-in. Until then, email{" "}
+          To remove a member or pending artist account and its data, email{" "}
           <a
             href="mailto:Robbie@theartistpost.org?subject=Delete%20my%20Artist%20Post%20account"
             className="text-spark-teal underline-offset-2 hover:underline"
           >
             Robbie@theartistpost.org
-          </a>{" "}
-          to request removal of an invited account and its drafts.
+          </a>
+          . In-app deletion lands with the next auth pass.{" "}
+          <Link href="/join" className="text-spark-teal underline-offset-2 hover:underline">
+            Join doors
+          </Link>
+          .
         </p>
       </section>
     </div>

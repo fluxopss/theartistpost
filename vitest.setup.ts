@@ -30,3 +30,27 @@ vi.mock("next/link", () => ({
   }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) =>
     React.createElement("a", { href, ...rest }, children),
 }));
+
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    get: () => undefined,
+    set: () => undefined,
+    delete: () => undefined,
+  }),
+  headers: async () =>
+    new Headers({
+      "x-forwarded-for": "127.0.0.1",
+    }),
+}));
+
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));

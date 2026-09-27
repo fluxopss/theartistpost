@@ -4,21 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { assets, links, site } from "@/content/site";
+import {
+  assets,
+  links,
+  site,
+  socialLabels,
+  type SocialNetwork,
+} from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { TrackClick } from "@/components/TrackClick";
 
-type SocialKey = keyof typeof links.social;
-
-const socialLabels: Record<SocialKey, string> = {
-  facebook: "Facebook",
-  instagram: "Instagram",
-  linkedin: "LinkedIn",
-  pinterest: "Pinterest",
-  tiktok: "TikTok",
-  x: "X",
-  youtube: "YouTube",
-};
+type SocialKey = SocialNetwork;
 
 function SocialGlyph({ network }: { network: SocialKey }) {
   const common = "h-4 w-4";

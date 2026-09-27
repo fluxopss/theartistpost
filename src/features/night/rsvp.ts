@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fieldErrors } from "@/shared/lib/fieldErrors";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,6 +25,7 @@ export function parseNightRsvp(raw: unknown) {
     return {
       ok: false as const,
       error: first?.message ?? "Check the pass and try again.",
+      fields: fieldErrors(result.error.issues),
     };
   }
   return { ok: true as const, data: result.data };

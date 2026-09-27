@@ -2,6 +2,14 @@ export const INVOLVE_INTENTS = ["space", "partner", "volunteer"] as const;
 
 export type InvolveIntent = (typeof INVOLVE_INTENTS)[number];
 
+/** Client that submitted the lead — lets the CRM tell native app leads apart. */
+export const LEAD_PLATFORMS = ["ios", "android", "web"] as const;
+
+export type LeadPlatform = (typeof LEAD_PLATFORMS)[number];
+
+/** Give up on the webhook after this long so a stuck CRM never hangs a form. */
+export const GHL_TIMEOUT_MS = 8_000;
+
 export type LeadPayload = {
   name: string;
   email: string;
@@ -12,6 +20,7 @@ export type LeadPayload = {
   intent?: string;
   medium?: string;
   city?: string;
+  platform?: LeadPlatform;
   submittedAt?: string;
 };
 
@@ -32,6 +41,7 @@ function summarizeLead(payload: LeadPayload) {
     source: payload.source,
     page: payload.page,
     intent: payload.intent,
+    platform: payload.platform,
   };
 }
 
@@ -70,6 +80,7 @@ export async function sendLeadToGhl(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(GHL_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -84,7 +95,15 @@ export async function sendLeadToGhl(
 
     return { ok: true };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Network error";
+    const timedOut =
+      typeof err === "object" &&
+      err !== null &&
+      (err as { name?: unknown }).name === "TimeoutError";
+    const message = timedOut
+      ? `timed out after ${GHL_TIMEOUT_MS}ms`
+      : err instanceof Error
+        ? err.message
+        : "Network error";
     console.error("[ghl] webhook request error", {
       message,
       lead: summarizeLead(body),

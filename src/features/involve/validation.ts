@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { INVOLVE_INTENTS } from "@/lib/ghl";
+import { fieldErrors } from "@/shared/lib/fieldErrors";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,6 +33,7 @@ export function parseInvolveInquiry(raw: unknown) {
     return {
       ok: false as const,
       error: first?.message ?? "Check the form and try again.",
+      fields: fieldErrors(result.error.issues),
     };
   }
   return { ok: true as const, data: result.data };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPosts } from "@/features/posts/queries";
+import { clampPostsTake, getPosts } from "@/features/posts/queries";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const result = await getPosts({
     cursor,
     tag,
-    take: Number.isFinite(take) ? take : 9,
+    // Capped at POSTS_MAX_TAKE (24) so one request cannot pull the whole wall.
+    take: clampPostsTake(Number.isFinite(take) ? take : 9),
   });
 
   return NextResponse.json(result);

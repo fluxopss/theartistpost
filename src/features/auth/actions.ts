@@ -41,6 +41,14 @@ export type RegisterResult =
   | { ok: false; error: string }
   | { ok: true; user: SessionUser; pendingApproval?: boolean };
 
+/**
+ * Join only opens a door for a brand-new email. Without an emailed code we
+ * cannot prove someone owns an existing address, so returning emails never
+ * get a session and their account is never touched.
+ */
+const EXISTING_EMAIL_ERROR =
+  "This email already joined. Email sign-in is coming soon.";
+
 async function clientKey(): Promise<string> {
   const h = await headers();
   const forwarded = h.get("x-forwarded-for");
@@ -108,27 +116,7 @@ export async function registerMemberAction(
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      if (existing.role === "ARTIST" || existing.role === "ADMIN") {
-        return {
-          ok: false,
-          error: "This email already has a studio account. Open the Artist door.",
-        };
-      }
-      const updated = await prisma.user.update({
-        where: { id: existing.id },
-        data: { name },
-      });
-      const session = toSessionUser(updated);
-      const wrote = await writeSessionCookie(session);
-      if (!wrote) return { ok: false, error: authSecretRequiredError() };
-      await writeAuditLog(prisma, {
-        actorId: updated.id,
-        action: "auth.register_member",
-        targetType: "User",
-        targetId: updated.id,
-        meta: { email, returning: true },
-      });
-      return { ok: true, user: session };
+      return { ok: false, error: EXISTING_EMAIL_ERROR };
     }
 
     const user = await prisma.user.create({
@@ -197,78 +185,39 @@ export async function registerArtistAction(
 
   try {
     const [byEmail, byHandle] = await Promise.all([
-      prisma.user.findUnique({
-        where: { email },
-        include: { artistProfile: true },
-      }),
+      prisma.user.findUnique({ where: { email } }),
       prisma.artistProfile.findUnique({ where: { handle } }),
     ]);
 
-    if (byHandle && byHandle.userId !== byEmail?.id) {
-      return { ok: false, error: "That handle is already taken." };
+    if (byEmail) {
+      return { ok: false, error: EXISTING_EMAIL_ERROR };
     }
 
-    if (byEmail?.artistProfile?.approved) {
-      return {
-        ok: false,
-        error: "This email is already an approved artist. Sign in from Settings.",
-      };
+    if (byHandle) {
+      return { ok: false, error: "That handle is already taken." };
     }
 
     const bio = `${medium} · ${intent}`;
     const socialLinks = { medium, intent };
 
-    let userId: string;
-    let profileId: string;
-
-    if (byEmail) {
-      const updated = await prisma.user.update({
-        where: { id: byEmail.id },
-        data: {
-          name,
-          role: "ARTIST",
-          artistProfile: byEmail.artistProfile
-            ? {
-                update: {
-                  handle,
-                  bio,
-                  socialLinks,
-                  approved: false,
-                },
-              }
-            : {
-                create: {
-                  handle,
-                  bio,
-                  socialLinks,
-                  approved: false,
-                },
-              },
-        },
-        include: { artistProfile: true },
-      });
-      userId = updated.id;
-      profileId = updated.artistProfile!.id;
-    } else {
-      const created = await prisma.user.create({
-        data: {
-          email,
-          name,
-          role: "ARTIST",
-          artistProfile: {
-            create: {
-              handle,
-              bio,
-              socialLinks,
-              approved: false,
-            },
+    const created = await prisma.user.create({
+      data: {
+        email,
+        name,
+        role: "ARTIST",
+        artistProfile: {
+          create: {
+            handle,
+            bio,
+            socialLinks,
+            approved: false,
           },
         },
-        include: { artistProfile: true },
-      });
-      userId = created.id;
-      profileId = created.artistProfile!.id;
-    }
+      },
+      include: { artistProfile: true },
+    });
+    const userId = created.id;
+    const profileId = created.artistProfile!.id;
 
     const session = toSessionUser({
       id: userId,

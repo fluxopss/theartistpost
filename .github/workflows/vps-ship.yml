@@ -2,8 +2,14 @@ name: Ship The Artist Post to VPS
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -19,8 +25,41 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # next-env.d.ts and .next/types are gitignored; generate them before tsc.
+      - run: pnpm exec next typegen
+      - run: pnpm exec tsc --noEmit --incremental false
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Placeholder URL makes getPrisma() return null, so pages build on fixtures.
+      DATABASE_URL: postgresql://USER:PASSWORD@localhost:5432/theartistpost
+      AUTH_SECRET: ci-build-only-secret
+      NEXT_PUBLIC_SITE_URL: https://theartistpost.fluxlab.agency
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
   ship:
-    needs: test
+    needs: [test, typecheck, build]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -31,7 +70,10 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           if [ -z "$VPS_SSH_KEY" ]; then
-            echo "VPS_SSH_KEY is not on this repo. Live deploys go through flux-ghl-mcp ship or ssh deploy-site."
+            # Production is deployed by the VPS redeploy-sites cron, which pulls main
+            # every ~3 minutes regardless of this workflow. Say so loudly instead of
+            # reporting a silent green "ship".
+            echo "::warning title=Not deployed by Actions::VPS_SSH_KEY is not set, so this job did not deploy. Production updates via the VPS redeploy-sites cron (pulls main ~every 3 min) or 'deploy-site theartistpost'."
             echo "SKIP_SHIP=1" >> "$GITHUB_ENV"
             exit 0
           fi
@@ -52,7 +94,7 @@ jobs:
       - name: Pull, build, restart
         if: env.SKIP_SHIP != '1'
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$USER@$HOST" 'bash -s' <<'REMOTE'
+          ssh -i ~/.ssh/deploy_key "$USER@$HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
           if command -v deploy-site >/dev/null 2>&1; then
             deploy-site theartistpost
@@ -63,5 +105,5 @@ jobs:
             pnpm build
             pm2 restart theartistpost
           fi
-          curl -fsS --max-time 15 http://127.0.0.1:3013/ >/dev/null
+          curl -fsS --max-time 15 --retry 5 --retry-delay 3 --retry-all-errors http://127.0.0.1:3013/ >/dev/null
           REMOTE

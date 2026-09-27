@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { hours } from "@/content/site";
 
-const TZ = "America/New_York";
-const OPEN_MINUTES = 9 * 60; // 09:00
-const CLOSE_MINUTES = 21 * 60 + 30; // 21:30
+const TZ = hours.timeZone;
+const OPEN_MINUTES = hours.openMinutes;
+const CLOSE_MINUTES = hours.closeMinutes;
 
 function minutesInTz(date: Date): number {
   const parts = new Intl.DateTimeFormat("en-US", {

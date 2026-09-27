@@ -1,6 +1,6 @@
 import type { Post, Prisma, Tag, User, ArtistProfile } from "@prisma/client";
 import { assets } from "@/content/site";
-import { POSTS_PAGE_SIZE } from "@/shared/lib/constants";
+import { POSTS_MAX_TAKE, POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { getPrisma } from "@/shared/lib/prisma";
 import {
   isDeniedAuthorEmail,
@@ -128,12 +128,18 @@ export async function getFeaturedPosts(limit = 4): Promise<PostSummary[]> {
   );
 }
 
+/** Whole number of posts per page, between 1 and POSTS_MAX_TAKE. */
+export function clampPostsTake(take: number | undefined): number {
+  if (take === undefined || !Number.isFinite(take)) return POSTS_PAGE_SIZE;
+  return Math.min(POSTS_MAX_TAKE, Math.max(1, Math.trunc(take)));
+}
+
 export async function getPosts(options?: {
   cursor?: string;
   take?: number;
   tag?: string;
 }): Promise<{ items: PostSummary[]; nextCursor: string | null }> {
-  const take = options?.take ?? POSTS_PAGE_SIZE;
+  const take = clampPostsTake(options?.take);
 
   return withDb(
     async () => {
@@ -166,7 +172,15 @@ export async function getPosts(options?: {
   );
 }
 
-export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
+export async function getPostBySlug(
+  slug: string,
+  options?: {
+    /** Oldest first by default (the post page reads top to bottom). */
+    commentOrder?: "asc" | "desc";
+    /** Omit to load every comment. */
+    commentTake?: number;
+  },
+): Promise<PostDetail | null> {
   if (isDeniedPostSlug(slug)) return null;
 
   return withDb(
@@ -182,7 +196,10 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
           tags: true,
           _count: { select: { likes: true, comments: true } },
           comments: {
-            orderBy: { createdAt: "asc" },
+            orderBy: { createdAt: options?.commentOrder ?? "asc" },
+            ...(options?.commentTake !== undefined
+              ? { take: options.commentTake }
+              : {}),
             include: {
               user: { select: { id: true, name: true, image: true } },
             },

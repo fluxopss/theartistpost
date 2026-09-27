@@ -41,6 +41,14 @@ export const site = {
   founder: "Robbie Alvarez",
 } as const;
 
+/** Daily open hours at Hacienda, in the venue's time zone. */
+export const hours = {
+  openMinutes: 9 * 60, // 09:00
+  closeMinutes: 21 * 60 + 30, // 21:30
+  label: "9:00 AM – 9:30 PM",
+  timeZone: "America/New_York",
+} as const;
+
 export const links = {
   donate:
     "https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=3DCYEFGX7GXMY",
@@ -57,6 +65,18 @@ export const links = {
     youtube: "https://www.youtube.com/channel/UC7xnl70dDRjEg6bJt-W1FXw",
   },
 } as const;
+
+export type SocialNetwork = keyof typeof links.social;
+
+export const socialLabels: Record<SocialNetwork, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  pinterest: "Pinterest",
+  tiktok: "TikTok",
+  x: "X",
+  youtube: "YouTube",
+};
 
 export const assets = {
   logo: "/brand/logo.webp",

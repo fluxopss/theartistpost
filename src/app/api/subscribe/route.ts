@@ -1,39 +1,19 @@
-import { parseSubscribeEmail } from "@/features/app/subscribe";
-import { sendLeadToGhl } from "@/lib/ghl";
+import { submitSubscribe } from "@/server/api/leads/subscribe";
 
 export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
-    const emailValue =
-      typeof body === "object" && body !== null && "email" in body
-        ? (body as { email: unknown }).email
-        : undefined;
-    const parsed = parseSubscribeEmail(emailValue);
-    if (!parsed.ok) {
-      return Response.json({ ok: false, error: parsed.error }, { status: 400 });
+    const outcome = await submitSubscribe(body);
+
+    if (outcome.ok) {
+      return Response.json({ ok: true });
     }
 
-    const result = await sendLeadToGhl({
-      name: parsed.email.split("@")[0] ?? "Subscriber",
-      email: parsed.email,
-      message: "Newsletter subscribe",
-      intent: "subscribe",
-      source: "theartistpost-subscribe",
-      page: "/",
-    });
-
-    if (!result.ok) {
-      return Response.json(
-        {
-          ok: false,
-          error:
-            "We could not add that just now. Email Robbie and we will put you on the list.",
-        },
-        { status: 502 },
-      );
+    if (outcome.reason === "invalid") {
+      return Response.json({ ok: false, error: outcome.error }, { status: 400 });
     }
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: false, error: outcome.error }, { status: 502 });
   } catch {
     return Response.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }

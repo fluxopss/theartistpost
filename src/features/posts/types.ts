@@ -66,4 +66,10 @@ export interface PostDetail extends PostSummary {
 
 export interface ArtistDetail extends ArtistSummary {
   posts: PostSummary[];
+  /** Published works in the public catalog (may exceed `posts.length` when paginated). */
+  postCount: number;
+}
+
+export interface ArtistProfileOnly extends ArtistSummary {
+  postCount: number;
 }

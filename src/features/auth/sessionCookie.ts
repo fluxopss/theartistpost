@@ -5,7 +5,8 @@ import { getAuthSecret } from "@/features/auth/secret";
 
 export const SESSION_COOKIE = "tap_session";
 const SESSION_DAYS = 30;
-const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60;
+/** Session lifetime in seconds (cookie maxAge and Bearer token exp). */
+export const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60;
 
 type SessionPayload = {
   sub: string;

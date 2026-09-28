@@ -12,6 +12,6 @@ export type AppConfig = {
 export const APP_CONFIG: AppConfig = {
   minSupportedVersion: "1.0.0",
   latestVersion: "1.0.0",
-  flags: { wallCanvas: false, publishing: false, accounts: false },
+  flags: { wallCanvas: false, publishing: true, accounts: true },
   notices: [],
 };

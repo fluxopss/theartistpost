@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => {
   const db = {
-    post: { findMany: vi.fn(), findFirst: vi.fn() },
+    post: { findMany: vi.fn(), findFirst: vi.fn(), count: vi.fn() },
     artistProfile: { findUnique: vi.fn() },
     tag: { findMany: vi.fn() },
   };
@@ -86,6 +86,7 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", ORIGIN);
   db.post.findMany.mockResolvedValue([]);
   db.post.findFirst.mockResolvedValue(null);
+  db.post.count.mockResolvedValue(0);
   db.artistProfile.findUnique.mockResolvedValue(null);
   db.tag.findMany.mockResolvedValue([]);
 });
@@ -277,8 +278,10 @@ describe("GET /api/v1/artists/[handle]", () => {
         medium: "Painters",
         intent: "Private join note",
       },
-      user: { ...author(), posts: [postRow("p1")] },
+      user: author(),
     });
+    db.post.count.mockResolvedValue(1);
+    db.post.findMany.mockResolvedValue([postRow("p1")]);
 
     const response = await artistV1("realpainter");
     expect(response.status).toBe(200);
@@ -289,8 +292,12 @@ describe("GET /api/v1/artists/[handle]", () => {
       bio: "Paints the plaster.",
       avatarUrl: `${ORIGIN}/uploads/avatar.webp`,
       socialLinks: { instagram: "https://instagram.com/realpainter" },
+      postCount: 1,
     });
     expect(data.posts).toHaveLength(1);
+    expect(data.items).toEqual(data.posts);
+    expect(data.postCount).toBe(1);
+    expect(data.nextCursor).toBeNull();
     expect(data.posts[0].media.url).toBe(`${ORIGIN}/uploads/p1.webp`);
   });
 });

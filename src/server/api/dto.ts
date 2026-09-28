@@ -1,7 +1,7 @@
 import type { ContentArtist, ContentChapter, ContentEvent } from "@/lib/content";
 import { nightPhase, type NightPhase } from "@/features/night/program";
 import type {
-  ArtistDetail,
+  ArtistSummary,
   MediaType,
   PostDetail,
   PostSummary,
@@ -169,7 +169,7 @@ export function toSocialLinksDTO(raw: unknown): SocialLinksDTO {
   return links;
 }
 
-export function toArtistProfileDTO(artist: ArtistDetail): ArtistProfileDTO {
+export function toArtistProfileDTO(artist: ArtistSummary): ArtistProfileDTO {
   return {
     handle: artist.handle,
     name: artist.name,

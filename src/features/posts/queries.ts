@@ -9,6 +9,7 @@ import {
 } from "@/features/posts/denylist";
 import type {
   ArtistDetail,
+  ArtistProfileOnly,
   PostDetail,
   PostSummary,
   PostTheme,
@@ -214,45 +215,128 @@ export async function getPostBySlug(
   );
 }
 
-export async function getArtistByHandle(
+const artistPostInclude = {
+  author: { include: { artistProfile: true } },
+  tags: true,
+  _count: { select: { likes: true, comments: true } },
+} as const;
+
+function mapArtistProfile(
+  profile: ArtistProfile & { user: User },
+  postCount: number,
+): ArtistProfileOnly {
+  return {
+    id: profile.id,
+    handle: profile.handle,
+    name: profile.user.name,
+    bio: profile.bio,
+    avatarUrl: sanitizeAvatarUrl(profile.avatarUrl ?? profile.user.image),
+    socialLinks: (profile.socialLinks as SocialLinks | null) ?? null,
+    postCount,
+  };
+}
+
+/**
+ * Approved public artist profile (no posts). Unknown, unapproved, or denied
+ * authors are null — same gate as the profile page.
+ */
+export async function getArtistProfileByHandle(
   handle: string,
-): Promise<ArtistDetail | null> {
+): Promise<ArtistProfileOnly | null> {
   return withDb(
     async () => {
       const prisma = getPrisma()!;
       const profile = await prisma.artistProfile.findUnique({
         where: { handle },
-        include: {
-          user: {
-            include: {
-              posts: {
-                where: publicCatalogWhere(),
-                orderBy: { publishedAt: "desc" },
-                include: {
-                  author: { include: { artistProfile: true } },
-                  tags: true,
-                  _count: { select: { likes: true, comments: true } },
-                },
-              },
-            },
-          },
+        include: { user: true },
+      });
+      if (!profile?.approved) return null;
+      if (isDeniedAuthorEmail(profile.user.email)) return null;
+
+      const postCount = await prisma.post.count({
+        where: {
+          ...publicCatalogWhere(),
+          authorId: profile.userId,
         },
       });
-      if (!profile) return null;
-      if (!profile.approved) return null;
+
+      return mapArtistProfile(profile, postCount);
+    },
+    () => null,
+  );
+}
+
+/**
+ * Chronological published works for an approved artist.
+ * Same catalog filter as the Wall; `nextCursor` is the last item's id.
+ */
+export async function getArtistTimeline(
+  handle: string,
+  options?: { cursor?: string; take?: number },
+): Promise<{
+  artist: ArtistProfileOnly;
+  items: PostSummary[];
+  nextCursor: string | null;
+} | null> {
+  const take = clampPostsTake(options?.take);
+
+  return withDb(
+    async () => {
+      const prisma = getPrisma()!;
+      const profile = await prisma.artistProfile.findUnique({
+        where: { handle },
+        include: { user: true },
+      });
+      if (!profile?.approved) return null;
       if (isDeniedAuthorEmail(profile.user.email)) return null;
+
+      const where: Prisma.PostWhereInput = {
+        ...publicCatalogWhere(),
+        authorId: profile.userId,
+      };
+
+      const [postCount, posts] = await Promise.all([
+        prisma.post.count({ where }),
+        prisma.post.findMany({
+          where,
+          orderBy: { publishedAt: "desc" },
+          take: take + 1,
+          ...(options?.cursor
+            ? { skip: 1, cursor: { id: options.cursor } }
+            : {}),
+          include: artistPostInclude,
+        }),
+      ]);
+
+      const hasMore = posts.length > take;
+      const slice = hasMore ? posts.slice(0, take) : posts;
       return {
-        id: profile.id,
-        handle: profile.handle,
-        name: profile.user.name,
-        bio: profile.bio,
-        avatarUrl: sanitizeAvatarUrl(profile.avatarUrl ?? profile.user.image),
-        socialLinks: (profile.socialLinks as SocialLinks | null) ?? null,
-        posts: profile.user.posts.map(mapPostSummary),
+        artist: mapArtistProfile(profile, postCount),
+        items: slice.map(mapPostSummary),
+        nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
       };
     },
     () => null,
   );
+}
+
+/**
+ * Profile + first page of works (defaults to a full page for the web SSR
+ * artist page). Prefer `getArtistTimeline` for mobile infinite scroll.
+ */
+export async function getArtistByHandle(
+  handle: string,
+  options?: { take?: number; cursor?: string },
+): Promise<ArtistDetail | null> {
+  const page = await getArtistTimeline(handle, {
+    take: options?.take ?? POSTS_MAX_TAKE,
+    cursor: options?.cursor,
+  });
+  if (!page) return null;
+  return {
+    ...page.artist,
+    posts: page.items,
+  };
 }
 
 export async function getAllTags(): Promise<TagSummary[]> {

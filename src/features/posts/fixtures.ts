@@ -329,10 +329,12 @@ export function toSummary(post: PostDetail): PostSummary {
 export function getFixtureArtist(handle: string): ArtistDetail | null {
   const artist = Object.values(artists).find((a) => a.handle === handle);
   if (!artist) return null;
+  const posts = fixturePosts
+    .filter((p) => p.artist.handle === handle)
+    .map(toSummary);
   return {
     ...artist,
-    posts: fixturePosts
-      .filter((p) => p.artist.handle === handle)
-      .map(toSummary),
+    posts,
+    postCount: posts.length,
   };
 }

@@ -12,6 +12,8 @@ import {
   memberJoinSchema,
   registerArtistCore,
   registerMemberCore,
+  reservedArtistIdentityError,
+  reservedMemberIdentityError,
   type RegisterArtistInput,
   type RegisterMemberInput,
 } from "@/features/auth/register";
@@ -55,6 +57,9 @@ export async function registerMemberAction(
   }
 
   const email = parsed.data.email.toLowerCase();
+  const reserved = reservedMemberIdentityError(email);
+  if (reserved) return { ok: false, error: reserved };
+
   const ip = await clientKey();
   if (
     !hitRateLimit(`register:member:${ip}`, { windowMs: 60_000, max: 8 }) ||
@@ -99,6 +104,10 @@ export async function registerArtistAction(
   }
 
   const email = parsed.data.email.toLowerCase();
+  const handle = parsed.data.handle.toLowerCase();
+  const reserved = reservedArtistIdentityError(email, handle);
+  if (reserved) return { ok: false, error: reserved };
+
   const ip = await clientKey();
   if (
     !hitRateLimit(`register:artist:${ip}`, { windowMs: 60_000, max: 5 }) ||

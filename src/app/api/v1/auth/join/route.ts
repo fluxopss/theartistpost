@@ -2,6 +2,8 @@ import {
   EXISTING_EMAIL_SIGN_IN_HINT,
   registerArtistCore,
   registerMemberCore,
+  reservedArtistIdentityError,
+  reservedMemberIdentityError,
 } from "@/features/auth/register";
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import { issueSessionToken } from "@/features/auth/requestSession";
@@ -54,6 +56,14 @@ export async function POST(request: Request) {
     const ip = clientIp(request);
     const email = parsed.data.email.toLowerCase();
     const door = parsed.data.door;
+    const reserved =
+      door === "member"
+        ? reservedMemberIdentityError(email)
+        : reservedArtistIdentityError(email, parsed.data.handle);
+    if (reserved) {
+      return apiError("validation_failed", reserved);
+    }
+
     const limit = checkRateLimit(`v1:auth:join:${door}:${ip}`, {
       windowMs: 60_000,
       max: door === "artist" ? 5 : 8,

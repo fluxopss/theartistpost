@@ -46,6 +46,27 @@ export const EXISTING_EMAIL_SIGN_IN_HINT =
   "This email already joined. Request a sign-in code instead.";
 
 /**
+ * Pure reserved-identity checks (no DB). Call before getPrisma() so CI and
+ * DB-down hosts still return validation errors instead of "unavailable".
+ */
+export function reservedMemberIdentityError(
+  email: string,
+): string | null {
+  if (isDeniedAuthorEmail(email)) return "That email is reserved.";
+  return null;
+}
+
+export function reservedArtistIdentityError(
+  email: string,
+  handle: string,
+): string | null {
+  if (isDeniedAuthorEmail(email) || handle.toLowerCase() === "studioguest") {
+    return "That identity is reserved.";
+  }
+  return null;
+}
+
+/**
  * Passwordless member join core: name + email → VIEWER.
  * Does not write cookies or tokens — callers issue the session.
  */
@@ -61,8 +82,9 @@ export async function registerMemberCore(
   const email = raw.email.toLowerCase();
   const name = raw.name;
 
-  if (isDeniedAuthorEmail(email)) {
-    return { ok: false, error: "That email is reserved.", code: "validation" };
+  const reserved = reservedMemberIdentityError(email);
+  if (reserved) {
+    return { ok: false, error: reserved, code: "validation" };
   }
 
   try {
@@ -118,12 +140,9 @@ export async function registerArtistCore(
   const medium = raw.medium;
   const intent = raw.intent;
 
-  if (isDeniedAuthorEmail(email) || handle === "studioguest") {
-    return {
-      ok: false,
-      error: "That identity is reserved.",
-      code: "validation",
-    };
+  const reserved = reservedArtistIdentityError(email, handle);
+  if (reserved) {
+    return { ok: false, error: reserved, code: "validation" };
   }
 
   try {

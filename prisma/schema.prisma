@@ -26,6 +26,10 @@ enum PostStatus {
   ARCHIVED
 }
 
+enum AuthChallengePurpose {
+  SIGN_IN
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -137,4 +141,19 @@ model AuditLog {
   @@index([action, createdAt])
   @@index([targetType, targetId])
   @@index([actorId])
+}
+
+/** Short-lived passwordless sign-in code (hashed). Join itself stays code-free like the website. */
+model AuthChallenge {
+  id         String                @id @default(cuid())
+  email      String
+  purpose    AuthChallengePurpose  @default(SIGN_IN)
+  codeHash   String
+  attempts   Int                   @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime              @default(now())
+
+  @@index([email, purpose, createdAt])
+  @@index([expiresAt])
 }

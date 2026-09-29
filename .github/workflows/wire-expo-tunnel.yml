@@ -1,0 +1,95 @@
+name: Wire Expo Go tunnel URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      tunnel_url:
+        description: "exp:// or https:// …exp.direct tunnel URL"
+        required: true
+        type: string
+        default: "exp://4p8wr9q-anonymous-8081.exp.direct"
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VPS_SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY is not set"
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          key="${VPS_SSH_KEY//$'\r'/}"
+          key="${key//\\n/$'\n'}"
+          printf '%s\n' "$key" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+          HOST="${{ secrets.VPS_HOST || vars.VPS_HOST }}"
+          USER="${{ secrets.VPS_USER || vars.VPS_USER || 'deploy' }}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST is not set"
+            exit 1
+          fi
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Upsert env + restart PM2 as deploy
+        env:
+          TUNNEL_URL: ${{ inputs.tunnel_url }}
+        run: |
+          set -euo pipefail
+          # Pass tunnel URL into the remote shell explicitly.
+          ssh -i ~/.ssh/deploy_key "$USER@$HOST" "export TUNNEL_URL=$(printf %q "$TUNNEL_URL"); bash -s" <<'REMOTE'
+          set -euo pipefail
+          ENV=/var/www/theartistpost/.env
+          URL="${TUNNEL_URL:?}"
+          AT="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+          echo "whoami=$(whoami) url=$URL"
+          test -f "$ENV"
+          cp -a "$ENV" "$ENV.bak.$(date -u +%Y%m%dT%H%M%SZ)"
+          tmp="$(mktemp)"
+          grep -Ev '^(#\s*)?(EXPO_DEV_TUNNEL_URL|EXPO_GO_URL|EXPO_DEV_UPDATED_AT)=' "$ENV" >"$tmp" || true
+          {
+            cat "$tmp"
+            printf '\n# Expo Go tip — /setup-expo + GET /api/v1/app/expo-dev\n'
+            printf 'EXPO_DEV_TUNNEL_URL=%s\n' "$URL"
+            printf 'EXPO_GO_URL=%s\n' "$URL"
+            printf 'EXPO_DEV_UPDATED_AT=%s\n' "$AT"
+          } >"$ENV"
+          rm -f "$tmp"
+          chmod 600 "$ENV"
+          if pm2 describe theartistpost >/dev/null 2>&1; then
+            pm2 restart theartistpost --update-env
+            pm2 save
+          else
+            echo "ERROR: pm2 process theartistpost not found for $(whoami)"
+            pm2 list || true
+            exit 1
+          fi
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS --max-time 5 http://127.0.0.1:3013/api/v1/app/expo-dev >/tmp/expo-dev.json; then
+              break
+            fi
+            sleep 2
+          done
+          cat /tmp/expo-dev.json
+          echo
+          python3 - <<'PY'
+          import json, sys
+          data = json.load(open("/tmp/expo-dev.json"))
+          d = data.get("data") or {}
+          got = d.get("expoGoUrl") or ""
+          print("status=", d.get("status"), "expoGoUrl=", got, file=sys.stderr)
+          if d.get("status") != "ready":
+              raise SystemExit("FAIL: expected status=ready")
+          if "exp://" not in got:
+              raise SystemExit("FAIL: missing expoGoUrl")
+          print("OK")
+          PY
+          REMOTE

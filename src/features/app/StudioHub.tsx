@@ -15,7 +15,7 @@ import {
   Bookmark,
   DoorOpen,
 } from "lucide-react";
-import { appCopy, assets, links, moreMenu, site } from "@/content/site";
+import { appCopy, assets, moreMenu, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { getSaves, getStudio } from "@/features/app/storage";
 import { useSession } from "@/features/auth/AuthProvider";
@@ -150,8 +150,7 @@ export function StudioHub() {
             Directions
           </ButtonLink>
           <ButtonLink
-            href={links.donate}
-            external
+            href="/donate"
             size="sm"
             variant="ghost"
             className="rounded-full"

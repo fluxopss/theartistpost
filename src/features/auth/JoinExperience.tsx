@@ -120,12 +120,11 @@ export function JoinExperience({
               </ButtonLink>
             ) : (
               <ButtonLink
-                href={links.donate}
-                external
+                href="/donate"
                 variant="outline"
                 className="rounded-full"
               >
-                Support on PayPal
+                Support the house
               </ButtonLink>
             )}
           </div>
@@ -449,12 +448,11 @@ export function JoinExperience({
                 Open the Wall
               </ButtonLink>
               <ButtonLink
-                href={links.donate}
-                external
+                href="/donate"
                 variant="outline"
                 className="rounded-full"
               >
-                Donate via PayPal
+                Donate
               </ButtonLink>
               <ButtonLink
                 href={links.merch}

@@ -30,8 +30,7 @@ export function AboutSupport() {
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <ButtonLink
-            href={links.donate}
-            external
+            href="/donate"
             className="rounded-full !bg-spark-coral !text-ink"
           >
             {copy.about.donateCta}

@@ -48,6 +48,11 @@ function summarizeLead(payload: LeadPayload) {
 /**
  * POST lead JSON to GoHighLevel inbound webhook (`GHL_WEBHOOK_URL`).
  * Unset env fails closed in production; accepted in development.
+ *
+ * Donor stewardship (from `/donate` / `/api/v1/donate/steward`) uses
+ * `intent: "donor"` and `medium: "one_time" | "monthly"`. Map those in GHL to
+ * tags `donor` / `donor.one_time` / `donor.recurring` (or `sustainer`).
+ * PayPal IPN → GHL is not wired yet — ops can hand-tag from PayPal exports until then.
  */
 export async function sendLeadToGhl(
   payload: LeadPayload,

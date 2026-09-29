@@ -53,7 +53,7 @@ export const whatThisFunds = [
 ] as const;
 
 export const giveActions = [
-  { id: "paypal", href: links.donate, label: "Donate with PayPal", external: true },
+  { id: "donate", href: "/donate", label: "Support the house", external: false },
   { id: "merch", href: links.merch, label: "Shop Kindness Always", external: true },
 ] as const;
 

@@ -90,8 +90,7 @@ export default function AboutPage() {
             Get Involved
           </ButtonLink>
           <ButtonLink
-            href={links.donate}
-            external
+            href="/donate"
             variant="outline"
             className="rounded-full"
           >

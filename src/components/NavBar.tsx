@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { HeartHandshake, Menu, X } from "lucide-react";
-import { assets, links, navMarketing, site } from "@/content/site";
+import { assets, navMarketing, site } from "@/content/site";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ButtonLink } from "@/shared/ui/Button";
 import { cn } from "@/shared/lib/cn";
@@ -89,8 +89,7 @@ export function NavBar() {
             <ThemeToggle className="hidden sm:inline-flex" />
             <TrackClick event="cta_donate" payload={{ source: "nav" }}>
             <ButtonLink
-              href={links.donate}
-              external
+              href="/donate"
               size="sm"
               variant="secondary"
               className="gap-1.5 rounded-full !bg-spark-coral !text-ink hover:brightness-110"
@@ -166,8 +165,7 @@ export function NavBar() {
             )}
             <TrackClick event="cta_donate" payload={{ source: "nav-mobile" }}>
               <ButtonLink
-                href={links.donate}
-                external
+                href="/donate"
                 className="col-span-2 mt-1 w-full rounded-full !bg-spark-coral !text-ink"
                 size="lg"
               >

@@ -125,8 +125,7 @@ export function Footer() {
           <div className="mt-5 flex flex-wrap gap-2">
             <TrackClick event="cta_donate" payload={{ source: "footer" }}>
             <ButtonLink
-              href={links.donate}
-              external
+              href="/donate"
               size="sm"
               className="rounded-full !bg-spark-coral !text-[#020b1a]"
             >

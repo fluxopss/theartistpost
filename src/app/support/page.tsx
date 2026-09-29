@@ -47,12 +47,15 @@ export default function SupportPage() {
 
       <h2>Donations and merch</h2>
       <p>
-        Donate via <a href={links.donate}>PayPal</a> or Venmo {site.venmo}. Order
-        Kindness Always merch on{" "}
+        Open the{" "}
+        <a href="/donate">donate page</a> for the house story, one-time and
+        monthly PayPal, and Venmo {site.venmo}. Order Kindness Always merch on{" "}
         <a href={links.merch} target="_blank" rel="noreferrer">
           Bonfire
         </a>{" "}
-        or call to place an order.
+        (a purchase, not a donation) or call to place an order. Sponsorships go
+        through{" "}
+        <a href="/get-involved?door=partner">Get Involved — partner</a>.
       </p>
     </LegalLayout>
   );

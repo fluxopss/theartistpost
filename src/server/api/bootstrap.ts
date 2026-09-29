@@ -7,7 +7,7 @@ import {
   type ChapterDTO,
   type ContentArtistDTO,
 } from "@/server/api/dto";
-import { externalUrl } from "@/server/api/urls";
+import { absoluteUrl, externalUrl } from "@/server/api/urls";
 
 export type BootstrapPayload = {
   contact: {
@@ -29,7 +29,12 @@ export type BootstrapPayload = {
     timeZone: string;
   };
   social: Array<{ id: SocialNetwork; label: string; url: string }>;
-  donate: { paypalUrl: string; venmo: string };
+  donate: {
+    paypalUrl: string;
+    paypalMonthlyUrl: string;
+    pageUrl: string;
+    venmo: string;
+  };
   merchUrl: string;
   artistAgreementUrl: string;
   chapters: ChapterDTO[];
@@ -50,6 +55,13 @@ function url(value: string): string {
   // Every link here is an absolute https URL in site.ts; fail loudly if not.
   const resolved = externalUrl(value);
   if (!resolved) throw new Error(`Expected an absolute URL, got "${value}"`);
+  return resolved;
+}
+
+/** In-house path (`/donate`) → absolute origin URL for native clients. */
+function sitePageUrl(path: string): string {
+  const resolved = absoluteUrl(path);
+  if (!resolved) throw new Error(`Expected a site path, got "${path}"`);
   return resolved;
 }
 
@@ -84,7 +96,12 @@ export async function buildBootstrap(): Promise<Bootstrap> {
       label: socialLabels[id],
       url: url(links.social[id]),
     })),
-    donate: { paypalUrl: url(links.donate), venmo: site.venmo },
+    donate: {
+      paypalUrl: url(links.donate),
+      paypalMonthlyUrl: url(links.donateMonthly),
+      pageUrl: sitePageUrl(links.donatePage),
+      venmo: site.venmo,
+    },
     merchUrl: url(links.merch),
     artistAgreementUrl: url(links.artistAgreement),
     chapters: chapters.map(toChapterDTO),

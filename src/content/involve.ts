@@ -87,7 +87,7 @@ export const involveDoors: InvolveDoor[] = [
     spark: "gold",
     imageFit: "contain",
     collectsInquiry: false,
-    primary: { href: links.donate, label: "Donate", external: true },
+    primary: { href: "/donate", label: "Support the house" },
     secondary: { href: links.merch, label: "Shop merch", external: true },
   },
   {

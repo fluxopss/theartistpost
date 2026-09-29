@@ -50,8 +50,17 @@ export const hours = {
 } as const;
 
 export const links = {
+  /** Hosted PayPal Donate button — one-time; monthly when enabled on the nonprofit account. */
   donate:
     "https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=3DCYEFGX7GXMY",
+  /**
+   * Same hosted button. PayPal’s donate page offers “Make this a monthly donation”
+   * when recurring is enabled on the nonprofit PayPal account — confirm in PayPal.
+   */
+  donateMonthly:
+    "https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=3DCYEFGX7GXMY",
+  /** In-house donate story (not the processor). */
+  donatePage: "/donate",
   merch: "https://www.bonfire.com/love-all-51/",
   artistAgreement: "https://forms.gle/uS58nk2Bpgx45Uwv5",
   partnerSubCulture: "https://sub-culture.org/",
@@ -163,10 +172,9 @@ export const moreMenu = [
     external: true,
   },
   {
-    href: "https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=3DCYEFGX7GXMY",
+    href: "/donate",
     label: "Donate",
-    description: "Support local arts",
-    external: true,
+    description: "Support the house",
   },
 ] as const;
 
@@ -320,6 +328,41 @@ export const copy = {
     liveRoomTitle: "The live room",
     liveRoomBody:
       "Hacienda on Clematis is where TAP meets people in the room — rotating showcases, donation-based merch, and a space built to connect.",
+  },
+  donate: {
+    kicker: "Support the house",
+    title: "Keep Clematis open for artists",
+    lead: "Gifts fund free artist showcase space at Hacienda, the kindness programs, community nights, and the long walk toward a permanent home for art — not a paywall on publishing.",
+    onceCta: "Give once with PayPal",
+    monthlyCta: "Give monthly with PayPal",
+    monthlyNote:
+      "On PayPal, choose Make this a monthly donation when that option is shown. Recurring must be enabled on the nonprofit PayPal account.",
+    venmoCta: "Venmo",
+    fundsTitle: "What gifts fund",
+    pathsTitle: "Donate · Sponsor · Shop",
+    pathsLead:
+      "Three different paths. Only a gift to the nonprofit is a donation — sponsorship and merch are labeled plainly.",
+    donatePathTitle: "Donate",
+    donatePathBody:
+      "A charitable gift through PayPal or Venmo. Receipts come from the processor; thank-you stewardship follows when we have your email.",
+    sponsorPathTitle: "Sponsor / partner",
+    sponsorPathBody:
+      "Businesses underwriting a night or room — recognition, not a personal tax-deductible donation unless counsel says otherwise.",
+    sponsorCta: "Partner with us",
+    shopPathTitle: "Shop",
+    shopPathBody:
+      "Kindness Always merch on Bonfire is a purchase that funds the mission — treat it as commerce unless counsel designs a true contribution-plus-premium model.",
+    shopCta: "Shop Kindness Always",
+    transparencyTitle: "Transparency",
+    transparencyBody:
+      "Legal name, EIN, and the nonprofit line already published on this site. Deductibility and solicitation rules are between you, the IRS, and counsel — we do not invent GuideStar badges or determination letters here.",
+    stewardTitle: "Already gave?",
+    stewardLead:
+      "Leave your email so Robbie can thank you and share impact notes. This tags you as a donor in our CRM — it does not process a payment.",
+    stewardCta: "Keep me posted",
+    stewardSuccess: "Thank you — Robbie has your note.",
+    stewardOnce: "I gave once",
+    stewardMonthly: "I give monthly",
   },
   schedule: {
     title: "Artist Schedule",

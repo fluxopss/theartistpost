@@ -44,8 +44,8 @@ async function loadPublicPostBySlug(
   if (isDeniedPostSlug(slug)) return null;
   const post = await prisma.post.findFirst({
     where: {
-      slug,
       ...publicCatalogWhere(),
+      slug,
     },
     include: {
       author: { include: { artistProfile: true } },

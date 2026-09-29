@@ -240,8 +240,8 @@ describe("GET/POST /api/v1/posts/[slug]/comments", () => {
     expect(body.data.items).toHaveLength(1);
     expect(body.data.items[0].author.name).toBe("Member One");
     expect(db.post.findFirst.mock.calls[0]?.[0].where).toMatchObject({
-      slug: "real-work",
       ...publicCatalogWhere(),
+      slug: "real-work",
     });
   });
 

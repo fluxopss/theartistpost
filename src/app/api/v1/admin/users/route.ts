@@ -1,6 +1,7 @@
-import { requireApiSession } from "@/server/api/session";
-import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
 import { isDeniedAuthorEmail } from "@/features/posts/denylist";
+import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
+import { requireAdmin } from "@/server/api/session";
+import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -12,14 +13,13 @@ const CURSOR_RE = /^[A-Za-z0-9_-]{1,64}$/;
 /**
  * Admin-only customer list from the real User table.
  * Does not invent rows — empty when the house has no accounts yet.
+ *
+ * Query: `pendingArtist=1` → artists awaiting approval only.
  */
 export async function GET(request: Request) {
   return withApiErrors("admin/users", async () => {
-    const ctx = await requireApiSession(request);
+    const ctx = await requireAdmin(request);
     if (ctx instanceof Response) return ctx;
-    if (ctx.dbUser.role !== "ADMIN") {
-      return apiError("forbidden", "Admin access required.");
-    }
 
     const params = new URL(request.url).searchParams;
     const fields: Record<string, string> = {};
@@ -40,13 +40,32 @@ export async function GET(request: Request) {
       fields.cursor = "cursor must be a nextCursor value from a previous page.";
     }
 
+    const pendingRaw = params.get("pendingArtist");
+    let pendingArtist = false;
+    if (pendingRaw !== null && pendingRaw !== "") {
+      if (pendingRaw === "1" || pendingRaw === "true") {
+        pendingArtist = true;
+      } else if (pendingRaw === "0" || pendingRaw === "false") {
+        pendingArtist = false;
+      } else {
+        fields.pendingArtist = "pendingArtist must be 1/true or 0/false.";
+      }
+    }
+
     if (Object.keys(fields).length > 0) {
       return apiError("validation_failed", "Check the query parameters.", {
         fields,
       });
     }
 
+    const where: Prisma.UserWhereInput = pendingArtist
+      ? {
+          artistProfile: { is: { approved: false } },
+        }
+      : {};
+
     const users = await ctx.prisma.user.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       take: take + 1,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),

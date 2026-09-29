@@ -162,6 +162,11 @@ export const moreMenu = [
   { href: "/history", label: "History", description: "The Artist Post History" },
   { href: "/supporters", label: "Supporters", description: "Chapters nationwide" },
   { href: "/install", label: "Get the app", description: "Home screen + App Store wrap" },
+  {
+    href: "/setup-expo",
+    label: "Setup latest Expo Go",
+    description: "Native tip on your phone via Expo Go tunnel",
+  },
   { href: "/create", label: "Create", description: "Compose a scene" },
   { href: "/saved", label: "Saved", description: "Works and nights you kept" },
   { href: "/settings", label: "Settings", description: "Theme, studio, data" },

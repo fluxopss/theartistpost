@@ -24,6 +24,34 @@ export type AuthedContext = {
 };
 
 /**
+ * Resolve a real session (Bearer or cookie) backed by a DB user.
+ * Mock guest / reserved emails / missing users yield null — never invents.
+ */
+export async function resolveOptionalSession(
+  request: Request,
+): Promise<AuthedContext | null> {
+  const session = await resolveSessionFromRequest(request);
+  if (!session || isMockGuestSession(session)) return null;
+
+  const prisma = getPrisma();
+  if (!prisma) return null;
+
+  const dbUser = await prisma.user.findUnique({
+    where: { email: session.email.toLowerCase() },
+    include: { artistProfile: true },
+  });
+  if (!dbUser) return null;
+
+  const liveSession = sessionUserFromDb(dbUser);
+  return {
+    session: liveSession,
+    dbUser,
+    user: toAuthUserDTO(dbUser),
+    prisma,
+  };
+}
+
+/**
  * Require a real session (Bearer or cookie) backed by a DB user.
  * Mock guest / reserved emails are treated as unauthorized.
  */
@@ -70,6 +98,18 @@ export async function requirePublisher(
   const gate = authorizePublisher(ctx.session, ctx.dbUser);
   if (!gate.ok) {
     return apiError("forbidden", gate.error || PUBLISHING_CLOSED_ERROR);
+  }
+  return ctx;
+}
+
+/** ADMIN session required for customer management. */
+export async function requireAdmin(
+  request: Request,
+): Promise<AuthedContext | Response> {
+  const ctx = await requireApiSession(request);
+  if (ctx instanceof Response) return ctx;
+  if (ctx.dbUser.role !== "ADMIN") {
+    return apiError("forbidden", "Admin access required.");
   }
   return ctx;
 }

@@ -1,7 +1,8 @@
 import type { SocialLinks } from "@/features/posts/types";
 import { toArtistProfileDTO } from "@/server/api/dto";
+import { patchMeProfile } from "@/server/api/meProfile";
 import { requireApiSession } from "@/server/api/session";
-import { apiOk, withApiErrors } from "@/server/api/respond";
+import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,33 @@ export async function GET(request: Request) {
             pendingApproval: !profile.approved,
           }
         : null,
+    });
+  });
+}
+
+/** Self-serve name / artist bio updates. Never changes role or approval. */
+export async function PATCH(request: Request) {
+  return withApiErrors("me:patch", async () => {
+    const ctx = await requireApiSession(request);
+    if (ctx instanceof Response) return ctx;
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError("validation_failed", "Expected a JSON body.");
+    }
+
+    const result = await patchMeProfile(ctx.prisma, ctx.dbUser, body);
+    if (!result.ok) {
+      return apiError(result.code, result.message, { fields: result.fields });
+    }
+
+    return apiOk({
+      user: result.user,
+      canPublish: result.canPublish,
+      permissions: result.permissions,
+      profile: result.profile,
     });
   });
 }

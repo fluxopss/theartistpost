@@ -214,18 +214,35 @@ export function SetupExpoExperience() {
             </li>
             <li>
               <span className="font-semibold text-paper">
-                2. Sign into Expo
+                2. Force-quit Expo Go
               </span>{" "}
-              with the account invited to{" "}
-              <span className="text-paper">fluxlabsfloridas-team</span> (Viewer
-              is enough).
+              — swipe it away from the app switcher so it fully restarts.
             </li>
             <li>
               <span className="font-semibold text-paper">
-                3. Tap Open in Expo Go
+                3. Sign out of Expo Go
+              </span>{" "}
+              — open Expo Go → Profile / Settings → Sign out. Required while
+              this tip uses an anonymous Metro tunnel (no Expo account on the
+              CLI). Staying signed in as robbiealvarez against an anonymous
+              session triggers the “accounts need to match” error.
+            </li>
+            <li>
+              <span className="font-semibold text-paper">
+                4. Hard-refresh this page
+              </span>{" "}
+              — pull to refresh (or close the Safari tab and reopen{" "}
+              <span className="text-paper">/setup-expo</span>) so you get the
+              current tunnel URL.
+            </li>
+            <li>
+              <span className="font-semibold text-paper">
+                5. Tap Open in Expo Go
               </span>{" "}
               above — or scan the QR on a desktop browser of this page. Cellular
-              or any Wi‑Fi works; the tunnel is on the public internet.
+              or any Wi‑Fi works; the tunnel is on the public internet. After it
+              loads you can sign back into robbiealvarez in Expo Go for other
+              projects.
             </li>
           </ol>
 
@@ -266,9 +283,17 @@ export function SetupExpoExperience() {
             Simulator / Xcode
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
-            On a Mac you can run the native shell in the iOS Simulator without a
-            paid Apple Developer account — free Xcode, then either an EAS
-            simulator build or a local clone.
+            Best long-term path: on your Mac, signed into Expo as{" "}
+            <span className="text-paper">robbiealvarez</span>, clone the app
+            repo and run{" "}
+            <code className="text-paper">npx expo start --tunnel --go</code>.
+            Keep Expo Go signed in as robbiealvarez — accounts match. The
+            cloud anonymous tunnel is for phone-only tips without a Mac.
+          </p>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
+            On a Mac you can also run the native shell in the iOS Simulator
+            without a paid Apple Developer account — free Xcode, then either an
+            EAS simulator build or a local clone.
           </p>
           <ul className="mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-paper-muted sm:text-base">
             <li className="flex gap-3">
@@ -321,9 +346,13 @@ export function SetupExpoExperience() {
             Honest limits
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
-            This page only works while Flux (or a cloud agent) has Metro running
-            with <code className="text-paper">--tunnel --go</code>. If Open in
-            Expo Go fails, the tunnel host may have rotated — ask Flux to refresh{" "}
+            This tip’s Metro runs <span className="text-paper">anonymous</span>{" "}
+            (no robot / org CLI login). Expo Go and the CLI must match — so{" "}
+            <span className="text-paper">sign out of Expo Go</span> before
+            opening the link. Do not sign into a robot account. This page only
+            works while Flux has Metro with{" "}
+            <code className="text-paper">--tunnel --go</code>. If Open in Expo
+            Go fails, the tunnel host may have rotated — ask Flux to refresh{" "}
             <code className="text-paper">EXPO_DEV_TUNNEL_URL</code> on the VPS.
             Prefer the home-screen web app anytime:{" "}
             <Link href="/install" className="text-spark-teal hover:underline">

@@ -93,6 +93,20 @@ export function InstallApp() {
         </section>
       )}
 
+      <section className="rounded-2xl border border-spark-coral/30 px-4 py-4">
+        <p className="font-semibold text-paper">Want the native Expo tip?</p>
+        <p className="mt-1 text-sm text-paper-muted">
+          Teammates with Expo Go can open the live Metro tunnel from a dedicated
+          setup page — no Apple Developer account.
+        </p>
+        <a
+          href="/setup-expo"
+          className="mt-3 inline-flex text-sm font-semibold text-spark-coral hover:underline"
+        >
+          Setup latest Expo Go →
+        </a>
+      </section>
+
       <section>
         <h2 className="display text-2xl text-paper">What you get</h2>
         <ul className="mt-4 space-y-3">

@@ -11,6 +11,7 @@ import {
   MapPin,
   Phone,
   Settings,
+  Smartphone,
   Sparkles,
   Bookmark,
   DoorOpen,
@@ -59,6 +60,12 @@ const destinations = [
     label: "Get Involved",
     detail: "Five doors. Robbie reads every note.",
     icon: HeartHandshake,
+  },
+  {
+    href: "/setup-expo",
+    label: "Setup latest Expo Go",
+    detail: "Open the native tip on your phone over the tunnel.",
+    icon: Smartphone,
   },
 ];
 

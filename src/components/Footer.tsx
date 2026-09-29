@@ -211,6 +211,14 @@ export function Footer() {
           </p>
           <p className="mt-2 text-sm">
             <Link
+              href="/setup-expo"
+              className="text-paper hover:text-spark-teal"
+            >
+              Setup latest Expo Go
+            </Link>
+          </p>
+          <p className="mt-2 text-sm">
+            <Link
               href="/supporters"
               className="text-paper hover:text-spark-teal"
             >

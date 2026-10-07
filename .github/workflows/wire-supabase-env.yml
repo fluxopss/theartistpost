@@ -4,10 +4,6 @@ name: Wire Supabase Auth env on VPS
 
 on:
   workflow_dispatch:
-  # Allows cutover from a feature branch before this file lands on main
-  # (GitHub only lists workflow_dispatch from the default branch).
-  push:
-    branches: [cursor/wire-supabase-vps-93b6]
 
 concurrency:
   group: wire-supabase-env-vps

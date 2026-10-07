@@ -43,8 +43,11 @@ vi.mock("@/features/auth/sessionCookie", async () => {
 
 import { POST as linkV1 } from "@/app/api/v1/auth/link/route";
 import { linkSupabaseUser } from "@/features/auth/linkSupabaseUser";
-import { looksLikeJwt } from "@/features/auth/supabaseJwt";
-import { verifySupabaseAccessToken } from "@/features/auth/supabaseJwt";
+import {
+  looksLikeJwt,
+  resetSupabaseJwksCacheForTests,
+  verifySupabaseAccessToken,
+} from "@/features/auth/supabaseJwt";
 import { resetRateLimits } from "@/features/auth/rateLimit";
 
 const db = state.db;
@@ -66,6 +69,29 @@ describe("looksLikeJwt", () => {
   it("accepts three-segment compact JWTs and rejects house HMAC", () => {
     expect(looksLikeJwt("aaa.bbb.ccc")).toBe(true);
     expect(looksLikeJwt("payload.sig")).toBe(false);
+  });
+});
+
+describe("verifySupabaseAccessToken (env skip)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetSupabaseJwksCacheForTests();
+  });
+
+  it("returns null when JWKS URL and SUPABASE_URL are unset (HMAC-only)", async () => {
+    vi.stubEnv("SUPABASE_JWKS_URL", "");
+    vi.stubEnv("SUPABASE_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    resetSupabaseJwksCacheForTests();
+
+    // ImportActual path — call the real verifier, not the route mock.
+    const actual = await vi.importActual<
+      typeof import("@/features/auth/supabaseJwt")
+    >("@/features/auth/supabaseJwt");
+    const result = await actual.verifySupabaseAccessToken(
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.sig",
+    );
+    expect(result).toBeNull();
   });
 });
 

@@ -17,11 +17,33 @@ function supabaseUrl(): string | null {
   return url ? url.replace(/\/$/, "") : null;
 }
 
+/** Derive project origin from a JWKS URL when SUPABASE_URL is unset. */
+function originFromJwksUrl(jwksUrl: string): string | null {
+  try {
+    const u = new URL(jwksUrl);
+    const marker = "/auth/v1/.well-known/jwks.json";
+    if (u.pathname.endsWith(marker) || u.pathname === marker) {
+      return `${u.origin}`;
+    }
+    // Fall back to origin only — issuer check still needs /auth/v1 suffix.
+    return u.origin;
+  } catch {
+    return null;
+  }
+}
+
 export function getSupabaseJwksUrl(): string | null {
   const explicit = process.env.SUPABASE_JWKS_URL?.trim();
   if (explicit) return explicit;
   const base = supabaseUrl();
   return base ? `${base}/auth/v1/.well-known/jwks.json` : null;
+}
+
+function resolveSupabaseOrigin(): string | null {
+  const fromEnv = supabaseUrl();
+  if (fromEnv) return fromEnv;
+  const jwks = getSupabaseJwksUrl();
+  return jwks ? originFromJwksUrl(jwks) : null;
 }
 
 function getJwks(): ReturnType<typeof createRemoteJWKSet> | null {
@@ -77,14 +99,15 @@ export async function verifySupabaseAccessToken(
 ): Promise<SupabaseAccessClaims | null> {
   if (!looksLikeJwt(token)) return null;
   const keys = getJwks();
-  const base = supabaseUrl();
-  if (!keys || !base) return null;
+  if (!keys) return null; // JWKS unset → HMAC-only hosts skip gracefully
+
+  const origin = resolveSupabaseOrigin();
+  const verifyOpts = origin
+    ? { issuer: `${origin}/auth/v1`, audience: "authenticated" as const }
+    : { audience: "authenticated" as const };
 
   try {
-    const { payload } = await jwtVerify(token, keys, {
-      issuer: `${base}/auth/v1`,
-      audience: "authenticated",
-    });
+    const { payload } = await jwtVerify(token, keys, verifyOpts);
 
     const sub = typeof payload.sub === "string" ? payload.sub : null;
     const email = emailFromPayload(payload);

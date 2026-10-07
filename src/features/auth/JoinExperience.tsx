@@ -7,26 +7,56 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   registerArtistAction,
   registerMemberAction,
+  requestSignInCodeAction,
+  verifySignInCodeAction,
 } from "@/features/auth/actions";
 import { useSession } from "@/features/auth/AuthProvider";
+import {
+  RETURNING_DOOR_COPY,
+  RETURNING_SUCCESS_COPY,
+} from "@/features/auth/returningSignIn";
+import type { SessionUser } from "@/features/auth/types";
 import { tapGenres } from "@/content/stage";
 import { links } from "@/content/site";
 import { Button, ButtonLink } from "@/shared/ui/Button";
 
-type Door = "pick" | "member" | "artist" | "memberDone" | "artistDone";
+type Door =
+  | "pick"
+  | "member"
+  | "artist"
+  | "return"
+  | "memberDone"
+  | "artistDone"
+  | "returnDone";
+
+type InitialDoor = "member" | "artist" | "return";
 
 const MEDIUMS = tapGenres.map((g) => g.label);
+
+function returnSuccessCopy(user: SessionUser, pendingApproval?: boolean) {
+  if (user.role === "ADMIN") return RETURNING_SUCCESS_COPY.admin;
+  if (user.role === "ARTIST") {
+    return pendingApproval
+      ? RETURNING_SUCCESS_COPY.artistPending
+      : RETURNING_SUCCESS_COPY.artist;
+  }
+  return RETURNING_SUCCESS_COPY.member;
+}
 
 export function JoinExperience({
   initialDoor,
 }: {
-  initialDoor?: "member" | "artist" | null;
+  initialDoor?: InitialDoor | null;
 }) {
   const router = useRouter();
   const { user } = useSession();
   const reduce = useReducedMotion();
   const [door, setDoor] = useState<Door>(
-    initialDoor === "member" || initialDoor === "artist" ? initialDoor : "pick",
+    initialDoor === "member" ||
+      initialDoor === "artist" ||
+      initialDoor === "return"
+      ? initialDoor
+      : "pick",
   );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -41,8 +71,19 @@ export function JoinExperience({
   const [medium, setMedium] = useState<string>(MEDIUMS[0] ?? "Musicians");
   const [intent, setIntent] = useState("");
 
+  const [returnStep, setReturnStep] = useState<"email" | "code">("email");
+  const [returnEmail, setReturnEmail] = useState("");
+  const [returnCode, setReturnCode] = useState("");
+  const [returnHint, setReturnHint] = useState<string | null>(null);
+  const [returnUser, setReturnUser] = useState<SessionUser | null>(null);
+  const [returnPendingApproval, setReturnPendingApproval] = useState(false);
+
   useEffect(() => {
-    if (initialDoor === "member" || initialDoor === "artist") {
+    if (
+      initialDoor === "member" ||
+      initialDoor === "artist" ||
+      initialDoor === "return"
+    ) {
       setDoor(initialDoor);
     }
   }, [initialDoor]);
@@ -80,6 +121,45 @@ export function JoinExperience({
         return;
       }
       setDoor("artistDone");
+      router.refresh();
+    });
+  }
+
+  function requestReturnCode(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setReturnHint(null);
+    startTransition(async () => {
+      const result = await requestSignInCodeAction({ email: returnEmail });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setReturnHint(
+        result.debugCode
+          ? `${RETURNING_DOOR_COPY.sentHint} Dev code: ${result.debugCode}`
+          : RETURNING_DOOR_COPY.sentHint,
+      );
+      setReturnStep("code");
+      setReturnCode("");
+    });
+  }
+
+  function verifyReturnCode(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const result = await verifySignInCodeAction({
+        email: returnEmail,
+        code: returnCode,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setReturnUser(result.user);
+      setReturnPendingApproval(Boolean(result.pendingApproval));
+      setDoor("returnDone");
       router.refresh();
     });
   }
@@ -133,6 +213,10 @@ export function JoinExperience({
     );
   }
 
+  const returnDoneCopy = returnUser
+    ? returnSuccessCopy(returnUser, returnPendingApproval)
+    : RETURNING_SUCCESS_COPY.member;
+
   return (
     <section className="relative isolate overflow-hidden rounded-[2rem] border border-line bg-ink-elevated">
       <div
@@ -161,14 +245,15 @@ export function JoinExperience({
             className="mx-auto max-w-2xl text-center"
           >
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-spark-coral">
-              Two doors · one house
+              Three doors · one house
             </p>
             <h1 className="display mt-4 text-4xl text-paper-on-dark sm:text-6xl">
               The Artist Post
             </h1>
             <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-paper-on-dark/80">
-              Step in as a member of the night, or open the studio as an artist.
-              No invented roster — only real names.
+              Step in as a member of the night, open the studio as an artist, or
+              come back through the side door. No invented roster — only real
+              names.
             </p>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -196,6 +281,23 @@ export function JoinExperience({
                 }}
               />
             </div>
+
+            <div className="mt-4">
+              <DoorCard
+                tone="gold"
+                kicker={RETURNING_DOOR_COPY.kicker}
+                title={RETURNING_DOOR_COPY.title}
+                body={RETURNING_DOOR_COPY.body}
+                cta={RETURNING_DOOR_COPY.cta}
+                onClick={() => {
+                  setError(null);
+                  setReturnHint(null);
+                  setReturnStep("email");
+                  setReturnCode("");
+                  setDoor("return");
+                }}
+              />
+            </div>
           </motion.div>
         ) : null}
 
@@ -211,7 +313,7 @@ export function JoinExperience({
               onClick={() => setDoor("pick")}
               className="text-xs font-semibold uppercase tracking-[0.16em] text-spark-teal"
             >
-              ← Both doors
+              ← All doors
             </button>
             <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-teal">
               Member door
@@ -221,7 +323,19 @@ export function JoinExperience({
             </h2>
             <p className="mt-2 text-sm text-paper-on-dark/75">
               Name and email open a member pass. No password this round — email
-              is your key.
+              is your key. Already joined? Use the{" "}
+              <button
+                type="button"
+                className="text-spark-gold underline-offset-2 hover:underline"
+                onClick={() => {
+                  setError(null);
+                  setReturnStep("email");
+                  setDoor("return");
+                }}
+              >
+                returning door
+              </button>
+              .
             </p>
             <label className="mt-6 block">
               <span className="text-xs font-semibold text-paper-on-dark/60">
@@ -300,7 +414,7 @@ export function JoinExperience({
               }}
               className="text-xs font-semibold uppercase tracking-[0.16em] text-spark-coral"
             >
-              ← {artistStep > 0 ? "Back a step" : "Both doors"}
+              ← {artistStep > 0 ? "Back a step" : "All doors"}
             </button>
             <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-coral">
               Artist door · step {artistStep + 1} of 3
@@ -312,7 +426,7 @@ export function JoinExperience({
             </h2>
             <p className="mt-2 text-sm text-paper-on-dark/75">
               {artistStep === 0 &&
-                "This is the studio app path — not a generic web form."}
+                "This is the studio app path — not a generic web form. Already have a seat? Use the returning door."}
               {artistStep === 1 &&
                 "Letters, numbers, _ or -. This is how the house finds you."}
               {artistStep === 2 &&
@@ -426,6 +540,136 @@ export function JoinExperience({
           </motion.form>
         ) : null}
 
+        {door === "return" ? (
+          <motion.form
+            onSubmit={returnStep === "email" ? requestReturnCode : verifyReturnCode}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto max-w-md"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                if (returnStep === "code") {
+                  setReturnStep("email");
+                  setError(null);
+                  setReturnHint(null);
+                  return;
+                }
+                setDoor("pick");
+              }}
+              className="text-xs font-semibold uppercase tracking-[0.16em] text-spark-gold"
+            >
+              ← {returnStep === "code" ? "Different email" : "All doors"}
+            </button>
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
+              Returning door
+              {returnStep === "code" ? " · code" : ""}
+            </p>
+            <h2 className="display mt-2 text-3xl text-paper-on-dark sm:text-4xl">
+              {returnStep === "email"
+                ? RETURNING_DOOR_COPY.formTitle
+                : RETURNING_DOOR_COPY.codeTitle}
+            </h2>
+            <p className="mt-2 text-sm text-paper-on-dark/75">
+              {returnStep === "email"
+                ? RETURNING_DOOR_COPY.formBody
+                : RETURNING_DOOR_COPY.codeBody}
+            </p>
+
+            {returnStep === "email" ? (
+              <label className="mt-6 block">
+                <span className="text-xs font-semibold text-paper-on-dark/60">
+                  Email on your pass
+                </span>
+                <input
+                  required
+                  type="email"
+                  value={returnEmail}
+                  onChange={(e) => setReturnEmail(e.target.value)}
+                  maxLength={200}
+                  autoComplete="email"
+                  className="mt-2 min-h-12 w-full rounded-full border border-line bg-ink/50 px-5 text-sm text-paper-on-dark outline-none focus:border-spark-gold"
+                />
+              </label>
+            ) : (
+              <>
+                <p className="mt-6 text-xs text-paper-on-dark/55">
+                  Code sent toward{" "}
+                  <span className="text-paper-on-dark/80">{returnEmail}</span>
+                </p>
+                <label className="mt-4 block">
+                  <span className="text-xs font-semibold text-paper-on-dark/60">
+                    Six-digit code
+                  </span>
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={returnCode}
+                    onChange={(e) =>
+                      setReturnCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    className="mt-2 min-h-12 w-full rounded-full border border-line bg-ink/50 px-5 text-center font-mono text-lg tracking-[0.35em] text-paper-on-dark outline-none focus:border-spark-gold"
+                  />
+                </label>
+              </>
+            )}
+
+            {returnHint ? (
+              <p className="mt-3 text-sm text-spark-teal" role="status">
+                {returnHint}
+              </p>
+            ) : null}
+            {error ? (
+              <p className="mt-3 text-sm text-spark-coral" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              disabled={pending}
+              className="mt-6 w-full rounded-full !bg-spark-gold !text-[#020b1a]"
+            >
+              {pending
+                ? returnStep === "email"
+                  ? "Sending…"
+                  : "Opening…"
+                : returnStep === "email"
+                  ? RETURNING_DOOR_COPY.requestCta
+                  : RETURNING_DOOR_COPY.verifyCta}
+            </Button>
+            {returnStep === "code" ? (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setError(null);
+                  startTransition(async () => {
+                    const result = await requestSignInCodeAction({
+                      email: returnEmail,
+                    });
+                    if (!result.ok) {
+                      setError(result.error);
+                      return;
+                    }
+                    setReturnHint(
+                      result.debugCode
+                        ? `${RETURNING_DOOR_COPY.sentHint} Dev code: ${result.debugCode}`
+                        : "Another code is on its way — if that email is on file.",
+                    );
+                  });
+                }}
+                className="mt-4 w-full text-center text-xs font-semibold uppercase tracking-[0.14em] text-spark-gold/90 hover:text-spark-gold"
+              >
+                Resend code
+              </button>
+            ) : null}
+          </motion.form>
+        ) : null}
+
         {door === "memberDone" ? (
           <motion.div
             initial={reduce ? false : { opacity: 0, scale: 0.98 }}
@@ -506,6 +750,70 @@ export function JoinExperience({
             </p>
           </motion.div>
         ) : null}
+
+        {door === "returnDone" ? (
+          <motion.div
+            initial={reduce ? false : { opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mx-auto max-w-md text-center"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
+              {returnDoneCopy.kicker}
+            </p>
+            <h2 className="display mt-3 text-4xl text-paper-on-dark">
+              {returnDoneCopy.title}
+            </h2>
+            <p className="mt-3 text-sm text-paper-on-dark/75">
+              {returnDoneCopy.body}
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <ButtonLink href="/explore" className="rounded-full">
+                Open the Wall
+              </ButtonLink>
+              {returnUser?.role === "ARTIST" ? (
+                <>
+                  <ButtonLink
+                    href="/install"
+                    variant="outline"
+                    className="rounded-full"
+                  >
+                    Install the studio
+                  </ButtonLink>
+                  {!returnPendingApproval ? (
+                    <ButtonLink
+                      href="/create"
+                      variant="ghost"
+                      className="rounded-full"
+                    >
+                      Create
+                    </ButtonLink>
+                  ) : null}
+                </>
+              ) : (
+                <ButtonLink
+                  href="/donate"
+                  variant="outline"
+                  className="rounded-full"
+                >
+                  Support the house
+                </ButtonLink>
+              )}
+            </div>
+            {returnUser ? (
+              <p className="mt-6 text-xs text-paper-on-dark/55">
+                Signed in as {returnUser.name}
+                {returnUser.handle ? ` · @${returnUser.handle}` : ""}. Sign out in{" "}
+                <Link
+                  href="/settings"
+                  className="text-spark-teal underline-offset-2 hover:underline"
+                >
+                  Settings
+                </Link>
+                .
+              </p>
+            ) : null}
+          </motion.div>
+        ) : null}
       </div>
     </section>
   );
@@ -519,14 +827,19 @@ function DoorCard({
   cta,
   onClick,
 }: {
-  tone: "teal" | "coral";
+  tone: "teal" | "coral" | "gold";
   kicker: string;
   title: string;
   body: string;
   cta: string;
   onClick: () => void;
 }) {
-  const rim = tone === "teal" ? "var(--spark-teal)" : "var(--spark-coral)";
+  const rim =
+    tone === "teal"
+      ? "var(--spark-teal)"
+      : tone === "coral"
+        ? "var(--spark-coral)"
+        : "var(--spark-gold)";
   return (
     <button
       type="button"

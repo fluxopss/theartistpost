@@ -35,16 +35,14 @@ export type RegisterCoreResult =
   | { ok: true; user: SessionUser; dbUserId: string; pendingApproval?: boolean };
 
 /**
- * Join only opens a door for a brand-new email. Without an emailed code we
- * cannot prove someone owns an existing address, so returning emails never
- * get a session and their account is never touched.
+ * Join only opens a door for a brand-new email. Returning emails must prove
+ * ownership via the returning door (HMAC code today; Supabase OTP after Auth #15).
  */
 export const EXISTING_EMAIL_ERROR =
-  "This email already joined. Email sign-in is coming soon.";
+  "This email already joined. Use the returning door for a sign-in code.";
 
 export const EXISTING_EMAIL_SIGN_IN_HINT =
-  "This email already joined. Request a sign-in code instead.";
-
+  "This email already joined. Request a sign-in code on the returning door.";
 /**
  * Pure reserved-identity checks (no DB). Call before getPrisma() so CI and
  * DB-down hosts still return validation errors instead of "unavailable".

@@ -8,7 +8,11 @@ import {
   registerArtistAction,
   registerMemberAction,
 } from "@/features/auth/actions";
-import { createCommentAction, toggleLikeAction } from "@/features/posts/engagement";
+import {
+  createCommentAction,
+  getLikeStatusAction,
+  toggleLikeAction,
+} from "@/features/posts/engagement";
 import { authorizePublisher, isMockGuestSession } from "@/features/auth/publishGate";
 import { MOCK_SESSION_USER } from "@/features/auth/mock-user";
 import type { SessionUser } from "@/features/auth/types";
@@ -109,6 +113,11 @@ describe("engagement requires real session", () => {
 
   it("toggleLikeAction refuses anonymous", async () => {
     const result = await toggleLikeAction({ postId: "post_fake" });
+    expect(result.ok).toBe(false);
+  });
+
+  it("getLikeStatusAction refuses anonymous", async () => {
+    const result = await getLikeStatusAction({ postId: "post_fake" });
     expect(result.ok).toBe(false);
   });
 });

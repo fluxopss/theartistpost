@@ -33,6 +33,10 @@ export type LikeActionResult =
   | { ok: false; error: string }
   | { ok: true; liked: boolean; likeCount: number };
 
+export type LikeStatusResult =
+  | { ok: false; error: string }
+  | { ok: true; liked: boolean; likeCount: number };
+
 async function requireEngagementUser() {
   const session = await getSession();
   if (!session || isMockGuestSession(session)) {
@@ -131,6 +135,44 @@ export async function createCommentAction(
   } catch (error) {
     console.error("[createCommentAction]", error);
     return { ok: false, error: "Could not leave that note." };
+  }
+}
+
+/**
+ * Current like state for the signed-in visitor on a public post.
+ * Used to hydrate the web LikeButton before the first click.
+ */
+export async function getLikeStatusAction(
+  raw: z.infer<typeof likeSchema>,
+): Promise<LikeStatusResult> {
+  const parsed = likeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid like" };
+  }
+
+  const gate = await requireEngagementUser();
+  if (!gate.ok) return gate;
+
+  try {
+    const post = await loadPublicPost(gate.prisma, parsed.data.postId);
+    if (!post) {
+      return { ok: false, error: "That post is not open for likes." };
+    }
+
+    const existing = await gate.prisma.like.findUnique({
+      where: {
+        userId_postId: { userId: gate.dbUser.id, postId: post.id },
+      },
+    });
+
+    return {
+      ok: true,
+      liked: Boolean(existing),
+      likeCount: post._count.likes,
+    };
+  } catch (error) {
+    console.error("[getLikeStatusAction]", error);
+    return { ok: false, error: "Could not load like." };
   }
 }
 

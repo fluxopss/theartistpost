@@ -5,7 +5,10 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { cn } from "@/shared/lib/cn";
 import { useSession } from "@/features/auth/AuthProvider";
-import { toggleLikeAction } from "@/features/posts/engagement";
+import {
+  getLikeStatusAction,
+  toggleLikeAction,
+} from "@/features/posts/engagement";
 import { isLiked, toggleLike } from "@/features/app/storage";
 
 export function LikeButton({
@@ -26,14 +29,26 @@ export function LikeButton({
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (signedIn) {
-      setLiked(false);
-      setCount(initialCount);
+    if (!signedIn) {
+      const on = isLiked(id);
+      setLiked(on);
+      setCount(initialCount + (on ? 1 : 0));
       return;
     }
-    const on = isLiked(id);
-    setLiked(on);
-    setCount(initialCount + (on ? 1 : 0));
+
+    let cancelled = false;
+    setLiked(false);
+    setCount(initialCount);
+
+    void getLikeStatusAction({ postId: id }).then((result) => {
+      if (cancelled || !result.ok) return;
+      setLiked(result.liked);
+      setCount(result.likeCount);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, initialCount, signedIn]);
 
   function onClick() {

@@ -128,6 +128,7 @@ describe("pending artist still cannot publish", () => {
       name: "Waiting",
       image: null,
       role: "ARTIST" as const,
+      supabaseAuthId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       artistProfile: {

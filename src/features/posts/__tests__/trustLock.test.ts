@@ -68,6 +68,7 @@ describe("P1 — mock / unapproved cannot publish", () => {
       name: "Waiting",
       image: null,
       role: "ARTIST" as const,
+      supabaseAuthId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       artistProfile: {
@@ -103,6 +104,7 @@ describe("P1 — mock / unapproved cannot publish", () => {
       name: "Approved",
       image: null,
       role: "ARTIST" as const,
+      supabaseAuthId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       artistProfile: {
@@ -139,6 +141,7 @@ describe("P1 — mock / unapproved cannot publish", () => {
       name: "Ops",
       image: null,
       role: "ADMIN" as const,
+      supabaseAuthId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       artistProfile: null,

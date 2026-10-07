@@ -31,13 +31,15 @@ enum AuthChallengePurpose {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  image     String?
-  role      Role     @default(VIEWER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  image           String?
+  role            Role     @default(VIEWER)
+  /** Supabase Auth `sub` — set when session comes from JWKS-verified JWT. */
+  supabaseAuthId  String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   artistProfile ArtistProfile?
   posts         Post[]

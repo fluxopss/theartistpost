@@ -55,15 +55,14 @@ jobs:
           : "${SUPABASE_URL:?SUPABASE_URL secret missing}"
           : "${SUPABASE_JWKS_URL:?SUPABASE_JWKS_URL secret missing}"
           : "${SUPABASE_PUBLISHABLE_KEY:?SUPABASE_PUBLISHABLE_KEY secret missing}"
-          # Pass values to remote via env + stdin script (never echo secrets).
-          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER@$HOST" \
-            env \
-              SUPABASE_URL="$SUPABASE_URL" \
-              SUPABASE_JWKS_URL="$SUPABASE_JWKS_URL" \
-              SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-              SUPABASE_SECRET_KEY="${SUPABASE_SECRET_KEY:-}" \
-              AGENT_SSH_PUBKEY="${AGENT_SSH_PUBKEY:-}" \
-            'bash -s' <<'REMOTE'
+          # Quote exports into remote bash stdin (pubkey has spaces; never use `ssh env`).
+          {
+            printf 'export SUPABASE_URL=%q\n' "$SUPABASE_URL"
+            printf 'export SUPABASE_JWKS_URL=%q\n' "$SUPABASE_JWKS_URL"
+            printf 'export SUPABASE_PUBLISHABLE_KEY=%q\n' "$SUPABASE_PUBLISHABLE_KEY"
+            printf 'export SUPABASE_SECRET_KEY=%q\n' "${SUPABASE_SECRET_KEY:-}"
+            printf 'export AGENT_SSH_PUBKEY=%q\n' "${AGENT_SSH_PUBKEY:-}"
+            cat <<'REMOTE'
           set -euo pipefail
           APP_DIR=/var/www/theartistpost
           ENV_FILE="$APP_DIR/.env"
@@ -112,7 +111,7 @@ jobs:
 
           echo "Env keys present:"
           grep -E '^(SUPABASE_URL|SUPABASE_JWKS_URL|SUPABASE_PUBLISHABLE_KEY|NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY|SUPABASE_SECRET_KEY)=' "$ENV_FILE" \
-            | sed -E 's/=.*/=✓/' 
+            | sed -E 's/=.*/=✓/'
 
           cd "$APP_DIR"
           git rev-parse --short HEAD
@@ -132,6 +131,7 @@ jobs:
           link_code="$(curl -sS -o /tmp/tap-auth-link.json -w '%{http_code}' --max-time 5 -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:3013/api/v1/auth/link 2>/dev/null || echo 000)"
           echo "local POST /api/v1/auth/link → $link_code"
           REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER@$HOST" 'bash -s'
 
       - name: Public smoke
         run: |

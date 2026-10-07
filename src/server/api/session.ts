@@ -5,7 +5,8 @@ import {
   PUBLISHING_CLOSED_ERROR,
   SIGN_IN_REQUIRED_ERROR,
 } from "@/features/auth/publishGate";
-import { resolveSessionFromRequest } from "@/features/auth/requestSession";
+import { resolveLinkedSupabaseUser } from "@/features/auth/linkSupabaseUser";
+import { resolveRequestAuth } from "@/features/auth/requestSession";
 import {
   sessionUserFromDb,
   toAuthUserDTO,
@@ -23,43 +24,59 @@ export type AuthedContext = {
   prisma: PrismaClient;
 };
 
+async function resolveDbUserFromRequest(
+  request: Request,
+): Promise<{ prisma: PrismaClient; dbUser: DbUserWithProfile } | null> {
+  const auth = await resolveRequestAuth(request);
+  if (auth.kind === "none") return null;
+
+  const prisma = getPrisma();
+  if (!prisma) return null;
+
+  if (auth.kind === "supabase") {
+    const dbUser = await resolveLinkedSupabaseUser(prisma, auth.claims);
+    if (!dbUser) return null;
+    return { prisma, dbUser };
+  }
+
+  if (isMockGuestSession(auth.session)) return null;
+
+  const dbUser = await prisma.user.findUnique({
+    where: { email: auth.session.email.toLowerCase() },
+    include: { artistProfile: true },
+  });
+  if (!dbUser) return null;
+  return { prisma, dbUser };
+}
+
 /**
- * Resolve a real session (Bearer or cookie) backed by a DB user.
+ * Resolve a real session (Supabase JWT, Bearer HMAC, or cookie) backed by a DB user.
  * Mock guest / reserved emails / missing users yield null — never invents.
  */
 export async function resolveOptionalSession(
   request: Request,
 ): Promise<AuthedContext | null> {
-  const session = await resolveSessionFromRequest(request);
-  if (!session || isMockGuestSession(session)) return null;
+  const resolved = await resolveDbUserFromRequest(request);
+  if (!resolved) return null;
 
-  const prisma = getPrisma();
-  if (!prisma) return null;
-
-  const dbUser = await prisma.user.findUnique({
-    where: { email: session.email.toLowerCase() },
-    include: { artistProfile: true },
-  });
-  if (!dbUser) return null;
-
-  const liveSession = sessionUserFromDb(dbUser);
+  const liveSession = sessionUserFromDb(resolved.dbUser);
   return {
     session: liveSession,
-    dbUser,
-    user: toAuthUserDTO(dbUser),
-    prisma,
+    dbUser: resolved.dbUser,
+    user: toAuthUserDTO(resolved.dbUser),
+    prisma: resolved.prisma,
   };
 }
 
 /**
- * Require a real session (Bearer or cookie) backed by a DB user.
+ * Require a real session backed by a DB user.
  * Mock guest / reserved emails are treated as unauthorized.
  */
 export async function requireApiSession(
   request: Request,
 ): Promise<AuthedContext | Response> {
-  const session = await resolveSessionFromRequest(request);
-  if (!session || isMockGuestSession(session)) {
+  const auth = await resolveRequestAuth(request);
+  if (auth.kind === "none") {
     return apiError("unauthorized", SIGN_IN_REQUIRED_ERROR);
   }
 
@@ -71,8 +88,29 @@ export async function requireApiSession(
     );
   }
 
+  if (auth.kind === "supabase") {
+    const dbUser = await resolveLinkedSupabaseUser(prisma, auth.claims);
+    if (!dbUser) {
+      return apiError(
+        "unauthorized",
+        "Join the house to link this pass, then try again.",
+      );
+    }
+    const liveSession = sessionUserFromDb(dbUser);
+    return {
+      session: liveSession,
+      dbUser,
+      user: toAuthUserDTO(dbUser),
+      prisma,
+    };
+  }
+
+  if (isMockGuestSession(auth.session)) {
+    return apiError("unauthorized", SIGN_IN_REQUIRED_ERROR);
+  }
+
   const dbUser = await prisma.user.findUnique({
-    where: { email: session.email.toLowerCase() },
+    where: { email: auth.session.email.toLowerCase() },
     include: { artistProfile: true },
   });
   if (!dbUser) {

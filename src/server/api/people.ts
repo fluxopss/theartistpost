@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { checkRateLimit } from "@/features/auth/rateLimit";
-import { DENIED_AUTHOR_EMAILS } from "@/features/posts/denylist";
+import { DENIED_AUTHOR_EMAILS, TEST_HANDLE_PREFIX } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
 import { content } from "@/lib/content";
 import {
@@ -43,12 +43,17 @@ export type PersonDTO = PersonSummaryDTO & {
   joinedAt: string;
 };
 
-/** Who may appear in people lists: has a handle, not suspended, not a seed identity. */
+/**
+ * Who may appear in people lists: has a handle, not suspended, not a seed
+ * identity, and not an E2E test account. The NOT clause is a separate key so
+ * callers that spread this and override `handle` keep the exclusion.
+ */
 export function visiblePersonWhere(): Prisma.UserWhereInput {
   return {
     handle: { not: null },
     suspendedAt: null,
     email: { notIn: [...DENIED_AUTHOR_EMAILS] },
+    NOT: { handle: { startsWith: TEST_HANDLE_PREFIX } },
   };
 }
 

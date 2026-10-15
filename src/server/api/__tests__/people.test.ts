@@ -15,6 +15,7 @@ import { GET as followingV1 } from "@/app/api/v1/people/[handle]/following/route
 import { GET as personCommunityV1 } from "@/app/api/v1/people/[handle]/community/route";
 import { resetRateLimits } from "@/features/auth/rateLimit";
 import { COMMUNITY_GATE_MESSAGE } from "@/server/api/safety";
+import { visiblePersonWhere } from "@/server/api/people";
 import {
   artistRow,
   db,
@@ -501,5 +502,37 @@ describe("GET /api/v1/feed?kind=following", () => {
     expect(data.items).toEqual([]);
     expect(data.kind).toBe("following");
     expect(db.post.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("E2E test accounts stay out of the people directory", () => {
+  const TEST_HANDLE = "e2eart408365";
+
+  it("visiblePersonWhere excludes handles with the E2E prefix", () => {
+    expect(visiblePersonWhere()).toMatchObject({
+      NOT: { handle: { startsWith: "e2eart" } },
+    });
+  });
+
+  it("GET /people/[handle] for an E2E handle filters it out of the lookup", async () => {
+    db.user.findFirst.mockResolvedValue(null);
+    const response = await personV1(
+      getRequest(`${BASE}/people/${TEST_HANDLE}`),
+      handleCtx(TEST_HANDLE),
+    );
+    expect(response.status).toBe(404);
+    expect(db.user.findFirst.mock.calls[0]?.[0].where).toMatchObject({
+      handle: TEST_HANDLE,
+      NOT: { handle: { startsWith: "e2eart" } },
+    });
+  });
+
+  it("GET /people search filters E2E handles out of the query", async () => {
+    db.user.findMany.mockResolvedValue([]);
+    const response = await peopleV1(getRequest(`${BASE}/people?q=ar`));
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(db.user.findMany.mock.calls[0]?.[0].where)).toContain(
+      `"startsWith":"e2eart"`,
+    );
   });
 });

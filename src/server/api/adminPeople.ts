@@ -410,7 +410,7 @@ export async function getAdminPersonDetail(
 /* ------------------------------------------------------------------ */
 
 const reasonSchema = z
-  .string()
+  .string({ error: "Say why, in a few words." })
   .trim()
   .min(3, "Say why, in a few words.")
   .max(200, "Keep the reason under 200 characters.");

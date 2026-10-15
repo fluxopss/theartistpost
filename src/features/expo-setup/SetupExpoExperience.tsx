@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Apple,
   ExternalLink,
   Laptop,
   Smartphone,
@@ -24,11 +23,11 @@ type LoadState =
 function statusLabel(status: ExpoDevStatus): string {
   switch (status) {
     case "ready":
-      return "Tunnel configured";
+      return "Remote tip available";
     case "fallback":
-      return "Using last-known tunnel";
+      return "Using last-known tip link";
     case "offline":
-      return "Tunnel offline";
+      return "Remote tip offline";
     default: {
       const _exhaustive: never = status;
       return _exhaustive;
@@ -61,7 +60,7 @@ export function SetupExpoExperience() {
             kind: "error",
             message:
               body.error?.message ??
-              "Could not load the Expo Go tunnel. Try again in a moment.",
+              "Could not load the optional phone tip link. The Mac steps below still work.",
           });
           return;
         }
@@ -70,7 +69,8 @@ export function SetupExpoExperience() {
         if (!cancelled) {
           setState({
             kind: "error",
-            message: "Network error loading Expo Go setup.",
+            message:
+              "Could not load the optional phone tip link. The Mac steps below still work.",
           });
         }
       }
@@ -82,7 +82,6 @@ export function SetupExpoExperience() {
   }, []);
 
   const openExpoGo = useCallback((url: string) => {
-    // Prefer same-tab navigation so iOS/Android hand off to Expo Go.
     window.location.href = url;
   }, []);
 
@@ -110,18 +109,151 @@ export function SetupExpoExperience() {
             Setup latest Expo Go
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-paper-on-dark/80 sm:text-lg">
-            Open the native Artist Post tip on your phone over the internet —
-            Expo Go + the live Metro tunnel. No Apple Developer account.
+            Best path: run the app on your Mac, stay signed into Expo Go as{" "}
+            <span className="text-paper-on-dark">robbiealvarez</span>, and open
+            it on your iPhone. No Apple Developer account needed.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <ButtonLink
+              href="#mac-steps"
+              size="lg"
+              className="rounded-full !bg-spark-teal !text-ink"
+            >
+              <Laptop className="h-5 w-5" aria-hidden />
+              Run on your Mac (recommended)
+            </ButtonLink>
+            {data ? (
+              <ButtonLink
+                href={data.stores.ios}
+                external
+                size="lg"
+                variant="onDark"
+                className="rounded-full"
+              >
+                Get Expo Go (iPhone)
+              </ButtonLink>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <PageShell className="space-y-16">
+        <SectionReveal>
+          <div id="mac-steps" className="scroll-mt-24">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-teal">
+              Recommended
+            </p>
+            <h2 className="display mt-3 text-3xl text-paper sm:text-4xl">
+              Run on your Mac
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
+              You need a Mac, internet, Expo Go from the App Store, and your
+              Expo login for <span className="text-paper">robbiealvarez</span>.
+            </p>
+            <ol className="mt-6 max-w-2xl space-y-4 text-sm leading-relaxed text-paper-muted sm:text-base">
+              <li>
+                <span className="font-semibold text-paper">
+                  1. Install Node.js (LTS)
+                </span>{" "}
+                from{" "}
+                <a
+                  href="https://nodejs.org"
+                  className="text-spark-teal hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  nodejs.org
+                </a>{" "}
+                if you do not already have it. Restart Terminal after install.
+              </li>
+              <li>
+                <span className="font-semibold text-paper">
+                  2. Get the code
+                </span>{" "}
+                — open Terminal and paste:
+                <pre className="mt-2 overflow-x-auto rounded-sm bg-ink/40 p-3 font-mono text-xs text-paper">
+                  {`git clone https://github.com/fluxopss/theartistpost-app.git
+cd theartistpost-app
+npm install`}
+                </pre>
+              </li>
+              <li>
+                <span className="font-semibold text-paper">
+                  3. Log into Expo
+                </span>{" "}
+                as robbiealvarez:
+                <pre className="mt-2 overflow-x-auto rounded-sm bg-ink/40 p-3 font-mono text-xs text-paper">
+                  npx expo login
+                </pre>
+              </li>
+              <li>
+                <span className="font-semibold text-paper">4. Start</span>
+                <pre className="mt-2 overflow-x-auto rounded-sm bg-ink/40 p-3 font-mono text-xs text-paper">
+                  npx expo start --tunnel --go
+                </pre>
+                Leave Terminal open. A QR code will appear.
+              </li>
+              <li>
+                <span className="font-semibold text-paper">
+                  5. Open on your iPhone
+                </span>{" "}
+                — Expo Go must still be signed in as{" "}
+                <span className="text-paper">robbiealvarez</span>. Scan the QR
+                (or open the project when Expo Go offers it).
+              </li>
+            </ol>
+            <p className="mt-6 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
+              <span className="font-semibold text-paper">Later updates:</span>{" "}
+              in the project folder run{" "}
+              <code className="text-paper">git pull</code>, then{" "}
+              <code className="text-paper">npm install</code>, then{" "}
+              <code className="text-paper">npx expo start --tunnel --go</code>{" "}
+              again.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink
+                href="https://github.com/fluxopss/theartistpost-app"
+                external
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden />
+                App repo on GitHub
+              </ButtonLink>
+              <ButtonLink
+                href="/install"
+                size="sm"
+                variant="ghost"
+                className="rounded-full"
+              >
+                Web / home-screen install instead
+              </ButtonLink>
+            </div>
+          </div>
+        </SectionReveal>
+
+        <SectionReveal>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-gold">
+            Only if needed
+          </p>
+          <h2 className="display mt-3 text-3xl text-paper sm:text-4xl">
+            Phone tip (no Mac today)
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
+            Prefer the Mac steps above. Use this only when you cannot run the
+            app from your Mac.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             {state.kind === "loading" ? (
               <Button
                 size="lg"
                 className="rounded-full !bg-spark-teal !text-ink"
                 disabled
               >
-                Loading tunnel…
+                Loading tip link…
               </Button>
             ) : null}
 
@@ -138,123 +270,26 @@ export function SetupExpoExperience() {
                 onClick={() => openExpoGo(expoGoUrl)}
               >
                 <Smartphone className="h-5 w-5" aria-hidden />
-                Open in Expo Go
+                Open tip in Expo Go
               </Button>
             ) : null}
 
             {data && !canOpen ? (
               <p className="inline-flex items-center gap-2 text-sm text-spark-coral">
                 <TriangleAlert className="h-4 w-4" aria-hidden />
-                Tunnel URL not available right now
+                Tip link not available right now — use the Mac steps
               </p>
-            ) : null}
-
-            {data ? (
-              <ButtonLink
-                href={data.stores.ios}
-                external
-                size="lg"
-                variant="onDark"
-                className="rounded-full"
-              >
-                Get Expo Go (iPhone)
-              </ButtonLink>
             ) : null}
           </div>
 
           {data ? (
-            <p className="mt-4 text-xs text-paper-on-dark/65">
+            <p className="mt-4 text-xs text-paper-muted">
               {statusLabel(data.status)}
               {data.updatedAt
                 ? ` · updated ${new Date(data.updatedAt).toLocaleString()}`
                 : null}
               {" · "}
               needs Expo Go for SDK {data.sdkMajor}
-            </p>
-          ) : null}
-        </div>
-      </section>
-
-      <PageShell className="space-y-16">
-        <SectionReveal>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-gold">
-            Phone
-          </p>
-          <h2 className="display mt-3 text-3xl text-paper sm:text-4xl">
-            iPhone or Android
-          </h2>
-          <ol className="mt-6 max-w-2xl space-y-4 text-sm leading-relaxed text-paper-muted sm:text-base">
-            <li>
-              <span className="font-semibold text-paper">1. Install Expo Go</span>{" "}
-              — latest from the{" "}
-              {data ? (
-                <>
-                  <a
-                    href={data.stores.ios}
-                    className="text-spark-teal hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    App Store
-                  </a>
-                  {" / "}
-                  <a
-                    href={data.stores.android}
-                    className="text-spark-teal hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Play Store
-                  </a>
-                </>
-              ) : (
-                "App Store or Play Store"
-              )}
-              . It must support SDK {data?.sdkMajor ?? 57}.
-            </li>
-            <li>
-              <span className="font-semibold text-paper">
-                2. Force-quit Expo Go
-              </span>{" "}
-              — swipe it away from the app switcher so it fully restarts.
-            </li>
-            <li>
-              <span className="font-semibold text-paper">
-                3. Sign out of Expo Go
-              </span>{" "}
-              — open Expo Go → Profile / Settings → Sign out. Required while
-              this tip uses an anonymous Metro tunnel (no Expo account on the
-              CLI). Staying signed in as robbiealvarez against an anonymous
-              session triggers the “accounts need to match” error.
-            </li>
-            <li>
-              <span className="font-semibold text-paper">
-                4. Hard-refresh this page
-              </span>{" "}
-              — pull to refresh (or close the Safari tab and reopen{" "}
-              <span className="text-paper">/setup-expo</span>) so you get the
-              current tunnel URL.
-            </li>
-            <li>
-              <span className="font-semibold text-paper">
-                5. Tap Open in Expo Go
-              </span>{" "}
-              above — or scan the QR on a desktop browser of this page. Cellular
-              or any Wi‑Fi works; the tunnel is on the public internet. After it
-              loads you can sign back into robbiealvarez in Expo Go for other
-              projects.
-            </li>
-          </ol>
-
-          {expoGoUrl ? (
-            <p className="mt-6 max-w-2xl break-all font-mono text-xs text-paper-muted">
-              {expoGoUrl}
-            </p>
-          ) : null}
-
-          {data?.notes ? (
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted">
-              {data.notes}
             </p>
           ) : null}
 
@@ -268,7 +303,7 @@ export function SetupExpoExperience() {
                 src={qrImageUrl(expoGoUrl)}
                 width={240}
                 height={240}
-                alt="QR code that opens the Expo Go tunnel"
+                alt="QR code that opens the Expo Go tip"
                 className="mt-4 bg-paper p-3"
               />
             </div>
@@ -276,85 +311,13 @@ export function SetupExpoExperience() {
         </SectionReveal>
 
         <SectionReveal>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-teal">
-            Mac
-          </p>
-          <h2 className="display mt-3 text-3xl text-paper sm:text-4xl">
-            Simulator / Xcode
-          </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
-            Best long-term path: on your Mac, signed into Expo as{" "}
-            <span className="text-paper">robbiealvarez</span>, clone the app
-            repo and run{" "}
-            <code className="text-paper">npx expo start --tunnel --go</code>.
-            Keep Expo Go signed in as robbiealvarez — accounts match. The
-            cloud anonymous tunnel is for phone-only tips without a Mac.
-          </p>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
-            On a Mac you can also run the native shell in the iOS Simulator
-            without a paid Apple Developer account — free Xcode, then either an
-            EAS simulator build or a local clone.
-          </p>
-          <ul className="mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-paper-muted sm:text-base">
-            <li className="flex gap-3">
-              <Laptop className="mt-0.5 h-5 w-5 shrink-0 text-spark-teal" aria-hidden />
-              <span>
-                Install Xcode from the Mac App Store, open Simulator, then
-                install the latest{" "}
-                <span className="text-paper">development-simulator</span> build
-                from the Expo project dashboard (or{" "}
-                <code className="text-paper">npx expo run:ios</code> after
-                cloning).
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <Apple className="mt-0.5 h-5 w-5 shrink-0 text-spark-teal" aria-hidden />
-              <span>
-                Point Simulator at the same Metro tunnel Flux keeps warm (
-                <code className="text-paper">npm run start:go</code> in the app
-                repo). Physical-device IPA still needs an Apple team — not
-                required for Expo Go on a real phone.
-              </span>
-            </li>
-          </ul>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {data ? (
-              <ButtonLink
-                href={data.project.dashboardUrl}
-                external
-                size="sm"
-                variant="outline"
-                className="rounded-full"
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden />
-                Expo project
-              </ButtonLink>
-            ) : null}
-            <ButtonLink
-              href="/install"
-              size="sm"
-              variant="ghost"
-              className="rounded-full"
-            >
-              Web / PWA install instead
-            </ButtonLink>
-          </div>
-        </SectionReveal>
-
-        <SectionReveal>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-spark-coral">
             Honest limits
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-paper-muted sm:text-base">
-            This tip’s Metro runs <span className="text-paper">anonymous</span>{" "}
-            (no robot / org CLI login). Expo Go and the CLI must match — so{" "}
-            <span className="text-paper">sign out of Expo Go</span> before
-            opening the link. Do not sign into a robot account. This page only
-            works while Flux has Metro with{" "}
-            <code className="text-paper">--tunnel --go</code>. If Open in Expo
-            Go fails, the tunnel host may have rotated — ask Flux to refresh{" "}
-            <code className="text-paper">EXPO_DEV_TUNNEL_URL</code> on the VPS.
-            Prefer the home-screen web app anytime:{" "}
+            The Mac path is the everyday way to try the native app. The phone
+            tip link only works while someone has left a matching Expo session
+            running. Prefer the home-screen web app anytime:{" "}
             <Link href="/install" className="text-spark-teal hover:underline">
               Get the app (PWA)
             </Link>

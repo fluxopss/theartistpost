@@ -1,5 +1,6 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
+import { sendSignInCodeEmail, smtpConfig } from "@/features/auth/authEmail";
 import { getAuthSecret } from "@/features/auth/secret";
 import { writeAuditLog } from "@/features/posts/audit";
 
@@ -101,6 +102,11 @@ export async function deliverAuthCode(input: {
     }
   }
 
+  const smtp = smtpConfig();
+  if (smtp) {
+    return sendSignInCodeEmail(smtp, input.email, input.code);
+  }
+
   if (process.env.NODE_ENV !== ("pro" + "duction")) { // pragma: allowlist secret
     console.info(
       `[auth/challenge] sign-in code for ${input.email}: ${input.code}`,
@@ -111,7 +117,7 @@ export async function deliverAuthCode(input: {
   return {
     delivered: false,
     error:
-      "Sign-in codes are not configured. Set AUTH_CODE_WEBHOOK_URL for delivery.",
+      "Sign-in codes are not configured. Set SMTP_* + AUTH_EMAIL_FROM or AUTH_CODE_WEBHOOK_URL for delivery.",
   };
 }
 

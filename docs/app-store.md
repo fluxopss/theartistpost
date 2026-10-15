@@ -166,3 +166,17 @@ Notes:
 | 10 | Web release: migration only after a `pg_dump` and Jonathan's go | Jonathan | Open |
 | 11 | Real screenshots approved by Robbie | Robbie | Open |
 | 12 | Privacy label and manifest checked against the build | Engineering | Open |
+
+## Legacy: Capacitor wrap (superseded by the Expo app)
+
+Kept because the build guide preserves the PWA/Capacitor path. The native Expo app (`fluxopss/theartistpost-app`) is the shipping iOS/Android binary; use this only as a fallback.
+
+`capacitor.config.json` loads `https://theartistpost.fluxlab.agency`. On a Mac:
+
+```bash
+pnpm add -D @capacitor/cli
+pnpm add @capacitor/core @capacitor/ios @capacitor/splash-screen @capacitor/status-bar
+npx cap add ios
+npx cap sync ios
+npx cap open ios
+```

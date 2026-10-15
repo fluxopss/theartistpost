@@ -505,6 +505,60 @@ export async function acceptTerms(
   }
 }
 
+/**
+ * After the DB delete commits, remove the Supabase Auth identity so the email
+ * can't sign back into a ghost. Never blocks deletion: failures are logged
+ * (no secrets) and audited. Skipped with a warning when the server key is not
+ * configured. Requires SUPABASE_URL + SUPABASE_SECRET_KEY.
+ */
+async function removeSupabaseIdentity(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+): Promise<void> {
+  const identityId = dbUser.supabaseAuthId;
+  if (!identityId) return;
+
+  const baseUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+  const secretKey = process.env.SUPABASE_SECRET_KEY?.trim();
+  if (!baseUrl || !secretKey) {
+    console.warn(
+      "[deleteAccount] SUPABASE_URL / SUPABASE_SECRET_KEY not set; Supabase Auth identity left in place.",
+    );
+    return;
+  }
+
+  let failure: string | null = null;
+  try {
+    const response = await fetch(
+      `${baseUrl}/auth/v1/admin/users/${encodeURIComponent(identityId)}`,
+      {
+        method: "DELETE",
+        headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}` },
+      },
+    );
+    // 404 = already gone, which is the outcome we want.
+    if (!response.ok && response.status !== 404) {
+      failure = `HTTP ${response.status}`;
+    }
+  } catch (error) {
+    failure = error instanceof Error ? error.name : "request failed";
+  }
+  if (!failure) return;
+
+  console.error(`[deleteAccount] Supabase identity removal failed: ${failure}`);
+  try {
+    await writeAuditLog(prisma, {
+      actorId: null,
+      action: "user.delete_identity_failed",
+      targetType: "User",
+      targetId: dbUser.id,
+      meta: { reason: failure },
+    });
+  } catch (error) {
+    console.error("[deleteAccount] audit failed", error);
+  }
+}
+
 export const deleteAccountSchema = z.object({ confirm: z.literal("DELETE") });
 
 export type DeleteAccountResult =
@@ -607,6 +661,8 @@ export async function deleteAccount(
         role: dbUser.role,
       },
     });
+
+    await removeSupabaseIdentity(prisma, dbUser);
 
     return { ok: true };
   } catch (error) {

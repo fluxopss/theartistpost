@@ -63,6 +63,8 @@ export interface CommentView {
 
 export interface PostDetail extends PostSummary {
   status: PostStatus;
+  /** Author's User.id — used to honor blocks; never put on the wire. */
+  authorId?: string;
   comments: CommentView[];
 }
 

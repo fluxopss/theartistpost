@@ -286,6 +286,48 @@ describe("blocked content disappears", () => {
     expect((await response.json()).data.comments[0].author.handle).toBe("ada");
   });
 
+  it("404s the post detail when the author and viewer are blocked, either way", async () => {
+    const wallPost = (authorId: string) => ({
+      id: "p1",
+      authorId,
+      title: "Real Work",
+      slug: "real-work",
+      description: null,
+      mediaUrl: "/uploads/p1.webp",
+      mediaType: "IMAGE",
+      theme: null,
+      status: "PUBLISHED",
+      featured: false,
+      viewCount: 0,
+      publishedAt: new Date("2026-09-01T12:00:00Z"),
+      createdAt: new Date("2026-09-01T12:00:00Z"),
+      updatedAt: new Date("2026-09-01T12:00:00Z"),
+      author: artistRow("realpainter", { id: authorId, email: "painter@example.com" }),
+      tags: [],
+      _count: { likes: 0, comments: 0 },
+      comments: [],
+    });
+    const ctx = { params: Promise.resolve({ slug: "real-work" }) };
+
+    for (const edge of [
+      { blockerId: me.id, blockedId: "user_artist" },
+      { blockerId: "user_artist", blockedId: me.id },
+    ]) {
+      db.post.findFirst.mockResolvedValue(wallPost("user_artist"));
+      db.block.findMany.mockResolvedValue([edge]);
+      const blocked = await postV1(getRequest(`${BASE}/posts/real-work`, signInAs(me)), ctx);
+      expect(blocked.status).toBe(404);
+    }
+
+    // an unrelated block, or no session, still reads the post
+    db.block.findMany.mockResolvedValue([{ blockerId: me.id, blockedId: "user_other" }]);
+    expect(
+      (await postV1(getRequest(`${BASE}/posts/real-work`, signInAs(me)), ctx)).status,
+    ).toBe(200);
+    db.block.findMany.mockResolvedValue([]);
+    expect((await postV1(getRequest(`${BASE}/posts/real-work`), ctx)).status).toBe(200);
+  });
+
   it("hides blocked artists' works from the explore feed and author pages", async () => {
     db.block.findMany.mockResolvedValue([{ blockerId: me.id, blockedId: "user_artist" }]);
     const feed = await feedV1(getRequest(`${BASE}/feed`, signInAs(me)));

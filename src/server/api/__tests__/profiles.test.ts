@@ -549,6 +549,96 @@ describe("DELETE /api/v1/me", () => {
     );
   });
 
+  describe("Supabase identity cleanup", () => {
+    const SB = "https://abc.supabase.co";
+    const linked = () =>
+      userRow({ email: "linked@example.com", supabaseAuthId: "sb-uuid-1" });
+
+    it("deletes the Auth identity after the DB delete, with the right URL and headers", async () => {
+      vi.stubEnv("SUPABASE_URL", `${SB}/`);
+      vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test_key");
+      const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+      const user = linked();
+      const response = await deleteMeV1(
+        jsonRequest(ME, "DELETE", { confirm: "DELETE" }, signInAs(user)),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toBe(`${SB}/auth/v1/admin/users/sb-uuid-1`);
+      expect(init.method).toBe("DELETE");
+      expect(init.headers).toMatchObject({
+        apikey: "sb_secret_test_key",
+        Authorization: "Bearer sb_secret_test_key",
+      });
+      // DB delete committed before the identity call
+      expect(db.user.delete.mock.invocationCallOrder[0]).toBeLessThan(
+        fetchMock.mock.invocationCallOrder[0]!,
+      );
+      vi.unstubAllGlobals();
+    });
+
+    it("skips with a warning when the env is missing, or the user has no identity", async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      vi.stubEnv("SUPABASE_URL", "");
+      vi.stubEnv("SUPABASE_SECRET_KEY", "");
+      const response = await deleteMeV1(
+        jsonRequest(ME, "DELETE", { confirm: "DELETE" }, signInAs(linked())),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalled();
+      expect(JSON.stringify(warn.mock.calls)).not.toContain("sb-uuid-1");
+
+      vi.stubEnv("SUPABASE_URL", SB);
+      vi.stubEnv("SUPABASE_SECRET_KEY", "k");
+      warn.mockClear();
+      await deleteMeV1(
+        jsonRequest(ME, "DELETE", { confirm: "DELETE" }, signInAs(userRow())),
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+      warn.mockRestore();
+      vi.unstubAllGlobals();
+    });
+
+    it("still deletes the account, logs and audits when the identity call fails", async () => {
+      vi.stubEnv("SUPABASE_URL", SB);
+      vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test_key");
+      vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new Error("network down"))));
+      const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const response = await deleteMeV1(
+        jsonRequest(ME, "DELETE", { confirm: "DELETE" }, signInAs(linked())),
+      );
+      expect(response.status).toBe(200);
+      expect(db.user.delete).toHaveBeenCalledTimes(1);
+      const actions = db.auditLog.create.mock.calls.map((c) => c[0].data.action);
+      expect(actions).toContain("user.delete");
+      expect(actions).toContain("user.delete_identity_failed");
+      expect(JSON.stringify(err.mock.calls)).not.toContain("sb_secret_test_key");
+      err.mockRestore();
+      vi.unstubAllGlobals();
+    });
+
+    it("treats a non-2xx identity response as a failure but never blocks deletion", async () => {
+      vi.stubEnv("SUPABASE_URL", SB);
+      vi.stubEnv("SUPABASE_SECRET_KEY", "k");
+      vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 500 })));
+      const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const response = await deleteMeV1(
+        jsonRequest(ME, "DELETE", { confirm: "DELETE" }, signInAs(linked())),
+      );
+      expect(response.status).toBe(200);
+      expect(db.auditLog.create.mock.calls.map((c) => c[0].data.action)).toContain(
+        "user.delete_identity_failed",
+      );
+      err.mockRestore();
+      vi.unstubAllGlobals();
+    });
+  });
+
   it("still works for a suspended user", async () => {
     const user = userRow({ suspendedAt: new Date() });
     const response = await deleteMeV1(

@@ -90,6 +90,7 @@ function mapPostDetail(post: PostWithRelations): PostDetail {
   return {
     ...mapPostSummary(post),
     status: post.status,
+    authorId: post.authorId,
     comments:
       post.comments?.map((c) => ({
         id: c.id,

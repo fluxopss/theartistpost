@@ -24,7 +24,7 @@ export async function GET(
           excludeCommentAuthorIds: blocked,
         })
       : null;
-    if (!post) {
+    if (!post || (post.authorId && blocked.includes(post.authorId))) {
       return apiError("not_found", "That post is not on the wall.");
     }
     return apiOk(toPostDetailDTO(post), {

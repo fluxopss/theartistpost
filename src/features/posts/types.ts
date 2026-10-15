@@ -56,11 +56,15 @@ export interface CommentView {
     id: string;
     name: string;
     image?: string | null;
+    /** Community handle (User.handle), falling back to the artist handle. */
+    handle?: string | null;
   };
 }
 
 export interface PostDetail extends PostSummary {
   status: PostStatus;
+  /** Author's User.id — used to honor blocks; never put on the wire. */
+  authorId?: string;
   comments: CommentView[];
 }
 

@@ -1,7 +1,7 @@
 import { deleteCommentForUser } from "@/server/api/engagement";
 import { isPlausibleSlug } from "@/server/api/posts";
 import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
-import { requireApiSession } from "@/server/api/session";
+import { requireActiveMember } from "@/server/api/session";
 
 export const runtime = "nodejs";
 
@@ -13,7 +13,7 @@ export async function DELETE(
   context: { params: Promise<{ slug: string; id: string }> },
 ) {
   return withApiErrors("posts/[slug]/comments/[id]:delete", async () => {
-    const session = await requireApiSession(request);
+    const session = await requireActiveMember(request);
     if (session instanceof Response) return session;
 
     const { slug, id } = await context.params;

@@ -1,7 +1,7 @@
 import { likeStateForUser, toggleLikeForUser } from "@/server/api/engagement";
 import { isPlausibleSlug } from "@/server/api/posts";
 import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
-import { requireApiSession, resolveOptionalSession } from "@/server/api/session";
+import { requireActiveMember, resolveOptionalSession } from "@/server/api/session";
 import { getPrisma } from "@/shared/lib/prisma";
 
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export async function POST(
   ctx: { params: Promise<{ slug: string }> },
 ) {
   return withApiErrors("posts/[slug]/like:toggle", async () => {
-    const session = await requireApiSession(request);
+    const session = await requireActiveMember(request);
     if (session instanceof Response) return session;
 
     const { slug } = await ctx.params;

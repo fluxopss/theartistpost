@@ -29,6 +29,20 @@ const state = vi.hoisted(() => {
     auditLog: {
       create: vi.fn(),
     },
+    userTopic: {
+      findMany: vi.fn(),
+    },
+    follow: {
+      count: vi.fn(),
+    },
+    notification: {
+      count: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    block: {
+      findFirst: vi.fn(),
+    },
   };
   return { db, connected: true };
 });
@@ -207,6 +221,12 @@ beforeEach(() => {
   db.like.delete.mockResolvedValue({});
   db.like.count.mockResolvedValue(3);
   db.auditLog.create.mockResolvedValue({ id: "audit_1" });
+  db.userTopic.findMany.mockResolvedValue([]);
+  db.follow.count.mockResolvedValue(0);
+  db.notification.count.mockResolvedValue(0);
+  db.notification.findFirst.mockResolvedValue(null);
+  db.notification.create.mockResolvedValue({ id: "n1" });
+  db.block.findFirst.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -533,9 +553,11 @@ describe("PATCH /api/v1/me", () => {
     expect(body.data.profile).toBeNull();
   });
 
-  it("rejects bio updates without an artist profile", async () => {
+  it("lets a member without an artist profile set a bio", async () => {
     const user = member();
-    db.user.findUnique.mockResolvedValue(user);
+    db.user.findUnique
+      .mockResolvedValueOnce(user)
+      .mockResolvedValueOnce({ ...user, bio: "I paint." });
     const response = await patchMeV1(
       jsonRequest(
         "http://localhost/api/v1/me",
@@ -544,6 +566,10 @@ describe("PATCH /api/v1/me", () => {
         bearerFor(user),
       ),
     );
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(200);
+    expect(db.user.update.mock.calls[0]?.[0].data).toMatchObject({
+      bio: "I paint.",
+    });
+    expect(db.artistProfile.update).not.toHaveBeenCalled();
   });
 });

@@ -14,6 +14,7 @@ export async function GET(
     return authorTimelineResponse(
       handle,
       new URL(request.url).searchParams,
+      request,
     );
   });
 }

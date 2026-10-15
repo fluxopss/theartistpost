@@ -42,7 +42,7 @@ export type PostSummaryDTO = {
 export type CommentDTO = {
   id: string;
   body: string;
-  author: { name: string };
+  author: { name: string; handle: string | null; avatarUrl: string | null };
   createdAt: string;
 };
 
@@ -148,7 +148,11 @@ export function toPostDetailDTO(post: PostDetail): PostDetailDTO {
     .map((c) => ({
       id: c.id,
       body: c.body,
-      author: { name: c.author.name },
+      author: {
+        name: c.author.name,
+        handle: c.author.handle ?? null,
+        avatarUrl: absoluteUrl(c.author.image),
+      },
       createdAt: c.createdAt,
     }));
   return { ...toPostSummaryDTO(post), comments };

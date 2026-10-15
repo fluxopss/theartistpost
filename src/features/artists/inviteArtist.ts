@@ -69,7 +69,7 @@ export async function inviteArtistAction(
       });
       await prisma.user.update({
         where: { id: existing.id },
-        data: { name, role: "ARTIST" },
+        data: { name, role: "ARTIST", handle },
       });
       await writeAuditLog(prisma, {
         actorId: null,
@@ -86,6 +86,7 @@ export async function inviteArtistAction(
         email,
         name,
         role: "ARTIST",
+        handle,
         artistProfile: {
           create: {
             handle,

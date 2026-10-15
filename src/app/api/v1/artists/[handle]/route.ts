@@ -1,6 +1,7 @@
 import { getArtistTimeline } from "@/features/posts/queries";
 import { toArtistProfileDTO, toPostSummaryDTO } from "@/server/api/dto";
 import { isPlausibleHandle, parsePostsQuery } from "@/server/api/posts";
+import { artistBlockedForViewer } from "@/server/api/feed";
 import { apiError, apiOk, CACHE, withApiErrors } from "@/server/api/respond";
 
 /**
@@ -23,6 +24,10 @@ export async function GET(
       return apiError("validation_failed", parsed.message, {
         fields: parsed.fields,
       });
+    }
+
+    if (await artistBlockedForViewer(request, handle)) {
+      return apiError("not_found", "No approved artist has that handle.");
     }
 
     const page = await getArtistTimeline(handle, parsed.query);

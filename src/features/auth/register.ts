@@ -8,6 +8,7 @@ import { toSessionUser } from "@/features/auth/sessionUser";
 import type { SessionUser } from "@/features/auth/types";
 import { isDeniedAuthorEmail } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
+import { isHandleUniqueViolation } from "@/server/api/handles";
 
 export const memberJoinSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -173,6 +174,7 @@ export async function registerArtistCore(
         email,
         name,
         role: "ARTIST",
+        handle,
         artistProfile: {
           create: {
             handle,
@@ -208,6 +210,13 @@ export async function registerArtistCore(
       pendingApproval: true,
     };
   } catch (error) {
+    if (isHandleUniqueViolation(error)) {
+      return {
+        ok: false,
+        error: "That handle is already taken.",
+        code: "conflict",
+      };
+    }
     console.error("[registerArtistCore]", error);
     return {
       ok: false,

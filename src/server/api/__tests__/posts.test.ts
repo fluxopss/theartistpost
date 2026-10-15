@@ -210,7 +210,7 @@ describe("GET /api/v1/posts/[slug]", () => {
     expect((await detailV1("work-p1")).status).toBe(404);
   });
 
-  it("returns newest comments first, capped at 50, name only", async () => {
+  it("returns newest comments first, capped at 50, with name, handle and avatar", async () => {
     db.post.findFirst.mockResolvedValue({
       ...postRow("p1"),
       comments: [
@@ -218,13 +218,19 @@ describe("GET /api/v1/posts/[slug]", () => {
           id: "c_old",
           body: "First!",
           createdAt: new Date("2026-09-02T00:00:00Z"),
-          user: { id: "u_a", name: "Ada", image: "/uploads/a.webp" },
+          user: {
+            id: "u_a",
+            name: "Ada",
+            image: "/uploads/a.webp",
+            handle: "ada_makes",
+            artistProfile: null,
+          },
         },
         {
           id: "c_new",
           body: "Still here.",
           createdAt: new Date("2026-09-03T00:00:00Z"),
-          user: { id: "u_b", name: "Bo", image: null },
+          user: { id: "u_b", name: "Bo", image: null, handle: null, artistProfile: null },
         },
       ],
     });
@@ -243,13 +249,17 @@ describe("GET /api/v1/posts/[slug]", () => {
       {
         id: "c_new",
         body: "Still here.",
-        author: { name: "Bo" },
+        author: { name: "Bo", handle: null, avatarUrl: null },
         createdAt: "2026-09-03T00:00:00.000Z",
       },
       {
         id: "c_old",
         body: "First!",
-        author: { name: "Ada" },
+        author: {
+          name: "Ada",
+          handle: "ada_makes",
+          avatarUrl: `${ORIGIN}/uploads/a.webp`,
+        },
         createdAt: "2026-09-02T00:00:00.000Z",
       },
     ]);

@@ -5,7 +5,7 @@ import {
 } from "@/server/api/engagement";
 import { isPlausibleSlug } from "@/server/api/posts";
 import { apiError, apiOk, CACHE, withApiErrors } from "@/server/api/respond";
-import { requireApiSession } from "@/server/api/session";
+import { requireActiveMember, resolveOptionalSession } from "@/server/api/session";
 import { getPrisma } from "@/shared/lib/prisma";
 
 export const runtime = "nodejs";
@@ -39,7 +39,13 @@ export async function GET(
       );
     }
 
-    const result = await listCommentsForSlug(prisma, slug, parsed.query);
+    const optional = await resolveOptionalSession(request);
+    const result = await listCommentsForSlug(
+      prisma,
+      slug,
+      parsed.query,
+      optional?.dbUser.id ?? null,
+    );
     if (!result.ok) {
       return apiError(result.code, result.message);
     }
@@ -61,7 +67,7 @@ export async function POST(
   ctx: { params: Promise<{ slug: string }> },
 ) {
   return withApiErrors("posts/[slug]/comments:create", async () => {
-    const session = await requireApiSession(request);
+    const session = await requireActiveMember(request);
     if (session instanceof Response) return session;
 
     const { slug } = await ctx.params;

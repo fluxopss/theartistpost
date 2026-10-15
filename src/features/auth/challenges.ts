@@ -40,6 +40,26 @@ function generateCode(): string {
   return String(randomInt(0, max)).padStart(CODE_LENGTH, "0");
 }
 
+/**
+ * App Review sign-in: a fixed code for an exact allow-list of demo accounts,
+ * so Apple's reviewers can sign in without receiving email.
+ *
+ * Returns the code only when BOTH env vars are valid and `email` is listed:
+ *  - APP_REVIEW_EMAILS: comma-separated, each trimmed + lowercased, exact match
+ *  - APP_REVIEW_CODE: exactly six digits
+ * Read at call time, never at module load. Anything else returns null.
+ */
+export function reviewCodeFor(email: string): string | null {
+  const code = process.env.APP_REVIEW_CODE;
+  if (!code || !/^\d{6}$/.test(code)) return null;
+  const listed = (process.env.APP_REVIEW_EMAILS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  const wanted = email.trim().toLowerCase();
+  return wanted && listed.includes(wanted) ? code : null;
+}
+
 function mayEchoCode(): boolean {
   if (process.env.NODE_ENV === ("pro" + "duction")) return false; // pragma: allowlist secret
   return process.env.AUTH_CODE_ECHO === "1";
@@ -119,7 +139,10 @@ export async function issueSignInChallenge(
     };
   }
 
-  const code = generateCode();
+  // App Review demo accounts (never admins) sign in with the fixed server-side
+  // code instead of an emailed one. Everything else below is unchanged.
+  const reviewCode = user.role === "ADMIN" ? null : reviewCodeFor(email);
+  const code = reviewCode ?? generateCode();
   const codeHash = hashCode(email, code, secret);
   const expiresAt = new Date(Date.now() + CODE_TTL_MS);
 
@@ -142,6 +165,22 @@ export async function issueSignInChallenge(
       expiresAt,
     },
   });
+
+  if (reviewCode) {
+    await writeAuditLog(prisma, {
+      actorId: user.id,
+      action: "auth.review_code_issued",
+      targetType: "AuthChallenge",
+      targetId: challenge.id,
+      meta: { email },
+    });
+    return {
+      ok: true,
+      challengeId: challenge.id,
+      expiresAt: expiresAt.toISOString(),
+      delivered: true,
+    };
+  }
 
   const delivery = await deliverAuthCode({
     email,

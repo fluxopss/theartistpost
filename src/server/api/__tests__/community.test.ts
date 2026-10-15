@@ -446,6 +446,23 @@ describe("GET /api/v1/community?scope=foryou", () => {
     expect(boosted.where).toMatchObject({ parentId: null, hiddenAt: null });
   });
 
+  it("the rest query still returns posts with no topic (SQL NOT IN drops NULL topicId)", async () => {
+    const auth = signInAs(me);
+    db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);
+    db.follow.findMany.mockResolvedValue([{ followingId: "user_pal" }]);
+    await listV1(getRequest(`${BASE}/community?scope=foryou`, auth));
+
+    const rest = db.communityPost.findMany.mock.calls
+      .map((call) => call[0].where)
+      .find((where) => !where.OR);
+    expect(rest).toBeDefined();
+    const json = JSON.stringify(rest);
+    // A null topic must be allowed explicitly; notIn alone excludes it.
+    expect(json).toContain('{"topicId":null}');
+    expect(json).toContain('"topicId":{"notIn":["t_music"]}');
+    expect(json).toContain('"authorId":{"notIn":["user_pal"]}');
+  });
+
   it("pages through the ranked list with the last id as cursor", async () => {
     const auth = signInAs(me);
     db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);

@@ -425,9 +425,20 @@ async function listForYou(
     // Nothing to rank on yet: For You is simply the newest posts.
     ranked = await fetchRows(base);
   } else {
+    // "Everything else" is spelled out rather than NOT(OR): SQL's NOT IN is
+    // NULL for a post with no topic, which would silently drop those posts.
+    const notBoosted: Prisma.CommunityPostWhereInput[] = [];
+    if (topicIds.size > 0) {
+      notBoosted.push({
+        OR: [{ topicId: null }, { topicId: { notIn: [...topicIds] } }],
+      });
+    }
+    if (followedIds.size > 0) {
+      notBoosted.push({ authorId: { notIn: [...followedIds] } });
+    }
     const [boosted, rest] = await Promise.all([
       fetchRows({ ...base, OR: boost }),
-      fetchRows({ ...base, NOT: { OR: boost } }),
+      fetchRows({ ...base, AND: notBoosted }),
     ]);
     const tier = (row: CommunityPostRow) =>
       row.topicId && topicIds.has(row.topicId)

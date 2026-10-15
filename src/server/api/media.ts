@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { uploadDir } from "@/server/api/uploadStore";
 import { absoluteUrl } from "@/server/api/urls";
 
 export const IMAGE_MAX_BYTES = 2.5 * 1024 * 1024;
@@ -96,7 +97,7 @@ function extensionFor(mime: string): string {
 }
 
 /**
- * Validate and store an uploaded image or video under public/uploads.
+ * Validate and store an uploaded image or video under `uploadDir()`.
  * Same on-disk convention as legacy POST /api/upload.
  */
 export async function storeUploadedMedia(file: File): Promise<StoreMediaResult> {
@@ -138,7 +139,7 @@ export async function storeUploadedMedia(file: File): Promise<StoreMediaResult> 
 
   const ext = extensionFor(sniffed);
   const name = `${randomUUID()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
+  const dir = uploadDir();
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), buffer);
 

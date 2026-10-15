@@ -328,27 +328,114 @@ describe("GET /api/v1/people", () => {
     db.follow.findMany
       .mockResolvedValueOnce([{ followingId: "user_followed" }]) // already followed
       .mockResolvedValueOnce([]); // viewerFollows hydration
-    db.user.findMany.mockResolvedValue([]);
+    const rows = Array.from({ length: 15 }, (_, i) => {
+      const id = `u${String(i).padStart(2, "0")}`;
+      return {
+        ...userRow({ id: `user_${id}`, handle: id, name: `Person ${id}` }),
+        topics: [{ topicId: "t_music" }],
+      };
+    });
+    db.user.findMany.mockResolvedValue(rows);
 
     const response = await peopleV1(
       getRequest(`${BASE}/people?suggested=1&take=30`, auth),
     );
     expect(response.status).toBe(200);
-    const args = db.user.findMany.mock.calls[0]?.[0];
-    expect(args.take).toBe(13); // 12 + 1 lookahead
-    const where = JSON.stringify(args.where);
+    const { data } = await response.json();
+    expect(data.items).toHaveLength(12);
+    expect(data.nextCursor).toBeNull();
+    const where = JSON.stringify(db.user.findMany.mock.calls[0]?.[0].where);
     expect(where).toContain('"notIn":["user_viewer","user_followed"]');
     expect(where).toContain('"topicId":{"in":["t_music"]}');
   });
 
-  it("suggested=1 is empty when the viewer has no topics yet", async () => {
+  it("suggested=1 is empty when the viewer has no topics and no home chapter", async () => {
     const auth = signInAs(viewer);
     db.userTopic.findMany.mockResolvedValue([]);
+    db.user.findUnique.mockResolvedValue({ chapterId: null });
     const { data } = await (
       await peopleV1(getRequest(`${BASE}/people?suggested=1`, auth))
     ).json();
     expect(data).toEqual({ items: [], nextCursor: null });
     expect(db.user.findMany).not.toHaveBeenCalled();
+  });
+
+  it("suggested=1 ranks by how many topics you share, not alphabetically", async () => {
+    const auth = signInAs(viewer);
+    db.userTopic.findMany.mockResolvedValue([
+      { topicId: "t_music" },
+      { topicId: "t_film" },
+      { topicId: "t_dance" },
+    ]);
+    db.follow.findMany.mockResolvedValue([]);
+    const person = (id: string, name: string, topicIds: string[]) => ({
+      ...userRow({ id: `user_${id}`, handle: id, name }),
+      topics: topicIds.map((topicId) => ({ topicId })),
+    });
+    db.user.findMany.mockResolvedValue([
+      person("ann", "Ann", ["t_music"]),
+      person("bea", "Bea", ["t_music", "t_film"]),
+      person("cy", "Cy", ["t_dance", "t_music", "t_film"]),
+      person("dot", "Dot", ["t_music"]),
+    ]);
+    const { data } = await (
+      await peopleV1(getRequest(`${BASE}/people?suggested=1`, auth))
+    ).json();
+    expect(data.items.map((p: { handle: string }) => p.handle)).toEqual([
+      "cy",
+      "bea",
+      "ann",
+      "dot",
+    ]);
+  });
+
+  it("suggested=1 boosts people in your home chapter and still suggests them with no shared topics", async () => {
+    const auth = signInAs(viewer);
+    db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);
+    db.user.findUnique.mockResolvedValue({ chapterId: "fl-wpb" });
+    db.follow.findMany.mockResolvedValue([]);
+    const person = (
+      id: string,
+      name: string,
+      topicIds: string[],
+      chapterId: string | null,
+    ) => ({
+      ...userRow({ id: `user_${id}`, handle: id, name, chapterId }),
+      topics: topicIds.map((topicId) => ({ topicId })),
+    });
+    db.user.findMany.mockResolvedValue([
+      person("far", "Aaron", ["t_music"], "fl-mia"),
+      person("both", "Zed", ["t_music"], "fl-wpb"),
+      person("near", "Mia", [], "fl-wpb"),
+      person("nothing", "Bob", [], "fl-mia"),
+    ]);
+    const { data } = await (
+      await peopleV1(getRequest(`${BASE}/people?suggested=1`, auth))
+    ).json();
+    expect(data.items.map((p: { handle: string }) => p.handle)).toEqual([
+      "both",
+      "far",
+      "near",
+    ]);
+    const where = JSON.stringify(db.user.findMany.mock.calls[0]?.[0].where);
+    expect(where).toContain('"chapterId":"fl-wpb"');
+  });
+
+  it("suggested=1 works for a viewer with a home chapter but no topics yet", async () => {
+    const auth = signInAs(viewer);
+    db.userTopic.findMany.mockResolvedValue([]);
+    db.user.findUnique.mockResolvedValue({ chapterId: "fl-wpb" });
+    db.follow.findMany.mockResolvedValue([]);
+    db.user.findMany.mockResolvedValue([
+      {
+        ...userRow({ id: "user_nbr", handle: "nbr", name: "Neighbor", chapterId: "fl-wpb" }),
+        topics: [],
+      },
+    ]);
+    const { data } = await (
+      await peopleV1(getRequest(`${BASE}/people?suggested=1`, auth))
+    ).json();
+    expect(data.items.map((p: { handle: string }) => p.handle)).toEqual(["nbr"]);
   });
 });
 

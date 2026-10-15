@@ -1,6 +1,6 @@
 /**
- * Follow graph — Phase 4 stub (engine Slice F).
- * No Prisma model yet; home feed stays explore-only until this lands.
+ * Follow graph types. The Follow model and the people/follow endpoints live in
+ * `people.ts`; this file keeps the feed-facing contract constants.
  */
 
 export type FollowEdge = {
@@ -11,5 +11,5 @@ export type FollowEdge = {
 /** What `/api/v1/feed` will advertise once Follow ships. */
 export type FeedKind = "explore" | "following" | "author";
 
-/** Placeholder until Follow exists — clients should treat as "not available". */
-export const FOLLOWING_FEED_AVAILABLE = false;
+/** The following feed (`GET /api/v1/feed?kind=following`) is live. */
+export const FOLLOWING_FEED_AVAILABLE = true;

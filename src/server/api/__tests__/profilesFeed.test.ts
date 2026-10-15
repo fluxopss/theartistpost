@@ -215,7 +215,7 @@ describe("GET /api/v1/artists/[handle]/timeline + feed/author", () => {
 });
 
 describe("GET /api/v1/feed", () => {
-  it("returns explore feed with followingAvailable false", async () => {
+  it("returns explore feed with followingAvailable true", async () => {
     db.post.findMany.mockResolvedValue([postRow("p1")]);
     const response = await getFeedV1(
       new Request("http://localhost/api/v1/feed?take=12"),
@@ -223,7 +223,7 @@ describe("GET /api/v1/feed", () => {
     expect(response.status).toBe(200);
     const { data } = await response.json();
     expect(data.kind).toBe("explore");
-    expect(data.followingAvailable).toBe(false);
+    expect(data.followingAvailable).toBe(true);
     expect(data.items).toHaveLength(1);
     expect(data.nextCursor).toBeNull();
   });
@@ -237,7 +237,7 @@ describe("GET /api/v1/feed", () => {
         kind: "explore",
         items: [],
         nextCursor: null,
-        followingAvailable: false,
+        followingAvailable: true,
       },
     });
   });

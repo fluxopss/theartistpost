@@ -139,6 +139,10 @@ export async function getPosts(options?: {
   cursor?: string;
   take?: number;
   tag?: string;
+  /** Only works by these authors (the following feed). */
+  authorIds?: string[];
+  /** Hide works by these authors (blocked people). */
+  excludeAuthorIds?: string[];
 }): Promise<{ items: PostSummary[]; nextCursor: string | null }> {
   const take = clampPostsTake(options?.take);
 
@@ -148,6 +152,16 @@ export async function getPosts(options?: {
       const where: Prisma.PostWhereInput = {
         ...publicCatalogWhere(),
         ...(options?.tag ? { tags: { some: { slug: options.tag } } } : {}),
+        ...(options?.authorIds || options?.excludeAuthorIds?.length
+          ? {
+              authorId: {
+                ...(options.authorIds ? { in: options.authorIds } : {}),
+                ...(options.excludeAuthorIds?.length
+                  ? { notIn: options.excludeAuthorIds }
+                  : {}),
+              },
+            }
+          : {}),
       };
 
       const posts = await prisma.post.findMany({

@@ -11,12 +11,14 @@ import {
 } from "@/server/api/follow";
 import { isPlausibleHandle, parsePostsQuery } from "@/server/api/posts";
 import { apiError, apiOk, CACHE } from "@/server/api/respond";
+import { blockedIdsFor } from "@/server/api/safety";
+import { requireApiSession } from "@/server/api/session";
 
 export type FeedPageDTO = {
   kind: FeedKind;
   items: PostSummaryDTO[];
   nextCursor: string | null;
-  /** Always null until Follow (Phase 4). */
+  /** True once the following feed is live (it is). */
   followingAvailable: boolean;
 };
 
@@ -62,6 +64,45 @@ export async function exploreFeedResponse(
     followingAvailable: FOLLOWING_FEED_AVAILABLE,
   };
   return apiOk(data, { cache: CACHE.minute });
+}
+
+/**
+ * Following feed — public Wall works by the artists the signed-in member
+ * follows, newest first. Sign-in required; never shows blocked authors.
+ */
+export async function followingFeedResponse(
+  request: Request,
+  params: URLSearchParams,
+): Promise<Response> {
+  const ctx = await requireApiSession(request);
+  if (ctx instanceof Response) return ctx;
+
+  const parsed = parseFeedSearchParams(params);
+  if (!parsed.ok) return parsed.response;
+
+  const [edges, blocked] = await Promise.all([
+    ctx.prisma.follow.findMany({
+      where: { followerId: ctx.dbUser.id },
+      select: { followingId: true },
+    }),
+    blockedIdsFor(ctx.prisma, ctx.dbUser.id),
+  ]);
+  const authorIds = edges
+    .map((edge) => edge.followingId)
+    .filter((id) => !blocked.has(id));
+
+  const { items, nextCursor } =
+    authorIds.length > 0
+      ? await getPosts({ ...parsed.query, authorIds })
+      : { items: [], nextCursor: null };
+
+  const data: FeedPageDTO = {
+    kind: "following",
+    items: items.map(toPostSummaryDTO),
+    nextCursor,
+    followingAvailable: FOLLOWING_FEED_AVAILABLE,
+  };
+  return apiOk(data, { cache: CACHE.none });
 }
 
 /** Author timeline for an approved handle. 404 when missing/unapproved. */

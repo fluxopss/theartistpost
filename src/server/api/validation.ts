@@ -48,3 +48,5 @@ export function parsePageParams(
   }
   return { ok: true, page: { cursor, take } };
 }
+
+export type Page<T> = { items: T[]; nextCursor: string | null };

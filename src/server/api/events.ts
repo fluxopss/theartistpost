@@ -1,5 +1,7 @@
 import type { ContentEvent } from "@/lib/content";
 
+type Timed = Pick<ContentEvent, "start" | "end">;
+
 /** YYYY-MM-DD, optionally followed by a time — what Date.parse reads reliably. */
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}(?:T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?)?$/;
 
@@ -43,7 +45,7 @@ export function parseEventWindow(params: URLSearchParams): WindowResult {
   };
 }
 
-export function inWindow(event: ContentEvent, window: EventWindow): boolean {
+export function inWindow(event: Timed, window: EventWindow): boolean {
   if (window.from !== undefined && !(Date.parse(event.end) >= window.from)) {
     return false;
   }

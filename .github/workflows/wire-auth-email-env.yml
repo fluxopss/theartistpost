@@ -1,0 +1,103 @@
+# One-shot ops: upsert sign-in email (SMTP) env on the VPS and reload. No app code changes.
+# Trigger: workflow_dispatch only. Does not change app code and runs no migration.
+# Values are never printed.
+name: Wire auth email (SMTP) env on VPS
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: wire-auth-email-env-vps
+  cancel-in-progress: false
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          if [ -z "${VPS_SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY secret missing"
+            exit 1
+          fi
+          key="${VPS_SSH_KEY//$'\r'/}"
+          key="${key//\\n/$'\n'}"
+          printf '%s\n' "$key" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+          HOST="${{ secrets.VPS_HOST || vars.VPS_HOST }}"
+          USER="${{ secrets.VPS_USER || vars.VPS_USER || 'deploy' }}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST is not set"
+            exit 1
+          fi
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Upsert SMTP env, reload
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          AUTH_EMAIL_FROM: ${{ secrets.AUTH_EMAIL_FROM }}
+        run: |
+          set -euo pipefail
+          : "${SMTP_HOST:?SMTP_HOST secret missing}"
+          : "${SMTP_PORT:?SMTP_PORT secret missing}"
+          : "${SMTP_USER:?SMTP_USER secret missing}"
+          : "${SMTP_PASS:?SMTP_PASS secret missing}"
+          : "${AUTH_EMAIL_FROM:?AUTH_EMAIL_FROM secret missing}"
+          # Quote exports into remote bash stdin (never use `ssh env`).
+          {
+            printf 'export SMTP_HOST=%q\n' "$SMTP_HOST"
+            printf 'export SMTP_PORT=%q\n' "$SMTP_PORT"
+            printf 'export SMTP_USER=%q\n' "$SMTP_USER"
+            printf 'export SMTP_PASS=%q\n' "$SMTP_PASS"
+            printf 'export AUTH_EMAIL_FROM=%q\n' "$AUTH_EMAIL_FROM"
+            cat <<'REMOTE'
+          set -euo pipefail
+          APP_DIR=/var/www/theartistpost
+          ENV_FILE="$APP_DIR/.env"
+          if [[ "$(whoami)" == "root" ]]; then
+            echo "ERROR: refuse to mutate .env as root"
+            exit 1
+          fi
+          if [[ ! -f "$ENV_FILE" ]]; then
+            echo "ERROR: missing $ENV_FILE"
+            exit 1
+          fi
+
+          umask 077
+          cp -a "$ENV_FILE" "${ENV_FILE}.bak.$(date -u +%Y%m%dT%H%M%SZ)"
+          tmp="$(mktemp)"
+          grep -Ev '^(#\s*)?(SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_PASS|AUTH_EMAIL_FROM)=' "$ENV_FILE" > "$tmp" || true
+          {
+            cat "$tmp"
+            printf '\n# Sign-in code email (SMTP)\n'
+            printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
+            printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
+            printf 'SMTP_USER=%s\n' "$SMTP_USER"
+            printf 'SMTP_PASS=%s\n' "$SMTP_PASS"
+            printf 'AUTH_EMAIL_FROM=%s\n' "$AUTH_EMAIL_FROM"
+          } > "$ENV_FILE"
+          rm -f "$tmp"
+          chmod 600 "$ENV_FILE"
+
+          echo "Env keys present:"
+          grep -E '^(SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_PASS|AUTH_EMAIL_FROM)=' "$ENV_FILE" | sed -E 's/=.*/=✓/'
+
+          cd "$APP_DIR"
+          git rev-parse --short HEAD
+          pm2 restart theartistpost --update-env
+          pm2 save
+          sleep 3
+          echo "local GET / -> $(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:3013/ || echo 000)"
+          REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER@$HOST" 'bash -s'

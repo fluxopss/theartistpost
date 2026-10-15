@@ -252,7 +252,11 @@ export async function getAdminPersonDetail(
 
   const profileId = target.artistProfile?.id;
   const auditWhere: Prisma.AuditLogWhereInput = {
-    NOT: { action: { startsWith: "block." } },
+    // The person's own sign-in and block events are noise here, and blocks are private.
+    NOT: [
+      { action: { startsWith: "auth." } },
+      { action: { startsWith: "block." } },
+    ],
     OR: [
       { targetType: "User", targetId: id },
       ...(profileId ? [{ targetType: "ArtistProfile", targetId: profileId }] : []),

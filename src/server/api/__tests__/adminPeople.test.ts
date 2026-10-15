@@ -244,8 +244,23 @@ describe("GET /admin/users/[id]: member detail", () => {
     });
   });
 
+  it("keeps the person's own sign-in and block noise out of the history", async () => {
+    target(userRow({ id: "user_member" }));
+    db.auditLog.findMany.mockResolvedValue([]);
+    const response = await detailV1(getRequest(`${BASE}/user_member`, auth(admin)), {
+      params: Promise.resolve({ id: "user_member" }),
+    });
+    expect(response.status).toBe(200);
+    const where = db.auditLog.findMany.mock.calls[0]?.[0].where;
+    expect(where.NOT).toEqual(
+      expect.arrayContaining([
+        { action: { startsWith: "auth." } },
+        { action: { startsWith: "block." } },
+      ]),
+    );
+  });
+
   it("404s a missing account", async () => {
-    db.user.findUnique.mockResolvedValueOnce(admin).mockResolvedValueOnce(null);
     target(null);
     const response = await detailV1(getRequest(`${BASE}/user_gone`, auth(admin)), {
       params: Promise.resolve({ id: "user_gone" }),

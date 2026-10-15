@@ -83,14 +83,14 @@ Use the fluxlab.agency URLs until the apex DNS points at the VPS. Re-check every
 
 | Requirement | How the app meets it | Where in the app / system | Status |
 |---|---|---|---|
-| Terms for users | Members accept the Community Guidelines before they can post to the board. A handle is also required. The acceptance is stored with a timestamp. | Guidelines text is at `/legal/guidelines`. Welcome step (A3). Web `POST /me/terms`. | Web: Done. App: In progress (Welcome step). |
+| Terms for users | Members accept the Community Guidelines before they can post to the board. A handle is also required. The acceptance is stored with a timestamp. | Guidelines text is at `/legal/guidelines`, approved by the founder on 2026-10-15. Welcome step (A3). Web `POST /me/terms`. | Web: Done. App: In progress (Welcome step). |
 | Filter objectionable material | Blocklist and link cap run on community posts and Wall notes before they are saved. Blocked text gets the message "Let's keep it kind — please rephrase." | Web `textFilter.ts`, used by community posts and Wall notes | Web: Done (feat/community-v1). App: shows the message from the server. |
 | Report content | Report on Wall works, Wall notes, community posts, and people. The report form asks for a reason and an optional note. | App `⋯` menu → Report; `POST /reports` | Web: Done. App: Done (report sheet). The `⋯` menu is mounted on Wall works and notes; it is not yet on community cards (A6). |
 | Auto-hide | Three distinct open reports hide a note or community post. A Wall work is archived. The author is not suspended automatically. | Web `AUTO_HIDE_THRESHOLD = 3` | Web: Done |
 | Admin review | Admins see open reports grouped by target. They can hide, dismiss (which restores auto-hidden items), or suspend the author. Every action is audited. | App Settings → Moderation (admins only); web `/api/v1/admin/reports` | Web: Done. App: Done. |
 | Suspend abusive users | A suspended account is read-only. It can still read and delete itself. | Web `suspendedAt`; writes return `forbidden` | Web: Done |
 | Block abusive users | Block from the `⋯` menu. Blocks remove follows both ways and hide each side's content from the other. Blocked list in Settings. | App `⋯` menu; Settings → Blocked; web `/api/v1/blocks` | Web: Done. App: Done. |
-| Timely response to reports | **"The house team reviews reports within 24 hours."** This is the promise shown to reporters. | Report confirmation text | **OPEN DECISION (Robbie):** name who answers reports within 24 hours. Until that is decided, the promise must not go to review. |
+| Timely response to reports | **"The house team reviews reports within 24 hours."** This is the promise shown to reporters. | Report confirmation text | Robbie Alvarez (founder) reviews reports within 24 hours. |
 | Published contact | Support page and support email | `/support` on the web | Done |
 
 Not in v1 (say so in review notes): direct messages (D9) and push alerts (D8). Both would need their own moderation work first.
@@ -155,7 +155,7 @@ Notes:
 | # | Item | Owner | Status |
 |---|---|---|---|
 | 1 | Age rating answered with UGC = yes; result confirmed 12+ | Jonathan | Open |
-| 2 | Who answers reports within 24 hours | Robbie | **OPEN DECISION** |
+| 2 | Robbie Alvarez (founder) reviews reports within 24 hours | Robbie | Decided 2026-10-15 |
 | 3 | Community board and Welcome onboarding on `feat/community-v1` | Engineering | In progress |
 | 4 | `⋯` menu on community cards and profiles (A6) | Engineering | Open |
 | 5 | Guidelines reachable from Settings and the join flow | Engineering | Open |

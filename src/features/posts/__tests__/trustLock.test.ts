@@ -162,8 +162,8 @@ describe("P1 — upload still 403 for mock/anonymous", () => {
 });
 
 describe("seed catalog denylist + approved filter", () => {
-  it("lists the six seed slugs and blocks midnight-filament", () => {
-    expect(DENIED_POST_SLUGS).toHaveLength(6);
+  it("lists the seed slugs and blocks midnight-filament", () => {
+    expect(DENIED_POST_SLUGS).toHaveLength(7);
     expect(isDeniedPostSlug("midnight-filament")).toBe(true);
     expect(isDeniedPostSlug("paper-tide")).toBe(true);
     expect(isDeniedPostSlug("real-approved-work")).toBe(false);

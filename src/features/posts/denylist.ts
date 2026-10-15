@@ -6,7 +6,11 @@ export const DENIED_POST_SLUGS = [
   "orbit-studies",
   "signal-garden",
   "paper-tide",
+  "e2e-seed-post-20261007",
 ] as const;
+
+/** Handle prefix reserved for E2E test artists — never on public reads. */
+export const TEST_HANDLE_PREFIX = "e2eart";
 
 export const DENIED_AUTHOR_EMAILS = [
   "luna@theartistpost.org",
@@ -38,7 +42,12 @@ export function publicCatalogWhere() {
     slug: { notIn: [...DENIED_POST_SLUGS] },
     author: {
       email: { notIn: [...DENIED_AUTHOR_EMAILS] },
-      artistProfile: { is: { approved: true } },
+      artistProfile: {
+        is: {
+          approved: true,
+          handle: { not: { startsWith: TEST_HANDLE_PREFIX } },
+        },
+      },
     },
   };
 }

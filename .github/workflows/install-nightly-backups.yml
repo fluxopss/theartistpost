@@ -1,0 +1,61 @@
+# One-shot ops: install deploy/backup-theartistpost.sh as a nightly cron on the VPS
+# (pg_dump + uploads, 14-day retention) and run it once. workflow_dispatch only.
+name: Install nightly backups on VPS
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: install-nightly-backups-vps
+  cancel-in-progress: false
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          if [ -z "${VPS_SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY secret missing"
+            exit 1
+          fi
+          key="${VPS_SSH_KEY//$'\r'/}"
+          key="${key//\\n/$'\n'}"
+          printf '%s\n' "$key" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+          HOST="${{ secrets.VPS_HOST || vars.VPS_HOST }}"
+          USER="${{ secrets.VPS_USER || vars.VPS_USER || 'deploy' }}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST is not set"
+            exit 1
+          fi
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Install backup script + cron, run once
+        run: |
+          set -euo pipefail
+          {
+            echo 'set -euo pipefail'
+            echo 'if [[ "$(whoami)" == "root" ]]; then echo "ERROR: refuse to install as root"; exit 1; fi'
+            echo 'command -v docker >/dev/null || { echo "ERROR: docker not on PATH for $(whoami)"; exit 1; }'
+            echo 'mkdir -p "$HOME/bin" "$HOME/backups/theartistpost" && chmod 700 "$HOME/backups"'
+            echo 'cat > "$HOME/bin/tap-backup.sh" <<'"'"'SCRIPT'"'"''
+            cat deploy/backup-theartistpost.sh
+            echo 'SCRIPT'
+            echo 'chmod 700 "$HOME/bin/tap-backup.sh"'
+            # 07:15 UTC = 3:15 AM Eastern (daylight time). Idempotent: replace any older line.
+            echo 'line="15 7 * * * $HOME/bin/tap-backup.sh >> $HOME/backups/theartistpost/backup.log 2>&1"'
+            echo '{ crontab -l 2>/dev/null | grep -v "tap-backup.sh" || true; echo "$line"; } | crontab -'
+            echo 'echo "cron:"; crontab -l | grep tap-backup.sh'
+            echo '"$HOME/bin/tap-backup.sh"'
+            echo 'ls -la "$HOME/backups/theartistpost" | tail -5'
+          } | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER@$HOST" 'bash -s'

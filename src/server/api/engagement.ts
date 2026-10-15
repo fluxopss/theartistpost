@@ -9,6 +9,7 @@ import {
 } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
 import type { DbUserWithProfile } from "@/features/auth/sessionUser";
+import { notify } from "@/server/api/notifications";
 
 export const COMMENT_BODY_MAX = 280;
 export const COMMENT_DEFAULT_TAKE = 24;
@@ -132,6 +133,15 @@ export async function createCommentForUser(
       meta: { postId: post.id, slug: post.slug },
     });
 
+    await notify(prisma, {
+      userId: post.authorId,
+      actorId: dbUser.id,
+      type: "COMMENT",
+      targetKind: "post",
+      targetRef: post.slug,
+      preview: comment.body,
+    });
+
     return {
       ok: true,
       comment: {
@@ -218,6 +228,14 @@ export async function toggleLikeForUser(
         targetType: "Post",
         targetId: post.id,
         meta: { slug: post.slug },
+      });
+      await notify(prisma, {
+        userId: post.authorId,
+        actorId: dbUser.id,
+        type: "LIKE",
+        targetKind: "post",
+        targetRef: post.slug,
+        preview: post.title,
       });
     }
 

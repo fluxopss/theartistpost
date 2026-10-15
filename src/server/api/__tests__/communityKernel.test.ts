@@ -37,6 +37,11 @@ const state = vi.hoisted(() => {
     },
     notification: {
       count: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    block: {
+      findFirst: vi.fn(),
     },
   };
   return { db, connected: true };
@@ -219,6 +224,9 @@ beforeEach(() => {
   db.userTopic.findMany.mockResolvedValue([]);
   db.follow.count.mockResolvedValue(0);
   db.notification.count.mockResolvedValue(0);
+  db.notification.findFirst.mockResolvedValue(null);
+  db.notification.create.mockResolvedValue({ id: "n1" });
+  db.block.findFirst.mockResolvedValue(null);
 });
 
 afterEach(() => {

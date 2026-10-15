@@ -30,21 +30,78 @@ enum AuthChallengePurpose {
   SIGN_IN
 }
 
+enum CommunityKind {
+  SHOUTOUT
+  COLLAB
+  SHOWING
+  ASK
+  KINDNESS
+  UPDATE
+}
+
+enum NotificationType {
+  FOLLOW
+  LIKE
+  COMMENT
+  REPLY
+  SUPPORT
+  MENTION
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+  COMMUNITY_POST
+  USER
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
+  id              String    @id @default(cuid())
+  email           String    @unique
   name            String
   image           String?
-  role            Role     @default(VIEWER)
-  /** Supabase Auth `sub` — set when session comes from JWKS-verified JWT. */
-  supabaseAuthId  String?  @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  role            Role      @default(VIEWER)
+  /**
+   * Supabase Auth `sub` — set when session comes from JWKS-verified JWT.
+   */
+  supabaseAuthId  String?   @unique
+  /**
+   * Community handle (lowercase). Artists mirror ArtistProfile.handle.
+   */
+  handle          String?   @unique
+  bio             String?
+  headline        String?
+  location        String?
+  /**
+   * Existing content chapter id (content.getChapters()); no FK yet.
+   */
+  chapterId       String?
+  termsAcceptedAt DateTime?
+  suspendedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   artistProfile ArtistProfile?
   posts         Post[]
   likes         Like[]
   comments      Comment[]
+
+  topics             UserTopic[]
+  following          Follow[]            @relation("Follower")
+  followers          Follow[]            @relation("Following")
+  blocksMade         Block[]             @relation("Blocker")
+  blocksReceived     Block[]             @relation("Blocked")
+  communityPosts     CommunityPost[]
+  communityReactions CommunityReaction[]
+  notifications      Notification[]      @relation("NotificationRecipient")
+  notificationsActed Notification[]      @relation("NotificationActor")
+  reportsFiled       Report[]
 
   @@index([role])
 }
@@ -118,12 +175,13 @@ model Like {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   body      String
   postId    String
   userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  hiddenAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -145,17 +203,143 @@ model AuditLog {
   @@index([actorId])
 }
 
-/** Short-lived passwordless sign-in code (hashed). Join itself stays code-free like the website. */
+/**
+ * Short-lived passwordless sign-in code (hashed). Join itself stays code-free like the website.
+ */
 model AuthChallenge {
-  id         String                @id @default(cuid())
+  id         String               @id @default(cuid())
   email      String
-  purpose    AuthChallengePurpose  @default(SIGN_IN)
+  purpose    AuthChallengePurpose @default(SIGN_IN)
   codeHash   String
-  attempts   Int                   @default(0)
+  attempts   Int                  @default(0)
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime              @default(now())
+  createdAt  DateTime             @default(now())
 
   @@index([email, purpose, createdAt])
   @@index([expiresAt])
+}
+
+/**
+ * Curated, data-driven interest topics (genres + community themes).
+ */
+model Topic {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  kind      String   @default("genre")
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users          UserTopic[]
+  communityPosts CommunityPost[]
+}
+
+model UserTopic {
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId, createdAt])
+}
+
+model Block {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model CommunityPost {
+  id        String        @id @default(cuid())
+  authorId  String
+  kind      CommunityKind
+  body      String
+  imageUrl  String?
+  topicId   String?
+  parentId  String?
+  hiddenAt  DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  author    User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  topic     Topic?              @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  parent    CommunityPost?      @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   CommunityPost[]     @relation("Replies")
+  reactions CommunityReaction[]
+
+  @@index([parentId, createdAt])
+  @@index([authorId, createdAt])
+  @@index([topicId, createdAt])
+  @@index([createdAt])
+}
+
+model CommunityReaction {
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  actorId    String?
+  targetKind String
+  targetRef  String?
+  preview    String?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user  User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model Report {
+  id           String           @id @default(cuid())
+  reporterId   String
+  targetType   ReportTargetType
+  targetId     String
+  reason       String
+  note         String?
+  status       ReportStatus     @default(OPEN)
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime         @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
 }

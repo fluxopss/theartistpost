@@ -6,7 +6,7 @@
 set -euo pipefail
 umask 077
 
-DEST="${TAP_BACKUP_DIR:-$HOME/backups/theartistpost}"
+DEST="${TAP_BACKUP_DIR:-$HOME/tap-backups}"
 APP_DIR="${TAP_APP_DIR:-/var/www/theartistpost}"
 UPLOADS="${TAP_UPLOAD_DIR:-$APP_DIR/public/uploads}"
 CONTAINER="${TAP_PG_CONTAINER:-theartistpost-postgres}"

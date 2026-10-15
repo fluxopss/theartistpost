@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export type ThemeMode = "dark" | "light";
 
@@ -16,21 +17,31 @@ export function applyTheme(theme: ThemeMode) {
   document.documentElement.setAttribute("data-theme", theme);
 }
 
+const listeners = new Set<() => void>();
+
+function subscribeTheme(onChange: () => void) {
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+  };
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<ThemeMode>("dark");
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    getStoredTheme,
+    () => "dark" as const,
+  );
+  const mounted = useHydrated();
 
   useEffect(() => {
-    const initial = getStoredTheme();
-    setThemeState(initial);
-    applyTheme(initial);
-    setMounted(true);
+    applyTheme(getStoredTheme());
   }, []);
 
   function setTheme(next: ThemeMode) {
-    setThemeState(next);
     applyTheme(next);
     window.localStorage.setItem(STORAGE_KEY, next);
+    listeners.forEach((listener) => listener());
   }
 
   function toggleTheme() {

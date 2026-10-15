@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 import Link from "next/link";
 import { copy, links, site } from "@/content/site";
 import type { ContentEvent } from "@/lib/content";
@@ -47,7 +48,8 @@ export function NightRoom({ event }: { event: ContentEvent }) {
   const tearOrigin = useRef(0);
   const pullRef = useRef(0);
   const [now, setNow] = useState(() => new Date());
-  const [ready, setReady] = useState(false);
+  const hydrated = useHydrated();
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [pass, setPass] = useState<NightPass | null>(null);
   const [sparks, setSparks] = useState<NightSpark[]>([]);
   const [lit, setLit] = useState<string[]>([]);
@@ -70,18 +72,27 @@ export function NightRoom({ event }: { event: ContentEvent }) {
   const phase = nightPhase(event, now);
   const clock = phase === "upcoming" ? countdownParts(event.start, now) : null;
 
-  useEffect(() => {
-    const stored = getNightPass(event.id);
-    setPass(stored);
-    setSparks(getNightSparks(event.id));
-    setLit(getLitRooms(event.id));
-    if (!stored) {
-      const studio = getStudio();
-      if (studio.displayName !== DEFAULT_STUDIO.displayName) {
-        setName(studio.displayName);
+  // Load this night's device state once hydrated, and again if the event changes
+  // (adjust state during render instead of a mount effect).
+  const loadKey = hydrated ? event.id : null;
+  if (loadedFor !== loadKey) {
+    setLoadedFor(loadKey);
+    if (loadKey !== null) {
+      const stored = getNightPass(event.id);
+      setPass(stored);
+      setSparks(getNightSparks(event.id));
+      setLit(getLitRooms(event.id));
+      if (!stored) {
+        const studio = getStudio();
+        if (studio.displayName !== DEFAULT_STUDIO.displayName) {
+          setName(studio.displayName);
+        }
       }
     }
-    setReady(true);
+  }
+  const ready = loadedFor !== null;
+
+  useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(id);
   }, [event.id]);

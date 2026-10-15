@@ -220,6 +220,22 @@ Effort figures are my rough engineering estimates for one developer, excluding r
 | 11 | Refund policy | Robbie | **Staff-only, case by case, from the processor dashboard**; no fixed window until counsel reviews. |
 | 12 | Donor record retention | Counsel + Robbie | **Counsel decides**; no retention promise in public copy until then. |
 
+## 8. Founder decisions (Robbie, 2026-10-15)
+
+**Decision 4 (v1 rail):** All donations made through the app go to The Artist Post (TAP). Gifting to individual artists happens outside the app for now. Artists get an optional profile spot for their personal payment usernames (for example Venmo, Cash App, or PayPal.me). That spot links out only. The app does no payment processing for it, and TAP takes nothing from it. The username is optional and artist-entered.
+
+**Section 7 items this resolves:**
+
+| # | Status | Effect |
+|---|---|---|
+| 4 | Resolved | v1 rail is general donations to TAP through the existing PayPal. |
+| 10 | Resolved for v1 | No designated Venmo flow in v1. The existing handle stays on the general Donate page. |
+| 1, 2, 3 | Deferred | In-app artist-designated giving is not built in v1, so these questions wait until it is. |
+
+Still open from section 7: 5, 6, 7, 8, 9, 11, 12.
+
+**Apple note (App Store Review Guideline 3.2.1(vii)):** Optional person-to-person gifts may be made outside in-app purchase if 100% of the money goes to the recipient and the gift is not tied to digital content. That is why artist payment usernames are link-out only, optional, and not connected to any in-app feature. Confirm the exact wording against the current guideline before submission.
+
 ---
 
 ## Sources

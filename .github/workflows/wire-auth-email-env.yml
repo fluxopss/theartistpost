@@ -56,16 +56,11 @@ jobs:
           : "${AUTH_EMAIL_FROM:?AUTH_EMAIL_FROM secret missing}"
           # Quote exports into remote bash stdin (never use `ssh env`).
           {
-            printf 'export SMTP_HOST=%q
-' "$SMTP_HOST"
-            printf 'export SMTP_PORT=%q
-' "$SMTP_PORT"
-            printf 'export SMTP_USER=%q
-' "$SMTP_USER"
-            printf 'export SMTP_PASS=%q
-' "$SMTP_PASS"
-            printf 'export AUTH_EMAIL_FROM=%q
-' "$AUTH_EMAIL_FROM"
+            printf 'export SMTP_HOST=%q\n' "$SMTP_HOST"
+            printf 'export SMTP_PORT=%q\n' "$SMTP_PORT"
+            printf 'export SMTP_USER=%q\n' "$SMTP_USER"
+            printf 'export SMTP_PASS=%q\n' "$SMTP_PASS"
+            printf 'export AUTH_EMAIL_FROM=%q\n' "$AUTH_EMAIL_FROM"
             cat <<'REMOTE'
           set -euo pipefail
           APP_DIR=/var/www/theartistpost
@@ -82,22 +77,15 @@ jobs:
           umask 077
           cp -a "$ENV_FILE" "${ENV_FILE}.bak.$(date -u +%Y%m%dT%H%M%SZ)"
           tmp="$(mktemp)"
-          grep -Ev '^(#s*)?(SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_PASS|AUTH_EMAIL_FROM)=' "$ENV_FILE" > "$tmp" || true
+          grep -Ev '^(#\s*)?(SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_PASS|AUTH_EMAIL_FROM)=' "$ENV_FILE" > "$tmp" || true
           {
             cat "$tmp"
-            printf '
-# Sign-in code email (SMTP)
-'
-            printf 'SMTP_HOST=%s
-' "$SMTP_HOST"
-            printf 'SMTP_PORT=%s
-' "$SMTP_PORT"
-            printf 'SMTP_USER=%s
-' "$SMTP_USER"
-            printf 'SMTP_PASS=%s
-' "$SMTP_PASS"
-            printf 'AUTH_EMAIL_FROM=%s
-' "$AUTH_EMAIL_FROM"
+            printf '\n# Sign-in code email (SMTP)\n'
+            printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
+            printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
+            printf 'SMTP_USER=%s\n' "$SMTP_USER"
+            printf 'SMTP_PASS=%s\n' "$SMTP_PASS"
+            printf 'AUTH_EMAIL_FROM=%s\n' "$AUTH_EMAIL_FROM"
           } > "$ENV_FILE"
           rm -f "$tmp"
           chmod 600 "$ENV_FILE"

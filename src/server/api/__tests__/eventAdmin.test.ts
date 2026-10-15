@@ -207,6 +207,26 @@ describe("POST /admin/events", () => {
   });
 });
 
+describe("GET /admin/events/[id]", () => {
+  it("returns the night with its counts, or 404", async () => {
+    db.event.findUnique.mockResolvedValueOnce(eventRow({ status: "PUBLISHED" }));
+    const res = await getEvent(
+      getRequest(`${BASE}/evt_1`, signInAs(admin)),
+      ctx("evt_1"),
+    );
+    const { data } = await res.json();
+    expect(data.event).toMatchObject({ id: "evt_1", publishState: "PUBLISHED" });
+    expect(data.event.counts).toMatchObject({ going: 0, checkedIn: 0 });
+
+    db.event.findUnique.mockResolvedValueOnce(null);
+    const missing = await getEvent(
+      getRequest(`${BASE}/nope`, signInAs(admin)),
+      ctx("nope"),
+    );
+    expect(missing.status).toBe(404);
+  });
+});
+
 describe("PATCH /admin/events/[id]", () => {
   const patch = (body: unknown) =>
     patchEvent(jsonRequest(`${BASE}/evt_1`, "PATCH", body, signInAs(admin)), ctx("evt_1"));

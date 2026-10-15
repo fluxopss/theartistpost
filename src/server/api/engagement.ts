@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Reaction } from "@prisma/client";
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import {
   DENIED_AUTHOR_EMAILS,
@@ -10,16 +10,32 @@ import {
 import { writeAuditLog } from "@/features/posts/audit";
 import type { DbUserWithProfile } from "@/features/auth/sessionUser";
 import { notify } from "@/server/api/notifications";
+import {
+  emptyReactionCounts,
+  loadWallReactionCounts,
+  reactionBodySchema,
+  totalReactions,
+  type ReactionCounts,
+} from "@/server/api/reactions";
 import { blockedIdsFor } from "@/server/api/safety";
 import { screenText } from "@/server/api/textFilter";
 import { absoluteUrl } from "@/server/api/urls";
+import { graphemeLength, unitCeiling } from "@/shared/lib/graphemes";
 
 export const COMMENT_BODY_MAX = 280;
 export const COMMENT_DEFAULT_TAKE = 24;
 export const COMMENT_MAX_TAKE = 50;
 
 export const commentBodySchema = z.object({
-  body: z.string().trim().min(1).max(COMMENT_BODY_MAX),
+  // Counted by what a person sees, so an emoji is one character.
+  body: z
+    .string()
+    .trim()
+    .min(1)
+    .max(unitCeiling(COMMENT_BODY_MAX))
+    .refine((value) => graphemeLength(value) <= COMMENT_BODY_MAX, {
+      message: `Keep it under ${COMMENT_BODY_MAX} characters.`,
+    }),
 });
 
 export type EngagementCommentDTO = {
@@ -35,7 +51,14 @@ export type CreateCommentResult =
 
 export type ToggleLikeResult =
   | { ok: false; code: "not_found" | "forbidden" | "rate_limited" | "upstream_unavailable"; message: string; retryAfterSec?: number }
-  | { ok: true; liked: boolean; likeCount: number };
+  | ({ ok: true } & WallReactionState);
+
+export type WallReactionState = {
+  liked: boolean;
+  likeCount: number;
+  viewerReaction: Reaction | null;
+  reactionCounts: ReactionCounts;
+};
 
 export type DeleteCommentResult =
   | { ok: false; code: "not_found" | "forbidden" | "upstream_unavailable"; message: string }
@@ -233,7 +256,7 @@ export async function toggleLikeForUser(
       });
     } else {
       await prisma.like.create({
-        data: { userId: dbUser.id, postId: post.id },
+        data: { userId: dbUser.id, postId: post.id, reaction: "LOVE" },
       });
       liked = true;
       await writeAuditLog(prisma, {
@@ -253,14 +276,193 @@ export async function toggleLikeForUser(
       });
     }
 
-    const likeCount = await prisma.like.count({ where: { postId: post.id } });
-    return { ok: true, liked, likeCount };
+    return {
+      ok: true,
+      ...(await wallStateFor(prisma, post.id, liked ? "LOVE" : null)),
+    };
   } catch (error) {
     console.error("[toggleLikeForUser]", error);
     return {
       ok: false,
       code: "upstream_unavailable",
       message: "Could not update like.",
+    };
+  }
+}
+
+async function wallStateFor(
+  prisma: PrismaClient,
+  postId: string,
+  viewerReaction: Reaction | null,
+): Promise<WallReactionState> {
+  const counts =
+    (await loadWallReactionCounts(prisma, [postId])).get(postId) ??
+    emptyReactionCounts();
+  return {
+    liked: viewerReaction !== null,
+    likeCount: totalReactions(counts),
+    viewerReaction,
+    reactionCounts: counts,
+  };
+}
+
+type WallReactionFailure = {
+  ok: false;
+  code:
+    | "validation_failed"
+    | "not_found"
+    | "forbidden"
+    | "rate_limited"
+    | "upstream_unavailable";
+  message: string;
+  retryAfterSec?: number;
+  fields?: Record<string, string>;
+};
+
+/**
+ * Set (or change) the viewer's one reaction on a Wall post. A Like row IS the
+ * reaction, so a different emoji updates it in place, and the artist hears
+ * about it once, on the first reaction.
+ */
+export async function setWallReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  slug: string,
+  rawBody: unknown,
+): Promise<({ ok: true } & WallReactionState) | WallReactionFailure> {
+  const denied = engagementForbidden(dbUser);
+  if (denied) return { ok: false, code: "forbidden", message: denied };
+
+  const parsed = reactionBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      code: "validation_failed",
+      message: parsed.error.issues[0]?.message ?? "Pick one of the reactions.",
+      fields: { reaction: "Pick one of the reactions." },
+    };
+  }
+  const { reaction } = parsed.data;
+
+  const limit = checkRateLimit(`v1:like:${dbUser.id}`, {
+    windowMs: 60_000,
+    max: 40,
+  });
+  if (!limit.ok) {
+    return {
+      ok: false,
+      code: "rate_limited",
+      message: "Slow down — too many reactions just now.",
+      retryAfterSec: Math.max(1, Math.ceil(limit.retryAfterMs / 1000)),
+    };
+  }
+
+  try {
+    const post = await loadPublicPostBySlug(prisma, slug);
+    if (!post) {
+      return {
+        ok: false,
+        code: "not_found",
+        message: "That post is not open for reactions.",
+      };
+    }
+
+    const existing = await prisma.like.findUnique({
+      where: { userId_postId: { userId: dbUser.id, postId: post.id } },
+    });
+
+    if (existing && existing.reaction === reaction) {
+      return { ok: true, ...(await wallStateFor(prisma, post.id, reaction)) };
+    }
+
+    if (existing) {
+      await prisma.like.update({
+        where: { id: existing.id },
+        data: { reaction },
+      });
+    } else {
+      await prisma.like.create({
+        data: { userId: dbUser.id, postId: post.id, reaction },
+      });
+      const earlier = await prisma.notification.findFirst({
+        where: {
+          userId: post.authorId,
+          actorId: dbUser.id,
+          type: "LIKE",
+          targetKind: "post",
+          targetRef: post.slug,
+        },
+        select: { id: true },
+      });
+      if (!earlier) {
+        await notify(prisma, {
+          userId: post.authorId,
+          actorId: dbUser.id,
+          type: "LIKE",
+          targetKind: "post",
+          targetRef: post.slug,
+          preview: post.title,
+        });
+      }
+    }
+
+    await writeAuditLog(prisma, {
+      actorId: dbUser.id,
+      action: "like.add",
+      targetType: "Post",
+      targetId: post.id,
+      meta: { slug: post.slug, reaction, replaced: existing?.reaction ?? null },
+    });
+
+    return { ok: true, ...(await wallStateFor(prisma, post.id, reaction)) };
+  } catch (error) {
+    console.error("[setWallReaction]", error);
+    return {
+      ok: false,
+      code: "upstream_unavailable",
+      message: "Could not save that reaction.",
+    };
+  }
+}
+
+/** Take the viewer's reaction off a Wall post (same as un-liking). */
+export async function clearWallReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  slug: string,
+): Promise<({ ok: true } & WallReactionState) | WallReactionFailure> {
+  const denied = engagementForbidden(dbUser);
+  if (denied) return { ok: false, code: "forbidden", message: denied };
+
+  try {
+    const post = await loadPublicPostBySlug(prisma, slug);
+    if (!post) {
+      return {
+        ok: false,
+        code: "not_found",
+        message: "That post is not open for reactions.",
+      };
+    }
+    const existing = await prisma.like.findUnique({
+      where: { userId_postId: { userId: dbUser.id, postId: post.id } },
+    });
+    if (existing) {
+      await prisma.like.delete({ where: { id: existing.id } });
+      await writeAuditLog(prisma, {
+        actorId: dbUser.id,
+        action: "like.remove",
+        targetType: "Post",
+        targetId: post.id,
+        meta: { slug: post.slug, reaction: existing.reaction },
+      });
+    }
+    return { ok: true, ...(await wallStateFor(prisma, post.id, null)) };
+  } catch (error) {
+    console.error("[clearWallReaction]", error);
+    return {
+      ok: false,
+      code: "upstream_unavailable",
+      message: "Could not remove that reaction.",
     };
   }
 }
@@ -423,13 +625,32 @@ export async function likeStateForUser(
   prisma: PrismaClient,
   slug: string,
   userId: string | null,
-): Promise<{ likedByMe: boolean | null; likeCount: number } | null> {
+): Promise<{
+  likedByMe: boolean | null;
+  likeCount: number;
+  viewerReaction: Reaction | null;
+  reactionCounts: ReactionCounts;
+} | null> {
   const post = await loadPublicPostBySlug(prisma, slug);
   if (!post) return null;
-  const likeCount = post._count.likes;
-  if (!userId) return { likedByMe: null, likeCount };
+  const grouped = (await loadWallReactionCounts(prisma, [post.id])).get(
+    post.id,
+  );
+  const reactionCounts = grouped ?? {
+    ...emptyReactionCounts(),
+    LOVE: post._count.likes,
+  };
+  const likeCount = grouped ? totalReactions(grouped) : post._count.likes;
+  if (!userId) {
+    return { likedByMe: null, likeCount, viewerReaction: null, reactionCounts };
+  }
   const existing = await prisma.like.findUnique({
     where: { userId_postId: { userId, postId: post.id } },
   });
-  return { likedByMe: Boolean(existing), likeCount };
+  return {
+    likedByMe: Boolean(existing),
+    likeCount,
+    viewerReaction: existing ? (existing.reaction ?? "LOVE") : null,
+    reactionCounts,
+  };
 }

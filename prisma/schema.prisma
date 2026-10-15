@@ -48,6 +48,18 @@ enum NotificationType {
   MENTION
 }
 
+/**
+ * Curated, kind-only reaction set (Kindness Always: nothing negative).
+ * SUPPORT is the Community default; Wall Likes migrated to LOVE.
+ */
+enum Reaction {
+  SUPPORT
+  LOVE
+  FIRE
+  APPLAUSE
+  INSPIRED
+}
+
 enum ReportTargetType {
   POST
   COMMENT
@@ -165,6 +177,10 @@ model Like {
   id        String   @id @default(cuid())
   userId    String
   postId    String
+  /**
+   * The emoji this like is. Existing likes are LOVE (the heart they always were).
+   */
+  reaction  Reaction @default(LOVE)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -299,6 +315,10 @@ model CommunityPost {
 model CommunityReaction {
   userId    String
   postId    String
+  /**
+   * One reaction per person per post; changing it replaces the old one.
+   */
+  reaction  Reaction @default(SUPPORT)
   createdAt DateTime @default(now())
 
   user User          @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -490,24 +490,40 @@ describe("POST /api/v1/community/[id]/support", () => {
   it("toggles support on and off, returning counts", async () => {
     db.communityPost.findFirst.mockResolvedValue(postRow("cp1"));
     db.communityReaction.findUnique.mockResolvedValueOnce(null);
-    db.communityReaction.count.mockResolvedValueOnce(3);
+    db.communityReaction.groupBy.mockResolvedValueOnce([
+      { postId: "cp1", reaction: "SUPPORT", _count: { _all: 3 } },
+    ]);
     const on = await supportV1(
       jsonRequest(`${BASE}/community/cp1/support`, "POST", undefined, signInAs(me)),
       idCtx("cp1"),
     );
     expect(on.status).toBe(200);
-    expect((await on.json()).data).toEqual({ supported: true, supportCount: 3 });
+    expect((await on.json()).data).toMatchObject({
+      supported: true,
+      supportCount: 3,
+      viewerReaction: "SUPPORT",
+    });
     expect(db.communityReaction.create).toHaveBeenCalledWith({
-      data: { userId: me.id, postId: "cp1" },
+      data: { userId: me.id, postId: "cp1", reaction: "SUPPORT" },
     });
 
-    db.communityReaction.findUnique.mockResolvedValueOnce({ userId: me.id, postId: "cp1" });
-    db.communityReaction.count.mockResolvedValueOnce(2);
+    db.communityReaction.findUnique.mockResolvedValueOnce({
+      userId: me.id,
+      postId: "cp1",
+      reaction: "SUPPORT",
+    });
+    db.communityReaction.groupBy.mockResolvedValueOnce([
+      { postId: "cp1", reaction: "SUPPORT", _count: { _all: 2 } },
+    ]);
     const off = await supportV1(
       jsonRequest(`${BASE}/community/cp1/support`, "POST", undefined, signInAs(me)),
       idCtx("cp1"),
     );
-    expect((await off.json()).data).toEqual({ supported: false, supportCount: 2 });
+    expect((await off.json()).data).toMatchObject({
+      supported: false,
+      supportCount: 2,
+      viewerReaction: null,
+    });
     expect(db.communityReaction.delete).toHaveBeenCalledTimes(1);
   });
 
@@ -516,13 +532,18 @@ describe("POST /api/v1/community/[id]/support", () => {
     db.communityReaction.create.mockRejectedValue(
       Object.assign(new Error("dup"), { code: "P2002" }),
     );
-    db.communityReaction.count.mockResolvedValue(1);
+    db.communityReaction.groupBy.mockResolvedValue([
+      { postId: "cp1", reaction: "SUPPORT", _count: { _all: 1 } },
+    ]);
     const response = await supportV1(
       jsonRequest(`${BASE}/community/cp1/support`, "POST", undefined, signInAs(me)),
       idCtx("cp1"),
     );
     expect(response.status).toBe(200);
-    expect((await response.json()).data).toEqual({ supported: true, supportCount: 1 });
+    expect((await response.json()).data).toMatchObject({
+      supported: true,
+      supportCount: 1,
+    });
   });
 
   it("404s for hidden/missing posts and requires a community member", async () => {

@@ -1,3 +1,5 @@
+import { graphemeLength, truncateGraphemes } from "@/shared/lib/graphemes";
+
 /**
  * Lightweight objectionable-text screen for user-generated text (App Store
  * Guideline 1.2: filter objectionable material). Intentionally small and
@@ -59,23 +61,28 @@ const blockedRe = new RegExp(
   "i",
 );
 
-/** Compatibility-fold and drop zero-width characters used to dodge filters. */
+/**
+ * Compatibility-fold and drop zero-width characters (and emoji variation
+ * selectors) used to dodge filters. Matching only: stored text is untouched.
+ */
 function normalize(text: string): string {
-  return text.normalize("NFKC").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+  return text
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\u2060\uFEFF\uFE0E\uFE0F]/g, "");
 }
 
 export const NOTIFICATION_PREVIEW_MAX = 120;
 
-/** Collapse to one line, at most 120 characters (ellipsis included). */
+/** Collapse to one line, at most 120 characters (ellipsis included); emoji stay whole. */
 export function truncatePreview(
   text: string | null | undefined,
 ): string | null {
   if (!text) return null;
   const flat = text.replace(/\s+/g, " ").trim();
   if (!flat) return null;
-  return flat.length <= NOTIFICATION_PREVIEW_MAX
+  return graphemeLength(flat) <= NOTIFICATION_PREVIEW_MAX
     ? flat
-    : `${flat.slice(0, NOTIFICATION_PREVIEW_MAX - 1).trimEnd()}…`;
+    : `${truncateGraphemes(flat, NOTIFICATION_PREVIEW_MAX - 1).trimEnd()}…`;
 }
 
 export function countLinks(text: string): number {

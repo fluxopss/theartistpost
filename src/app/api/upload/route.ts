@@ -8,6 +8,7 @@ import {
   isMockGuestSession,
   PUBLISHING_CLOSED_ERROR,
 } from "@/features/auth/publishGate";
+import { uploadDir } from "@/server/api/uploadStore";
 import { getPrisma } from "@/shared/lib/prisma";
 
 export const runtime = "nodejs";
@@ -139,9 +140,8 @@ export async function POST(request: Request) {
             ? "gif"
             : "jpg";
     const name = `${randomUUID()}.${ext}`;
-    // Keep public/uploads this sprint so Next static serve still works.
-    // Private storage ships when a media route can stream outside public/.
-    const dir = path.join(process.cwd(), "public", "uploads");
+    // Served by /uploads/[file] (see src/server/api/uploadStore.ts).
+    const dir = uploadDir();
     await mkdir(dir, { recursive: true });
     await writeFile(path.join(dir, name), buffer);
 

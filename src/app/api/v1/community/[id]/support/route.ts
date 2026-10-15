@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
-/** Toggle Support (the one-tap sparkle) on a post. */
+/** Toggle Support (the one-tap sparkle) on a post; kept for older builds. */
 export async function POST(
   request: Request,
   ctx: RouteContext<"/api/v1/community/[id]/support">,
@@ -25,9 +25,6 @@ export async function POST(
       });
     }
 
-    return apiOk({
-      supported: result.supported,
-      supportCount: result.supportCount,
-    });
+    return apiOk(result.state);
   });
 }

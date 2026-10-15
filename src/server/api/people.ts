@@ -20,6 +20,7 @@ import {
 } from "@/server/api/communityDto";
 import { normalizeHandle } from "@/server/api/handles";
 import { notify } from "@/server/api/notifications";
+import { loadCommunityReactionCounts } from "@/server/api/reactions";
 import { blockedIdsFor } from "@/server/api/safety";
 import { toTopicDTO, type TopicDTO } from "@/server/api/topics";
 import type { Page, PageParams } from "@/server/api/validation";
@@ -529,10 +530,16 @@ export async function listPersonCommunity(
 
   const hasMore = rows.length > page.take;
   const slice = hasMore ? rows.slice(0, page.take) : rows;
+  const counts = await loadCommunityReactionCounts(
+    prisma,
+    slice.map((row) => row.id),
+  );
   return {
     ok: true,
     page: {
-      items: slice.map((row) => toCommunityPostDTO(row, viewer)),
+      items: slice.map((row) =>
+        toCommunityPostDTO(row, viewer, counts.get(row.id)),
+      ),
       nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
     },
   };

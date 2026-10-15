@@ -23,8 +23,10 @@ const state = vi.hoisted(() => {
     like: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
+      groupBy: vi.fn(),
     },
     auditLog: {
       create: vi.fn(),
@@ -220,6 +222,10 @@ beforeEach(() => {
   db.like.create.mockResolvedValue({ id: "like_1" });
   db.like.delete.mockResolvedValue({});
   db.like.count.mockResolvedValue(3);
+  // Three hearts after the like: counts now come from one grouped read.
+  db.like.groupBy.mockResolvedValue([
+    { postId: "post_1", reaction: "LOVE", _count: { _all: 3 } },
+  ]);
   db.auditLog.create.mockResolvedValue({ id: "audit_1" });
   db.userTopic.findMany.mockResolvedValue([]);
   db.follow.count.mockResolvedValue(0);
@@ -394,7 +400,16 @@ describe("POST /api/v1/posts/[slug]/like", () => {
     );
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.data).toEqual({ liked: true, likeCount: 3 });
+    expect(body.data).toEqual({
+      liked: true,
+      likeCount: 3,
+      viewerReaction: "LOVE",
+      reactionCounts: { SUPPORT: 0, LOVE: 3, FIRE: 0, APPLAUSE: 0, INSPIRED: 0 },
+    });
+    // A plain like is the heart: the row is created as LOVE.
+    expect(db.like.create).toHaveBeenCalledWith({
+      data: { userId: user.id, postId: "post_1", reaction: "LOVE" },
+    });
   });
 
   it("returns like state anonymously without inventing likedByMe", async () => {
@@ -405,7 +420,12 @@ describe("POST /api/v1/posts/[slug]/like", () => {
         { params: Promise.resolve({ slug: "real-work" }) },
       )
     ).json();
-    expect(body.data).toEqual({ likedByMe: null, likeCount: 2 });
+    expect(body.data).toEqual({
+      likedByMe: null,
+      likeCount: 3,
+      viewerReaction: null,
+      reactionCounts: { SUPPORT: 0, LOVE: 3, FIRE: 0, APPLAUSE: 0, INSPIRED: 0 },
+    });
   });
 });
 

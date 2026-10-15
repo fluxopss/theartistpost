@@ -1,5 +1,11 @@
 import { z } from "zod";
-import type { CommunityKind, Prisma, PrismaClient } from "@prisma/client";
+import type {
+  CommunityKind,
+  CommunityPost,
+  Prisma,
+  PrismaClient,
+  Reaction,
+} from "@prisma/client";
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import type { DbUserWithProfile } from "@/features/auth/sessionUser";
 import { writeAuditLog } from "@/features/posts/audit";
@@ -7,15 +13,26 @@ import {
   communityPostInclude,
   communityVisibleWhere,
   toCommunityPostDTO,
+  toPersonSummaryDTO,
   type CommunityPostDTO,
+  type PersonSummaryDTO,
   type CommunityPostRow,
   type Viewer,
 } from "@/server/api/communityDto";
 import { IMAGE_MAX_BYTES, storeUploadedMedia } from "@/server/api/media";
 import { notify } from "@/server/api/notifications";
 import { visiblePersonWhere } from "@/server/api/people";
+import {
+  emptyReactionCounts,
+  loadCommunityReactionCounts,
+  parseReaction,
+  reactionBodySchema,
+  totalReactions,
+  type ReactionCounts,
+} from "@/server/api/reactions";
 import { blockedIdsFor } from "@/server/api/safety";
 import { screenText } from "@/server/api/textFilter";
+import { graphemeLength, unitCeiling } from "@/shared/lib/graphemes";
 import { absoluteUrl, siteOrigin } from "@/server/api/urls";
 import {
   parsePageParams,
@@ -89,11 +106,19 @@ export function normalizeUploadUrl(raw: string): string | null {
 
 const createSchema = z.object({
   kind: z.enum(COMMUNITY_KINDS),
+  // Counted by what a person sees, so an emoji is one character.
   body: z
     .string()
     .trim()
     .min(1, "Write something first.")
-    .max(COMMUNITY_BODY_MAX, `Keep it under ${COMMUNITY_BODY_MAX} characters.`),
+    .max(
+      unitCeiling(COMMUNITY_BODY_MAX),
+      `Keep it under ${COMMUNITY_BODY_MAX} characters.`,
+    )
+    .refine(
+      (value) => graphemeLength(value) <= COMMUNITY_BODY_MAX,
+      `Keep it under ${COMMUNITY_BODY_MAX} characters.`,
+    ),
   topicSlug: z
     .string()
     .trim()
@@ -397,10 +422,16 @@ export async function listCommunity(
 
   const hasMore = rows.length > query.page.take;
   const slice = hasMore ? rows.slice(0, query.page.take) : rows;
+  const counts = await loadCommunityReactionCounts(
+    prisma,
+    slice.map((row) => row.id),
+  );
   return {
     ok: true,
     page: {
-      items: slice.map((row) => toCommunityPostDTO(row, viewer)),
+      items: slice.map((row) =>
+        toCommunityPostDTO(row, viewer, counts.get(row.id)),
+      ),
       nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
     },
   };
@@ -450,10 +481,16 @@ export async function getCommunityThread(
     take: COMMUNITY_REPLIES_MAX,
   })) as unknown as CommunityPostRow[];
 
+  const counts = await loadCommunityReactionCounts(prisma, [
+    post.id,
+    ...replies.map((row) => row.id),
+  ]);
   return {
     ok: true,
-    post: toCommunityPostDTO(post, viewer),
-    replies: replies.map((row) => toCommunityPostDTO(row, viewer)),
+    post: toCommunityPostDTO(post, viewer, counts.get(post.id)),
+    replies: replies.map((row) =>
+      toCommunityPostDTO(row, viewer, counts.get(row.id)),
+    ),
   };
 }
 
@@ -504,13 +541,43 @@ function isUniqueViolation(error: unknown): boolean {
   );
 }
 
-/** Support (the one-tap sparkle): toggle for the signed-in member. */
-export async function toggleSupport(
+export type ReactionState = {
+  viewerReaction: Reaction | null;
+  reactionCounts: ReactionCounts;
+  supportCount: number;
+  /** True when the viewer has reacted with anything (older builds' flag). */
+  supported: boolean;
+};
+
+async function reactionStateFor(
+  prisma: PrismaClient,
+  postId: string,
+  viewerReaction: Reaction | null,
+): Promise<ReactionState> {
+  const counts =
+    (await loadCommunityReactionCounts(prisma, [postId])).get(postId) ??
+    emptyReactionCounts();
+  return {
+    viewerReaction,
+    reactionCounts: counts,
+    supportCount: totalReactions(counts),
+    supported: viewerReaction !== null,
+  };
+}
+
+type Existing = { reaction: Reaction } | null;
+
+/**
+ * Shared gate for every reaction write: rate limit (60 a minute per member,
+ * one bucket for all of them), then the visible post and the viewer's current
+ * reaction on it.
+ */
+async function loadReactable(
   prisma: PrismaClient,
   dbUser: DbUserWithProfile,
   id: string,
 ): Promise<
-  { ok: true; supported: boolean; supportCount: number } | Failure
+  { ok: true; post: CommunityPost; existing: Existing } | Failure
 > {
   const limit = checkRateLimit(`v1:community:support:${dbUser.id}`, {
     windowMs: 60_000,
@@ -524,65 +591,310 @@ export async function toggleSupport(
       retryAfterSec: retryAfter(limit),
     };
   }
+  const blocked = await blockedIdsFor(prisma, dbUser.id);
+  const post = await prisma.communityPost.findFirst({
+    where: { id, ...communityVisibleWhere(blocked) },
+  });
+  if (!post) {
+    return { ok: false, code: "not_found", message: "That post is gone." };
+  }
+  const existing = await prisma.communityReaction.findUnique({
+    where: { userId_postId: { userId: dbUser.id, postId: post.id } },
+  });
+  return { ok: true, post, existing };
+}
 
+/**
+ * Tell the author, ONCE per person per post. Switching emoji, or removing and
+ * reacting again, never re-notifies: the check looks at any earlier SUPPORT
+ * notification from this actor on this thread, read or not.
+ */
+async function notifyFirstReaction(
+  prisma: PrismaClient,
+  actorId: string,
+  post: CommunityPost,
+): Promise<void> {
+  const targetRef = post.parentId ?? post.id;
   try {
-    const blocked = await blockedIdsFor(prisma, dbUser.id);
-    const post = await prisma.communityPost.findFirst({
-      where: { id, ...communityVisibleWhere(blocked) },
+    const earlier = await prisma.notification.findFirst({
+      where: {
+        userId: post.authorId,
+        actorId,
+        type: "SUPPORT",
+        targetKind: "community",
+        targetRef,
+      },
+      select: { id: true },
     });
-    if (!post) {
-      return { ok: false, code: "not_found", message: "That post is gone." };
-    }
+    if (earlier) return;
+  } catch (error) {
+    console.error("[notifyFirstReaction]", error);
+    return;
+  }
+  await notify(prisma, {
+    userId: post.authorId,
+    actorId,
+    type: "SUPPORT",
+    targetKind: "community",
+    targetRef,
+    preview: post.body,
+  });
+}
 
-    const key = { userId_postId: { userId: dbUser.id, postId: post.id } };
-    const existing = await prisma.communityReaction.findUnique({ where: key });
+/**
+ * Make `reaction` the viewer's ONE reaction. A different emoji replaces the
+ * old one (an update, never a second row); the same emoji again is a no-op.
+ */
+async function applyReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  post: CommunityPost,
+  existing: Existing,
+  reaction: Reaction,
+): Promise<ReactionState> {
+  if (existing?.reaction === reaction) {
+    return reactionStateFor(prisma, post.id, reaction);
+  }
 
-    let supported: boolean;
-    if (existing) {
-      await prisma.communityReaction.delete({ where: key });
-      supported = false;
-      await writeAuditLog(prisma, {
-        actorId: dbUser.id,
-        action: "community.support_remove",
-        targetType: "CommunityPost",
-        targetId: post.id,
+  const key = { userId_postId: { userId: dbUser.id, postId: post.id } };
+  if (existing) {
+    await prisma.communityReaction.update({ where: key, data: { reaction } });
+  } else {
+    try {
+      await prisma.communityReaction.create({
+        data: { userId: dbUser.id, postId: post.id, reaction },
       });
-    } else {
-      try {
-        await prisma.communityReaction.create({
-          data: { userId: dbUser.id, postId: post.id },
-        });
-        await writeAuditLog(prisma, {
-          actorId: dbUser.id,
-          action: "community.support_add",
-          targetType: "CommunityPost",
-          targetId: post.id,
-        });
-        await notify(prisma, {
-          userId: post.authorId,
-          actorId: dbUser.id,
-          type: "SUPPORT",
-          targetKind: "community",
-          targetRef: post.parentId ?? post.id,
-          preview: post.body,
-        });
-      } catch (error) {
-        // Two quick taps raced: the other one already recorded support.
-        if (!isUniqueViolation(error)) throw error;
-      }
-      supported = true;
+      await notifyFirstReaction(prisma, dbUser.id, post);
+    } catch (error) {
+      // Two quick taps raced: the other one created the row, so this one is
+      // just a change of emoji.
+      if (!isUniqueViolation(error)) throw error;
+      await prisma.communityReaction.update({ where: key, data: { reaction } });
     }
+  }
 
-    const supportCount = await prisma.communityReaction.count({
-      where: { postId: post.id },
+  await writeAuditLog(prisma, {
+    actorId: dbUser.id,
+    action: "community.reaction_set",
+    targetType: "CommunityPost",
+    targetId: post.id,
+    meta: { reaction, replaced: existing?.reaction ?? null },
+  });
+  return reactionStateFor(prisma, post.id, reaction);
+}
+
+async function removeReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  post: CommunityPost,
+  existing: Existing,
+): Promise<ReactionState> {
+  if (existing) {
+    await prisma.communityReaction.delete({
+      where: { userId_postId: { userId: dbUser.id, postId: post.id } },
     });
-    return { ok: true, supported, supportCount };
+    await writeAuditLog(prisma, {
+      actorId: dbUser.id,
+      action: "community.reaction_remove",
+      targetType: "CommunityPost",
+      targetId: post.id,
+      meta: { reaction: existing.reaction },
+    });
+  }
+  return reactionStateFor(prisma, post.id, null);
+}
+
+/** Set the viewer's reaction on a post (PUT). */
+export async function setReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  id: string,
+  raw: unknown,
+): Promise<{ ok: true; state: ReactionState } | Failure> {
+  const parsed = reactionBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      code: "validation_failed",
+      message: parsed.error.issues[0]?.message ?? "Pick one of the reactions.",
+      fields: zodFieldErrors(parsed.error),
+    };
+  }
+  try {
+    const gate = await loadReactable(prisma, dbUser, id);
+    if (!gate.ok) return gate;
+    const state = await applyReaction(
+      prisma,
+      dbUser,
+      gate.post,
+      gate.existing,
+      parsed.data.reaction,
+    );
+    return { ok: true, state };
+  } catch (error) {
+    console.error("[setReaction]", error);
+    return {
+      ok: false,
+      code: "upstream_unavailable",
+      message: "Could not save that reaction.",
+    };
+  }
+}
+
+/** Remove the viewer's reaction (DELETE; a quiet no-op when there is none). */
+export async function clearReaction(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  id: string,
+): Promise<{ ok: true; state: ReactionState } | Failure> {
+  try {
+    const gate = await loadReactable(prisma, dbUser, id);
+    if (!gate.ok) return gate;
+    const state = await removeReaction(prisma, dbUser, gate.post, gate.existing);
+    return { ok: true, state };
+  } catch (error) {
+    console.error("[clearReaction]", error);
+    return {
+      ok: false,
+      code: "upstream_unavailable",
+      message: "Could not remove that reaction.",
+    };
+  }
+}
+
+/**
+ * Support (the original one-tap sparkle), kept for older app builds: toggles
+ * between no reaction and SUPPORT; any other reaction counts as "supported"
+ * and a tap removes it.
+ */
+export async function toggleSupport(
+  prisma: PrismaClient,
+  dbUser: DbUserWithProfile,
+  id: string,
+): Promise<{ ok: true; state: ReactionState } | Failure> {
+  try {
+    const gate = await loadReactable(prisma, dbUser, id);
+    if (!gate.ok) return gate;
+    const state = gate.existing
+      ? await removeReaction(prisma, dbUser, gate.post, gate.existing)
+      : await applyReaction(prisma, dbUser, gate.post, null, "SUPPORT");
+    return { ok: true, state };
   } catch (error) {
     console.error("[toggleSupport]", error);
     return {
       ok: false,
       code: "upstream_unavailable",
       message: "Could not update support.",
+    };
+  }
+}
+
+export type ReactorDTO = {
+  reaction: Reaction;
+  person: PersonSummaryDTO;
+  createdAt: string;
+};
+
+export const REACTORS_DEFAULT_TAKE = 30;
+export const REACTORS_MAX_TAKE = 50;
+
+export function parseReactorsQuery(
+  params: URLSearchParams,
+):
+  | { ok: true; page: PageParams; reaction?: Reaction }
+  | { ok: false; message: string; fields: Record<string, string> } {
+  const paged = parsePageParams(params, {
+    defaultTake: REACTORS_DEFAULT_TAKE,
+    maxTake: REACTORS_MAX_TAKE,
+  });
+  const fields: Record<string, string> = paged.ok ? {} : { ...paged.fields };
+  const rawReaction = params.get("reaction") || undefined;
+  let reaction: Reaction | undefined;
+  if (rawReaction !== undefined) {
+    reaction = parseReaction(rawReaction) ?? undefined;
+    if (!reaction) fields.reaction = "reaction must be one of the reaction names.";
+  }
+  if (Object.keys(fields).length > 0 || !paged.ok) {
+    return { ok: false, message: "Check the query parameters.", fields };
+  }
+  return { ok: true, page: paged.page, reaction };
+}
+
+/**
+ * Who reacted, newest first, optionally one emoji. Blocked people (either
+ * direction), suspended accounts and seed/test handles never appear. A plain
+ * list for one post, never a ranking.
+ */
+export async function listReactors(
+  prisma: PrismaClient,
+  id: string,
+  page: PageParams,
+  reaction: Reaction | undefined,
+  viewer: Viewer,
+): Promise<{ ok: true; page: Page<ReactorDTO> } | Failure> {
+  try {
+    const viewerId = viewer?.id ?? null;
+    const blocked = viewerId
+      ? await blockedIdsFor(prisma, viewerId)
+      : new Set<string>();
+    const post = await prisma.communityPost.findFirst({
+      where: { id, ...communityVisibleWhere(blocked) },
+      select: { id: true },
+    });
+    if (!post) {
+      return { ok: false, code: "not_found", message: "That post is gone." };
+    }
+
+    const rows = await prisma.communityReaction.findMany({
+      where: {
+        postId: post.id,
+        ...(reaction ? { reaction } : {}),
+        ...(blocked.size > 0 ? { userId: { notIn: [...blocked] } } : {}),
+        user: visiblePersonWhere(),
+      },
+      include: { user: { include: { artistProfile: true } } },
+      orderBy: [{ createdAt: "desc" }, { userId: "desc" }],
+      take: page.take + 1,
+      ...(page.cursor
+        ? {
+            skip: 1,
+            cursor: { userId_postId: { userId: page.cursor, postId: post.id } },
+          }
+        : {}),
+    });
+
+    const hasMore = rows.length > page.take;
+    const slice = hasMore ? rows.slice(0, page.take) : rows;
+
+    let following = new Set<string>();
+    if (viewerId && slice.length > 0) {
+      const edges = await prisma.follow.findMany({
+        where: {
+          followerId: viewerId,
+          followingId: { in: slice.map((row) => row.userId) },
+        },
+        select: { followingId: true },
+      });
+      following = new Set(edges.map((edge) => edge.followingId));
+    }
+
+    return {
+      ok: true,
+      page: {
+        items: slice.map((row) => ({
+          reaction: row.reaction,
+          person: toPersonSummaryDTO(row.user, following.has(row.userId)),
+          createdAt: row.createdAt.toISOString(),
+        })),
+        nextCursor: hasMore ? (slice[slice.length - 1]?.userId ?? null) : null,
+      },
+    };
+  } catch (error) {
+    console.error("[listReactors]", error);
+    return {
+      ok: false,
+      code: "upstream_unavailable",
+      message: "Could not load who reacted.",
     };
   }
 }

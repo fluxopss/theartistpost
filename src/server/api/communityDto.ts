@@ -3,9 +3,15 @@ import type {
   CommunityKind,
   CommunityPost,
   Prisma,
+  Reaction,
   Topic,
   User,
 } from "@prisma/client";
+import {
+  emptyReactionCounts,
+  totalReactions,
+  type ReactionCounts,
+} from "@/server/api/reactions";
 import { DENIED_AUTHOR_EMAILS } from "@/features/posts/denylist";
 import { toTopicDTO, type TopicDTO } from "@/server/api/topics";
 import { absoluteUrl } from "@/server/api/urls";
@@ -23,9 +29,15 @@ export type CommunityPostDTO = {
     avatarUrl: string | null;
     isArtist: boolean;
   };
+  /** Total reactions of any kind (named for the original Support-only build). */
   supportCount: number;
   replyCount: number;
+  /** True when the viewer has reacted with anything. */
   viewerSupported: boolean;
+  /** Per-emoji counts, every key present. */
+  reactionCounts: ReactionCounts;
+  /** The viewer's one reaction on this post, or null. */
+  viewerReaction: Reaction | null;
   canDelete: boolean;
   createdAt: string;
 };
@@ -65,7 +77,7 @@ export type CommunityPostRow = CommunityPost & {
   author: User & { artistProfile: ArtistProfile | null };
   topic: Topic | null;
   _count: { reactions: number; replies: number };
-  reactions?: Array<{ userId: string }>;
+  reactions?: Array<{ userId: string; reaction?: Reaction }>;
 };
 
 /**
@@ -93,7 +105,12 @@ export function communityPostInclude(
       },
     },
     ...(viewerId
-      ? { reactions: { where: { userId: viewerId }, select: { userId: true } } }
+      ? {
+          reactions: {
+            where: { userId: viewerId },
+            select: { userId: true, reaction: true },
+          },
+        }
       : {}),
   } satisfies Prisma.CommunityPostInclude;
 }
@@ -115,8 +132,14 @@ export function communityVisibleWhere(
 export function toCommunityPostDTO(
   row: CommunityPostRow,
   viewer: Viewer,
+  counts?: ReactionCounts,
 ): CommunityPostDTO {
   const artist = row.author.artistProfile;
+  // Without the grouped read (older call sites), fall back to the plain count.
+  const reactionCounts =
+    counts ??
+    ({ ...emptyReactionCounts(), SUPPORT: row._count.reactions } as ReactionCounts);
+  const mine = row.reactions?.[0];
   return {
     id: row.id,
     kind: row.kind,
@@ -130,9 +153,11 @@ export function toCommunityPostDTO(
       avatarUrl: absoluteUrl(artist?.avatarUrl ?? row.author.image),
       isArtist: artist?.approved === true,
     },
-    supportCount: row._count.reactions,
+    supportCount: counts ? totalReactions(counts) : row._count.reactions,
     replyCount: row._count.replies,
-    viewerSupported: (row.reactions?.length ?? 0) > 0,
+    viewerSupported: mine !== undefined,
+    reactionCounts,
+    viewerReaction: mine ? (mine.reaction ?? "SUPPORT") : null,
     canDelete: viewer
       ? viewer.role === "ADMIN" || row.authorId === viewer.id
       : false,

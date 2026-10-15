@@ -64,6 +64,11 @@ export async function POST(
       });
     }
 
-    return apiOk({ liked: result.liked, likeCount: result.likeCount });
+    return apiOk({
+      liked: result.liked,
+      likeCount: result.likeCount,
+      viewerReaction: result.viewerReaction,
+      reactionCounts: result.reactionCounts,
+    });
   });
 }

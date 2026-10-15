@@ -53,14 +53,14 @@ function sentLead(n = 0): Record<string, unknown> {
   return JSON.parse(String(init?.body));
 }
 
-const subscriber = { email: "fan@example.com" };
+const subscriber = { email: "fan@gmail.com" };
 const inquiry = {
   name: "Avery Artist",
-  email: "avery@example.com",
+  email: "avery@gmail.com",
   intent: "space",
   message: "I would like a weekend slot at Hacienda.",
 };
-const seat = { eventId: "e9", name: "Ada", email: "ada@example.com", party: 2 };
+const seat = { eventId: "e9", name: "Ada", email: "ada@gmail.com", party: 2 };
 
 beforeEach(() => {
   resetRateLimits();
@@ -117,7 +117,7 @@ describe("POST /api/v1/subscribe", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, data: { accepted: true } });
     expect(sentLead()).toMatchObject({
-      email: "fan@example.com",
+      email: "fan@gmail.com",
       source: "theartistpost-subscribe",
       intent: "subscribe",
       platform: "ios",
@@ -205,7 +205,7 @@ describe("POST /api/v1/night/rsvp", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       ok: true,
-      data: { code: passCode("e9", "ada@example.com") },
+      data: { code: passCode("e9", "ada@gmail.com") },
     });
     expect(sentLead()).toMatchObject({
       intent: "rsvp",

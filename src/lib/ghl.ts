@@ -22,7 +22,56 @@ export type LeadPayload = {
   city?: string;
   platform?: LeadPlatform;
   submittedAt?: string;
+  is_test?: boolean | number | string;
+  flux_internal?: boolean | number | string;
+  utm_source?: string;
 };
+
+/** Reserved documentation domains (RFC 2606); the domain or any subdomain. */
+export const TEST_EMAIL_DOMAINS = ["example.com", "example.net", "example.org"] as const;
+
+/** Reserved TLDs (RFC 2606 / 6761): anything under these is QA, e.g. tap.test. */
+export const TEST_EMAIL_TLDS = ["test", "invalid", "example", "localhost"] as const;
+
+/** Internal QA mailboxes: test+anything@fluxlab.agency. */
+const TEST_PLUS_LOCAL = "test";
+const TEST_PLUS_DOMAIN = "fluxlab.agency";
+
+export const TEST_UTM_SOURCES = ["smoke", "verify", "deploy-smoke"] as const;
+
+export function isTestEmail(email: string | null | undefined): boolean {
+  const e = (email ?? "").trim().toLowerCase();
+  const at = e.lastIndexOf("@");
+  if (at < 1) return false;
+  const local = e.slice(0, at);
+  const domain = e.slice(at + 1).replace(/\.$/, "");
+  if (!domain) return false;
+  if (TEST_EMAIL_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))) {
+    return true;
+  }
+  const tld = domain.split(".").pop() ?? "";
+  if ((TEST_EMAIL_TLDS as readonly string[]).includes(tld)) return true;
+  return domain === TEST_PLUS_DOMAIN && local.startsWith(`${TEST_PLUS_LOCAL}+`);
+}
+
+function isTruthyFlag(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  if (typeof value !== "string") return false;
+  return ["1", "true", "yes"].includes(value.trim().toLowerCase());
+}
+
+export type TestLeadReason = "email" | "flag" | "utm_source";
+
+/** Why a lead is QA traffic that must never reach the CRM, or null for a real lead. */
+export function testLeadReason(payload: LeadPayload): TestLeadReason | null {
+  if (isTestEmail(payload.email)) return "email";
+  if (isTruthyFlag(payload.is_test) || isTruthyFlag(payload.flux_internal)) {
+    return "flag";
+  }
+  const utm = payload.utm_source?.trim().toLowerCase() ?? "";
+  if ((TEST_UTM_SOURCES as readonly string[]).includes(utm)) return "utm_source";
+  return null;
+}
 
 export function normalizeInvolveIntent(
   value?: string | null,
@@ -53,10 +102,13 @@ function summarizeLead(payload: LeadPayload) {
  * `intent: "donor"` and `medium: "one_time" | "monthly"`. Map those in GHL to
  * tags `donor` / `donor.one_time` / `donor.recurring` (or `sustainer`).
  * PayPal IPN → GHL is not wired yet — ops can hand-tag from PayPal exports until then.
+ *
+ * Test leads (see `testLeadReason`) never hit the webhook: the GHL catch-all
+ * workflow has no QA filter, so each one would create a contact, an opp and an SMS.
  */
 export async function sendLeadToGhl(
   payload: LeadPayload,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; skipped?: "test" }> {
   const webhookUrl = process.env.GHL_WEBHOOK_URL?.trim();
   const intent = normalizeInvolveIntent(payload.intent);
   const body: LeadPayload = {
@@ -64,6 +116,15 @@ export async function sendLeadToGhl(
     intent: intent ?? payload.intent,
     submittedAt: payload.submittedAt ?? new Date().toISOString(),
   };
+
+  const testReason = testLeadReason(body);
+  if (testReason) {
+    console.info("[ghl] test lead — webhook skipped", {
+      reason: testReason,
+      lead: summarizeLead(body),
+    });
+    return { ok: true, skipped: "test" };
+  }
 
   if (!webhookUrl) {
     if (process.env.NODE_ENV !== "production") {

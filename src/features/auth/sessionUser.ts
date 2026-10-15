@@ -29,7 +29,7 @@ export function sessionUserFromDb(user: DbUserWithProfile): SessionUser {
     email: user.email,
     name: user.name,
     role: user.role,
-    handle: user.artistProfile?.handle,
+    handle: user.artistProfile?.handle ?? user.handle,
     image: user.image,
   });
 }

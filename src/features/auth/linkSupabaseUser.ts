@@ -16,6 +16,7 @@ import {
 import type { SessionUser } from "@/features/auth/types";
 import { isDeniedAuthorEmail } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
+import { isHandleUniqueViolation } from "@/server/api/handles";
 
 const returnDoorSchema = z.object({
   door: z.literal("return"),
@@ -210,6 +211,7 @@ export async function linkSupabaseUser(
         email: claims.email,
         name: body.name,
         role: "ARTIST",
+        handle,
         supabaseAuthId: claims.supabaseAuthId,
         artistProfile: {
           create: {
@@ -245,6 +247,13 @@ export async function linkSupabaseUser(
       pendingApproval: true,
     };
   } catch (error) {
+    if (isHandleUniqueViolation(error)) {
+      return {
+        ok: false,
+        code: "conflict",
+        error: "That handle is already taken.",
+      };
+    }
     console.error("[linkSupabaseUser]", error);
     return {
       ok: false,

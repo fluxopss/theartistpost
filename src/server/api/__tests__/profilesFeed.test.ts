@@ -6,6 +6,9 @@ const state = vi.hoisted(() => {
     artistProfile: { findUnique: vi.fn() },
     user: { findUnique: vi.fn(), findMany: vi.fn() },
     tag: { findMany: vi.fn() },
+    userTopic: { findMany: vi.fn() },
+    follow: { count: vi.fn() },
+    notification: { count: vi.fn() },
   };
   return { db, connected: true };
 });
@@ -116,6 +119,9 @@ beforeEach(() => {
   db.user.findUnique.mockResolvedValue(null);
   db.user.findMany.mockResolvedValue([]);
   db.tag.findMany.mockResolvedValue([]);
+  db.userTopic.findMany.mockResolvedValue([]);
+  db.follow.count.mockResolvedValue(0);
+  db.notification.count.mockResolvedValue(0);
 });
 
 afterEach(() => {

@@ -151,3 +151,21 @@ export async function requireAdmin(
   }
   return ctx;
 }
+
+export const SUSPENDED_ERROR =
+  "Your account is paused. Contact the house team if you think this is a mistake.";
+
+/**
+ * Real session AND not suspended. Every write route uses this (suspended
+ * users stay read-only); reads and `DELETE /me` keep `requireApiSession`.
+ */
+export async function requireActiveMember(
+  request: Request,
+): Promise<AuthedContext | Response> {
+  const ctx = await requireApiSession(request);
+  if (ctx instanceof Response) return ctx;
+  if (ctx.dbUser.suspendedAt) {
+    return apiError("forbidden", SUSPENDED_ERROR);
+  }
+  return ctx;
+}

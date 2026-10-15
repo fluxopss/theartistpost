@@ -42,6 +42,7 @@ export function isWritableRole(role: Role | SessionUser["role"]): boolean {
 export function authorizePublisher(
   session: SessionUser | null | undefined,
   dbUser: DbUserWithProfile | null,
+  options?: { allowSuspended?: boolean },
 ): { ok: true; canPublish: boolean } | { ok: false; error: string } {
   if (!session || isMockGuestSession(session)) {
     return { ok: false, error: PUBLISHING_CLOSED_ERROR };
@@ -50,6 +51,10 @@ export function authorizePublisher(
     return { ok: false, error: NOT_AUTHORIZED_ERROR };
   }
   if (!isWritableRole(dbUser.role)) {
+    return { ok: false, error: NOT_AUTHORIZED_ERROR };
+  }
+  // Suspended accounts are read-only everywhere (web studio included).
+  if (dbUser.suspendedAt && !options?.allowSuspended) {
     return { ok: false, error: NOT_AUTHORIZED_ERROR };
   }
   if (dbUser.role === "ADMIN") {

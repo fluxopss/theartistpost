@@ -7,10 +7,11 @@ import type {
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import { writeAuditLog } from "@/features/posts/audit";
 import { blockedIdsFor } from "@/server/api/safety";
+import { truncatePreview } from "@/server/api/textFilter";
 import { absoluteUrl } from "@/server/api/urls";
+export { truncatePreview };
 import { zodFieldErrors, type Page, type PageParams } from "@/server/api/validation";
 
-export const NOTIFICATION_PREVIEW_MAX = 120;
 export const NOTIFICATIONS_DEFAULT_TAKE = 20;
 export const NOTIFICATIONS_MAX_TAKE = 30;
 
@@ -36,16 +37,6 @@ export type NotificationDTO = {
   readAt: string | null;
   createdAt: string;
 };
-
-/** One line, at most 120 characters (ellipsis included). */
-export function truncatePreview(text: string | null | undefined): string | null {
-  if (!text) return null;
-  const flat = text.replace(/\s+/g, " ").trim();
-  if (!flat) return null;
-  return flat.length <= NOTIFICATION_PREVIEW_MAX
-    ? flat
-    : `${flat.slice(0, NOTIFICATION_PREVIEW_MAX - 1).trimEnd()}…`;
-}
 
 /**
  * Create an in-app notification. Never throws (failures are logged, because a

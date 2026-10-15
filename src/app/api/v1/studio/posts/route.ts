@@ -28,7 +28,7 @@ const listQuerySchema = z.object({
 /** List the signed-in artist's own studio posts (including drafts). */
 export async function GET(request: Request) {
   return withApiErrors("studio/posts:list", async () => {
-    const ctx = await requirePublisher(request);
+    const ctx = await requirePublisher(request, { allowSuspended: true });
     if (ctx instanceof Response) return ctx;
 
     const parsed = listQuerySchema.safeParse(

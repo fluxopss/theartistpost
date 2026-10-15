@@ -10,6 +10,9 @@ import {
 import { writeAuditLog } from "@/features/posts/audit";
 import type { DbUserWithProfile } from "@/features/auth/sessionUser";
 import { notify } from "@/server/api/notifications";
+import { blockedIdsFor } from "@/server/api/safety";
+import { screenText } from "@/server/api/textFilter";
+import { absoluteUrl } from "@/server/api/urls";
 
 export const COMMENT_BODY_MAX = 280;
 export const COMMENT_DEFAULT_TAKE = 24;
@@ -22,7 +25,7 @@ export const commentBodySchema = z.object({
 export type EngagementCommentDTO = {
   id: string;
   body: string;
-  author: { name: string; handle: string | null };
+  author: { name: string; handle: string | null; avatarUrl: string | null };
   createdAt: string;
 };
 
@@ -94,6 +97,16 @@ export async function createCommentForUser(
     };
   }
 
+  const screened = screenText(parsed.data.body);
+  if (!screened.ok) {
+    return {
+      ok: false,
+      code: "validation_failed",
+      message: screened.message,
+      fields: { body: screened.message },
+    };
+  }
+
   const limit = checkRateLimit(`v1:comment:${dbUser.id}`, {
     windowMs: 60_000,
     max: 20,
@@ -149,7 +162,8 @@ export async function createCommentForUser(
         body: comment.body,
         author: {
           name: dbUser.name,
-          handle: dbUser.artistProfile?.handle ?? null,
+          handle: dbUser.handle ?? dbUser.artistProfile?.handle ?? null,
+          avatarUrl: absoluteUrl(dbUser.artistProfile?.avatarUrl ?? dbUser.image),
         },
         createdAt: comment.createdAt.toISOString(),
       },
@@ -341,6 +355,7 @@ export async function listCommentsForSlug(
   prisma: PrismaClient,
   slug: string,
   query: CommentsQuery,
+  viewerId: string | null = null,
 ): Promise<
   | { ok: false; code: "not_found"; message: string }
   | {
@@ -359,9 +374,16 @@ export async function listCommentsForSlug(
     };
   }
 
+  const blocked = viewerId
+    ? await blockedIdsFor(prisma, viewerId)
+    : new Set<string>();
   const publicCommentWhere = {
     postId: post.id,
-    user: { email: { notIn: [...DENIED_AUTHOR_EMAILS] } },
+    hiddenAt: null,
+    user: {
+      email: { notIn: [...DENIED_AUTHOR_EMAILS] },
+      ...(blocked.size > 0 ? { id: { notIn: [...blocked] } } : {}),
+    },
   };
 
   const comments = await prisma.comment.findMany({
@@ -387,7 +409,8 @@ export async function listCommentsForSlug(
       body: c.body,
       author: {
         name: c.user.name,
-        handle: c.user.artistProfile?.handle ?? null,
+        handle: c.user.handle ?? c.user.artistProfile?.handle ?? null,
+        avatarUrl: absoluteUrl(c.user.artistProfile?.avatarUrl ?? c.user.image),
       },
       createdAt: c.createdAt.toISOString(),
     })),

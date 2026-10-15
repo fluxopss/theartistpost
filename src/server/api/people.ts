@@ -1,13 +1,15 @@
-import type {
-  ArtistProfile,
-  Prisma,
-  PrismaClient,
-  User,
-} from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import { DENIED_AUTHOR_EMAILS } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
 import { content } from "@/lib/content";
+import {
+  toPersonSummaryDTO,
+  type PersonRow,
+  type PersonSummaryDTO,
+} from "@/server/api/communityDto";
+export { toPersonSummaryDTO };
+export type { PersonRow, PersonSummaryDTO };
 import {
   communityPostInclude,
   communityVisibleWhere,
@@ -20,23 +22,12 @@ import { normalizeHandle } from "@/server/api/handles";
 import { notify } from "@/server/api/notifications";
 import { blockedIdsFor } from "@/server/api/safety";
 import { toTopicDTO, type TopicDTO } from "@/server/api/topics";
-import { absoluteUrl } from "@/server/api/urls";
 import type { Page, PageParams } from "@/server/api/validation";
 
 export const PEOPLE_DEFAULT_TAKE = 20;
 export const PEOPLE_MAX_TAKE = 30;
 export const SUGGESTED_MAX = 12;
 export const PEOPLE_QUERY_MIN = 2;
-
-export type PersonSummaryDTO = {
-  id: string;
-  handle: string;
-  name: string;
-  avatarUrl: string | null;
-  headline: string | null;
-  isArtist: boolean;
-  viewerFollows: boolean;
-};
 
 export type PersonDTO = PersonSummaryDTO & {
   bio: string | null;
@@ -51,25 +42,6 @@ export type PersonDTO = PersonSummaryDTO & {
   artist: { handle: string; approved: boolean } | null;
   joinedAt: string;
 };
-
-export type PersonRow = User & { artistProfile: ArtistProfile | null };
-
-/** `isArtist` means an APPROVED artist (the badge people see). */
-export function toPersonSummaryDTO(
-  user: PersonRow,
-  viewerFollows: boolean,
-): PersonSummaryDTO {
-  const artist = user.artistProfile;
-  return {
-    id: user.id,
-    handle: user.handle ?? "",
-    name: user.name,
-    avatarUrl: absoluteUrl(artist?.avatarUrl ?? user.image),
-    headline: user.headline ?? null,
-    isArtist: artist?.approved === true,
-    viewerFollows,
-  };
-}
 
 /** Who may appear in people lists: has a handle, not suspended, not a seed identity. */
 export function visiblePersonWhere(): Prisma.UserWhereInput {

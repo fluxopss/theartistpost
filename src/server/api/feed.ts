@@ -12,7 +12,8 @@ import {
 import { isPlausibleHandle, parsePostsQuery } from "@/server/api/posts";
 import { apiError, apiOk, CACHE } from "@/server/api/respond";
 import { blockedIdsFor } from "@/server/api/safety";
-import { requireApiSession } from "@/server/api/session";
+import { requireApiSession, resolveOptionalSession } from "@/server/api/session";
+import { getPrisma } from "@/shared/lib/prisma";
 
 export type FeedPageDTO = {
   kind: FeedKind;
@@ -49,21 +50,64 @@ export function parseFeedSearchParams(
   return { ok: true, query: parsed.query };
 }
 
-/** Community / explore feed — public catalog, newest first. */
+/**
+ * Signed-in viewer's block list (either direction). Anonymous or DB-less
+ * requests get an empty set and keep the public cache policy.
+ */
+async function viewerBlocks(
+  request: Request | undefined,
+): Promise<{ viewerId: string | null; blocked: Set<string> }> {
+  if (!request) return { viewerId: null, blocked: new Set() };
+  const optional = await resolveOptionalSession(request);
+  if (!optional) return { viewerId: null, blocked: new Set() };
+  return {
+    viewerId: optional.dbUser.id,
+    blocked: await blockedIdsFor(optional.prisma, optional.dbUser.id),
+  };
+}
+
+/**
+ * True when the signed-in viewer is in a block relationship with the artist
+ * behind `handle` (that artist's works disappear for them).
+ */
+export async function artistBlockedForViewer(
+  request: Request | undefined,
+  handle: string,
+): Promise<boolean> {
+  const { viewerId, blocked } = await viewerBlocks(request);
+  const prisma = getPrisma();
+  if (!viewerId || blocked.size === 0 || !prisma) return false;
+  const profile = await prisma.artistProfile.findUnique({
+    where: { handle },
+    select: { userId: true },
+  });
+  return profile ? blocked.has(profile.userId) : false;
+}
+
+/**
+ * Community / explore feed — public catalog, newest first. A signed-in viewer
+ * never sees works by people they blocked (or who blocked them), so that
+ * response is private.
+ */
 export async function exploreFeedResponse(
   params: URLSearchParams,
+  request?: Request,
 ): Promise<Response> {
   const parsed = parseFeedSearchParams(params);
   if (!parsed.ok) return parsed.response;
 
-  const { items, nextCursor } = await getPosts(parsed.query);
+  const { viewerId, blocked } = await viewerBlocks(request);
+  const { items, nextCursor } = await getPosts({
+    ...parsed.query,
+    ...(blocked.size > 0 ? { excludeAuthorIds: [...blocked] } : {}),
+  });
   const data: FeedPageDTO = {
     kind: "explore",
     items: items.map(toPostSummaryDTO),
     nextCursor,
     followingAvailable: FOLLOWING_FEED_AVAILABLE,
   };
-  return apiOk(data, { cache: CACHE.minute });
+  return apiOk(data, { cache: viewerId ? CACHE.none : CACHE.minute });
 }
 
 /**
@@ -109,8 +153,12 @@ export async function followingFeedResponse(
 export async function authorTimelineResponse(
   handle: string,
   params: URLSearchParams,
+  request?: Request,
 ): Promise<Response> {
   if (!isPlausibleHandle(handle)) {
+    return apiError("not_found", "No approved artist has that handle.");
+  }
+  if (await artistBlockedForViewer(request, handle)) {
     return apiError("not_found", "No approved artist has that handle.");
   }
 

@@ -126,14 +126,24 @@ export async function requireApiSession(
   };
 }
 
-/** Approved ARTIST or ADMIN — same gate as web studio writes. */
+/**
+ * Approved ARTIST or ADMIN — same gate as web studio writes. Suspended
+ * accounts are refused unless the caller is a read (`allowSuspended`).
+ */
 export async function requirePublisher(
   request: Request,
+  options?: { allowSuspended?: boolean },
 ): Promise<AuthedContext | Response> {
   const ctx = await requireApiSession(request);
   if (ctx instanceof Response) return ctx;
 
-  const gate = authorizePublisher(ctx.session, ctx.dbUser);
+  if (ctx.dbUser.suspendedAt && !options?.allowSuspended) {
+    return apiError("forbidden", SUSPENDED_ERROR);
+  }
+
+  const gate = authorizePublisher(ctx.session, ctx.dbUser, {
+    allowSuspended: options?.allowSuspended,
+  });
   if (!gate.ok) {
     return apiError("forbidden", gate.error || PUBLISHING_CLOSED_ERROR);
   }

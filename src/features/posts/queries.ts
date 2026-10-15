@@ -25,7 +25,13 @@ type PostWithRelations = Post & {
     id: string;
     body: string;
     createdAt: Date;
-    user: { id: string; name: string; image: string | null };
+    user: {
+      id: string;
+      name: string;
+      image: string | null;
+      handle?: string | null;
+      artistProfile?: { handle: string; avatarUrl: string | null } | null;
+    };
   }>;
 };
 
@@ -92,7 +98,10 @@ function mapPostDetail(post: PostWithRelations): PostDetail {
         author: {
           id: c.user.id,
           name: c.user.name,
-          image: sanitizeAvatarUrl(c.user.image),
+          image: sanitizeAvatarUrl(
+            c.user.artistProfile?.avatarUrl ?? c.user.image,
+          ),
+          handle: c.user.handle ?? c.user.artistProfile?.handle ?? null,
         },
       })) ?? [],
   };
@@ -120,7 +129,7 @@ export async function getFeaturedPosts(limit = 4): Promise<PostSummary[]> {
         include: {
           author: { include: { artistProfile: true } },
           tags: true,
-          _count: { select: { likes: true, comments: true } },
+          _count: { select: { likes: true, comments: { where: { hiddenAt: null } } } },
         },
       });
       return posts.map(mapPostSummary);
@@ -172,7 +181,7 @@ export async function getPosts(options?: {
         include: {
           author: { include: { artistProfile: true } },
           tags: true,
-          _count: { select: { likes: true, comments: true } },
+          _count: { select: { likes: true, comments: { where: { hiddenAt: null } } } },
         },
       });
 
@@ -194,6 +203,8 @@ export async function getPostBySlug(
     commentOrder?: "asc" | "desc";
     /** Omit to load every comment. */
     commentTake?: number;
+    /** Hide comments by these people (the viewer's blocks, either direction). */
+    excludeCommentAuthorIds?: string[];
   },
 ): Promise<PostDetail | null> {
   if (isDeniedPostSlug(slug)) return null;
@@ -209,14 +220,30 @@ export async function getPostBySlug(
         include: {
           author: { include: { artistProfile: true } },
           tags: true,
-          _count: { select: { likes: true, comments: true } },
+          _count: { select: { likes: true, comments: { where: { hiddenAt: null } } } },
           comments: {
+            where: {
+              hiddenAt: null,
+              ...(options?.excludeCommentAuthorIds?.length
+                ? { userId: { notIn: options.excludeCommentAuthorIds } }
+                : {}),
+            },
             orderBy: { createdAt: options?.commentOrder ?? "asc" },
             ...(options?.commentTake !== undefined
               ? { take: options.commentTake }
               : {}),
             include: {
-              user: { select: { id: true, name: true, image: true } },
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true,
+                  handle: true,
+                  artistProfile: {
+                    select: { handle: true, avatarUrl: true },
+                  },
+                },
+              },
             },
           },
         },
@@ -232,7 +259,7 @@ export async function getPostBySlug(
 const artistPostInclude = {
   author: { include: { artistProfile: true } },
   tags: true,
-  _count: { select: { likes: true, comments: true } },
+  _count: { select: { likes: true, comments: { where: { hiddenAt: null } } } },
 } as const;
 
 function mapArtistProfile(

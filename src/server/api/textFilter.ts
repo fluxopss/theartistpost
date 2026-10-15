@@ -61,7 +61,21 @@ const blockedRe = new RegExp(
 
 /** Compatibility-fold and drop zero-width characters used to dodge filters. */
 function normalize(text: string): string {
-  return text.normalize("NFKC").replace(/[​-‍⁠﻿]/g, "");
+  return text.normalize("NFKC").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+}
+
+export const NOTIFICATION_PREVIEW_MAX = 120;
+
+/** Collapse to one line, at most 120 characters (ellipsis included). */
+export function truncatePreview(
+  text: string | null | undefined,
+): string | null {
+  if (!text) return null;
+  const flat = text.replace(/\s+/g, " ").trim();
+  if (!flat) return null;
+  return flat.length <= NOTIFICATION_PREVIEW_MAX
+    ? flat
+    : `${flat.slice(0, NOTIFICATION_PREVIEW_MAX - 1).trimEnd()}…`;
 }
 
 export function countLinks(text: string): number {

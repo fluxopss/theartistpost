@@ -30,6 +30,35 @@ export type CommunityPostDTO = {
   createdAt: string;
 };
 
+export type PersonSummaryDTO = {
+  id: string;
+  handle: string;
+  name: string;
+  avatarUrl: string | null;
+  headline: string | null;
+  isArtist: boolean;
+  viewerFollows: boolean;
+};
+
+export type PersonRow = User & { artistProfile: ArtistProfile | null };
+
+/** `isArtist` means an APPROVED artist (the badge people see). */
+export function toPersonSummaryDTO(
+  user: PersonRow,
+  viewerFollows: boolean,
+): PersonSummaryDTO {
+  const artist = user.artistProfile;
+  return {
+    id: user.id,
+    handle: user.handle ?? "",
+    name: user.name,
+    avatarUrl: absoluteUrl(artist?.avatarUrl ?? user.image),
+    headline: user.headline ?? null,
+    isArtist: artist?.approved === true,
+    viewerFollows,
+  };
+}
+
 export type Viewer = { id: string; role: "VIEWER" | "ARTIST" | "ADMIN" } | null;
 
 export type CommunityPostRow = CommunityPost & {

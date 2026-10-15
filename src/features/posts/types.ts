@@ -56,6 +56,8 @@ export interface CommentView {
     id: string;
     name: string;
     image?: string | null;
+    /** Community handle (User.handle), falling back to the artist handle. */
+    handle?: string | null;
   };
 }
 

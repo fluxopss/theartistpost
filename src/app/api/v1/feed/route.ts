@@ -13,6 +13,6 @@ export async function GET(request: Request) {
     if (params.get("kind") === "following") {
       return followingFeedResponse(request, params);
     }
-    return exploreFeedResponse(params);
+    return exploreFeedResponse(params, request);
   });
 }

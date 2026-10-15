@@ -13,7 +13,11 @@ import { TrackClick } from "@/components/TrackClick";
 
 export function NavBar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  // The sheet remembers the path it was opened on, so navigating closes it
+  // without a reset effect.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const setOpen = (next: boolean) => setOpenOn(next ? pathname : null);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -22,10 +26,6 @@ export function NavBar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -104,7 +104,7 @@ export function NavBar() {
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => setOpen(!open)}
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>

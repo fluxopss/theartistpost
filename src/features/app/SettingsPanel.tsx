@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/hooks/useTheme";
-import { Button } from "@/shared/ui/Button";
+import { Button, ButtonLink } from "@/shared/ui/Button";
+import { useHydratedState } from "@/hooks/useHydrated";
 import { useToast } from "@/design-system/primitives/Toast";
 import { useSession } from "@/features/auth/AuthProvider";
 import {
@@ -20,15 +21,15 @@ export function SettingsPanel() {
   const { theme, setTheme, mounted } = useTheme();
   const { push } = useToast();
   const { user, isAuthenticated, signOut, signingOut } = useSession();
-  const [name, setName] = useState("");
-  const [city, setCity] = useState("");
-  const [motion, setMotion] = useState<MotionPreference>("system");
+  const [name, setName] = useHydratedState("studio", () => getStudio().displayName, "");
+  const [city, setCity] = useHydratedState("studio", () => getStudio().city ?? "", "");
+  const [motion, setMotion] = useHydratedState<MotionPreference>(
+    "motion",
+    getMotionPreference,
+    "system",
+  );
 
   useEffect(() => {
-    const studio = getStudio();
-    setName(studio.displayName);
-    setCity(studio.city ?? "");
-    setMotion(getMotionPreference());
     applyMotionPreference();
   }, []);
 
@@ -89,15 +90,12 @@ export function SettingsPanel() {
               No account session on this device. Browse freely, or join to leave
               real comments and open a pending studio.
             </p>
-            <Button
-              type="button"
+            <ButtonLink
+              href="/join"
               className="rounded-full !bg-spark-teal !text-[#020b1a]"
-              onClick={() => {
-                window.location.href = "/join";
-              }}
             >
               Open the join doors
-            </Button>
+            </ButtonLink>
           </>
         )}
       </section>

@@ -68,7 +68,16 @@ export function LivingWall({
     startScale: 1,
   });
 
-  const [filters, setFilters] = useState<WallFilters>(DEFAULT_WALL_FILTERS);
+  const [filters, setFilters] = useState<WallFilters>(() =>
+    lane ? { ...DEFAULT_WALL_FILTERS, medium: lane.medium } : DEFAULT_WALL_FILTERS,
+  );
+  // Arriving on a new ?lane= narrows the wall to that medium (adjust state on
+  // prop change rather than in the layout effect).
+  const [filtersLaneId, setFiltersLaneId] = useState(laneId);
+  if (laneId !== filtersLaneId) {
+    setFiltersLaneId(laneId);
+    if (lane) setFilters({ ...DEFAULT_WALL_FILTERS, medium: lane.medium });
+  }
   const [scale, setScale] = useState(0.62);
   const [pan, setPan] = useState({ x: 40, y: 30 });
   const [selected, setSelected] = useState<WallPiece | null>(null);
@@ -84,13 +93,15 @@ export function LivingWall({
     [pieces, filters],
   );
 
+  // Latest pieces for the lane-aim observer; synced before the aim effect below runs.
   const piecesRef = useRef(pieces);
-  piecesRef.current = pieces;
+  useLayoutEffect(() => {
+    piecesRef.current = pieces;
+  }, [pieces]);
 
   useLayoutEffect(() => {
     const active = tapLane(laneId);
     if (!active) return;
-    setFilters({ ...DEFAULT_WALL_FILTERS, medium: active.medium });
 
     const aim = () => {
       const node = viewportRef.current;

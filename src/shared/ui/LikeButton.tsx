@@ -10,6 +10,9 @@ import {
   toggleLikeAction,
 } from "@/features/posts/engagement";
 import { isLiked, toggleLike } from "@/features/app/storage";
+import { useHydratedState } from "@/hooks/useHydrated";
+
+type RemoteLike = { key: string; liked: boolean; count: number };
 
 export function LikeButton({
   id,
@@ -22,34 +25,41 @@ export function LikeButton({
 }) {
   const { isAuthenticated, user } = useSession();
   const signedIn = isAuthenticated && Boolean(user);
-  const [liked, setLiked] = useState(false);
-  const [count, setCount] = useState(initialCount);
   const [pending, startTransition] = useTransition();
   const [hint, setHint] = useState(false);
   const reduce = useReducedMotion();
 
+  // Signed out: the like lives on this device; re-read when the post or session changes.
+  const [localLiked, setLocalLiked] = useHydratedState(
+    `${id}:${signedIn}`,
+    () => !signedIn && isLiked(id),
+    false,
+  );
+
+  // Signed in: server status, tagged with what it was fetched for so a new
+  // post/count/user falls back to the unliked baseline until it reloads.
+  const remoteKey = `${id}:${initialCount}:${user?.id ?? ""}`;
+  const [remote, setRemote] = useState<RemoteLike | null>(null);
+  const fresh = signedIn && remote?.key === remoteKey ? remote : null;
+
+  const liked = signedIn ? (fresh?.liked ?? false) : localLiked;
+  const count = signedIn
+    ? (fresh?.count ?? initialCount)
+    : initialCount + (localLiked ? 1 : 0);
+
   useEffect(() => {
-    if (!signedIn) {
-      const on = isLiked(id);
-      setLiked(on);
-      setCount(initialCount + (on ? 1 : 0));
-      return;
-    }
+    if (!signedIn) return;
 
     let cancelled = false;
-    setLiked(false);
-    setCount(initialCount);
-
     void getLikeStatusAction({ postId: id }).then((result) => {
       if (cancelled || !result.ok) return;
-      setLiked(result.liked);
-      setCount(result.likeCount);
+      setRemote({ key: remoteKey, liked: result.liked, count: result.likeCount });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [id, initialCount, signedIn]);
+  }, [id, remoteKey, signedIn]);
 
   function onClick() {
     if (signedIn) {
@@ -59,15 +69,12 @@ export function LikeButton({
           setHint(true);
           return;
         }
-        setLiked(result.liked);
-        setCount(result.likeCount);
+        setRemote({ key: remoteKey, liked: result.liked, count: result.likeCount });
         setHint(false);
       });
       return;
     }
-    const next = toggleLike(id);
-    setLiked(next);
-    setCount(initialCount + (next ? 1 : 0));
+    setLocalLiked(toggleLike(id));
     setHint(true);
   }
 

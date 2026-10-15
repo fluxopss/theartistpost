@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useHydratedState } from "@/hooks/useHydrated";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 import {
@@ -19,11 +19,11 @@ export function SavePostButton({
   post: SavedPost;
   className?: string;
 }) {
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setSaved(isPostSaved(post.id));
-  }, [post.id]);
+  const [saved, setSaved] = useHydratedState(
+    `post:${post.id}`,
+    () => isPostSaved(post.id),
+    false,
+  );
 
   return (
     <button
@@ -51,11 +51,11 @@ export function SaveEventButton({
   event: SavedEvent;
   className?: string;
 }) {
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setSaved(isEventSaved(event.id));
-  }, [event.id]);
+  const [saved, setSaved] = useHydratedState(
+    `event:${event.id}`,
+    () => isEventSaved(event.id),
+    false,
+  );
 
   return (
     <button

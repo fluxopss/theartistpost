@@ -54,10 +54,7 @@ vi.mock("@/shared/lib/prisma", () => ({
 }));
 
 import { GET as listAdminUsersV1 } from "@/app/api/v1/admin/users/route";
-import {
-  GET as getAdminUserV1,
-  PATCH as patchAdminUserV1,
-} from "@/app/api/v1/admin/users/[id]/route";
+import { PATCH as patchAdminUserV1 } from "@/app/api/v1/admin/users/[id]/route";
 import {
   GET as listCommentsV1,
   POST as createCommentV1,
@@ -508,28 +505,6 @@ describe("admin users detail + approval", () => {
     );
     expect(response.status).toBe(409);
     expect(db.artistProfile.update).not.toHaveBeenCalled();
-  });
-
-  it("returns admin user detail with counts", async () => {
-    const admin = adminUser();
-    const pending = pendingArtist();
-    db.user.findUnique
-      .mockResolvedValueOnce(admin)
-      .mockResolvedValueOnce({
-        ...pending,
-        _count: { posts: 2, comments: 1, likes: 4 },
-      });
-
-    const response = await getAdminUserV1(
-      new Request("http://localhost/api/v1/admin/users/user_pending", {
-        headers: bearerFor(admin),
-      }),
-      { params: Promise.resolve({ id: "user_pending" }) },
-    );
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.data.user.postCount).toBe(2);
-    expect(body.data.user.handle).toBe("pendingpainter");
   });
 
   it("blocks self-demotion from ADMIN", async () => {

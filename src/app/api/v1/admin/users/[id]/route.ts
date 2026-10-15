@@ -1,7 +1,5 @@
-import {
-  getAdminUserById,
-  patchAdminUser,
-} from "@/server/api/adminUsers";
+import { getAdminPersonDetail } from "@/server/api/adminPeople";
+import { patchAdminUser } from "@/server/api/adminUsers";
 import { apiError, apiOk, withApiErrors } from "@/server/api/respond";
 import { requireAdmin } from "@/server/api/session";
 
@@ -9,7 +7,10 @@ export const runtime = "nodejs";
 
 const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
-/** Admin customer detail — real User row only. */
+/**
+ * Admin member detail: profile, counts, recent activity and audit history.
+ * Real rows only; ADMIN only; never cached.
+ */
 export async function GET(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -23,12 +24,12 @@ export async function GET(
       return apiError("not_found", "That account was not found.");
     }
 
-    const user = await getAdminUserById(admin.prisma, id);
-    if (!user) {
+    const detail = await getAdminPersonDetail(admin.prisma, id);
+    if (!detail) {
       return apiError("not_found", "That account was not found.");
     }
 
-    return apiOk({ user });
+    return apiOk(detail);
   });
 }
 

@@ -319,7 +319,7 @@ export async function createCommunityPost(
 }
 
 export type CommunityListQuery = {
-  scope: "all" | "following";
+  scope: "all" | "following" | "foryou";
   topic?: string;
   kind?: CommunityKind;
   page: PageParams;
@@ -337,8 +337,8 @@ export function parseCommunityQuery(
   const fields: Record<string, string> = paged.ok ? {} : { ...paged.fields };
 
   const rawScope = params.get("scope") || "all";
-  if (rawScope !== "all" && rawScope !== "following") {
-    fields.scope = "scope must be all or following.";
+  if (rawScope !== "all" && rawScope !== "following" && rawScope !== "foryou") {
+    fields.scope = "scope must be all, following or foryou.";
   }
 
   const topic = params.get("topic") || undefined;
@@ -362,10 +362,101 @@ export function parseCommunityQuery(
   return {
     ok: true,
     query: {
-      scope: rawScope as "all" | "following",
+      scope: rawScope as CommunityListQuery["scope"],
       topic,
       kind,
       page: paged.page,
+    },
+  };
+}
+
+/** Candidates fetched per tier when ranking For You (boosted, then the rest). */
+export const FOR_YOU_POOL = 120;
+
+/**
+ * For You: the board ranked by the viewer's topics. Tier 0 is a post on one of
+ * their topics, tier 1 a post by someone they follow, tier 2 everything else;
+ * newest first inside each tier. Ranking happens over a bounded pool, and the
+ * cursor is the last id returned, so paging walks the same ranked list.
+ */
+async function listForYou(
+  prisma: PrismaClient,
+  query: CommunityListQuery,
+  viewer: NonNullable<Viewer>,
+  blocked: Set<string>,
+): Promise<{ ok: true; page: Page<CommunityPostDTO> }> {
+  const [mine, edges] = await Promise.all([
+    prisma.userTopic.findMany({
+      where: { userId: viewer.id },
+      select: { topicId: true },
+    }),
+    prisma.follow.findMany({
+      where: { followerId: viewer.id },
+      select: { followingId: true },
+    }),
+  ]);
+  const topicIds = new Set(mine.map((row) => row.topicId));
+  const followedIds = new Set(
+    edges.map((edge) => edge.followingId).filter((id) => !blocked.has(id)),
+  );
+
+  const base: Prisma.CommunityPostWhereInput = {
+    ...communityVisibleWhere(blocked),
+    parentId: null,
+    ...(query.kind ? { kind: query.kind } : {}),
+    ...(query.topic ? { topic: { slug: query.topic } } : {}),
+  };
+  const include = communityPostInclude(viewer.id, blocked);
+  const orderBy = [{ createdAt: "desc" as const }, { id: "desc" as const }];
+  const fetchRows = async (where: Prisma.CommunityPostWhereInput) =>
+    (await prisma.communityPost.findMany({
+      where,
+      include,
+      orderBy,
+      take: FOR_YOU_POOL,
+    })) as unknown as CommunityPostRow[];
+
+  const boost: Prisma.CommunityPostWhereInput[] = [];
+  if (topicIds.size > 0) boost.push({ topicId: { in: [...topicIds] } });
+  if (followedIds.size > 0) boost.push({ authorId: { in: [...followedIds] } });
+
+  let ranked: CommunityPostRow[];
+  if (boost.length === 0) {
+    // Nothing to rank on yet: For You is simply the newest posts.
+    ranked = await fetchRows(base);
+  } else {
+    const [boosted, rest] = await Promise.all([
+      fetchRows({ ...base, OR: boost }),
+      fetchRows({ ...base, NOT: { OR: boost } }),
+    ]);
+    const tier = (row: CommunityPostRow) =>
+      row.topicId && topicIds.has(row.topicId)
+        ? 0
+        : followedIds.has(row.authorId)
+          ? 1
+          : 2;
+    ranked = [...boosted, ...rest].sort(
+      (a, b) =>
+        tier(a) - tier(b) ||
+        b.createdAt.getTime() - a.createdAt.getTime() ||
+        (a.id < b.id ? 1 : a.id > b.id ? -1 : 0),
+    );
+  }
+
+  let start = 0;
+  if (query.page.cursor) {
+    const at = ranked.findIndex((row) => row.id === query.page.cursor);
+    // A cursor that is no longer in the list (post removed) ends the walk.
+    if (at < 0) return { ok: true, page: { items: [], nextCursor: null } };
+    start = at + 1;
+  }
+  const slice = ranked.slice(start, start + query.page.take);
+  const hasMore = start + query.page.take < ranked.length;
+  return {
+    ok: true,
+    page: {
+      items: slice.map((row) => toCommunityPostDTO(row, viewer)),
+      nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
     },
   };
 }
@@ -383,11 +474,22 @@ export async function listCommunity(
       message: "Sign in to see the people you follow.",
     };
   }
+  if (query.scope === "foryou" && !viewer) {
+    return {
+      ok: false,
+      code: "unauthorized",
+      message: "Sign in to see posts picked for you.",
+    };
+  }
 
   const viewerId = viewer?.id ?? null;
   const blocked = viewerId
     ? await blockedIdsFor(prisma, viewerId)
     : new Set<string>();
+
+  if (query.scope === "foryou" && viewer) {
+    return listForYou(prisma, query, viewer, blocked);
+  }
 
   let authorFilter: Prisma.CommunityPostWhereInput = {};
   if (query.scope === "following" && viewerId) {

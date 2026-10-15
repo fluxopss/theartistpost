@@ -401,6 +401,105 @@ describe("GET /api/v1/community", () => {
   });
 });
 
+describe("GET /api/v1/community?scope=foryou", () => {
+  const older = new Date("2026-10-01T10:00:00Z");
+  const mid = new Date("2026-10-01T11:00:00Z");
+  const newer = new Date("2026-10-01T12:00:00Z");
+  const ids = (body: { data: { items: { id: string }[] } }) =>
+    body.data.items.map((item) => item.id);
+
+  it("needs sign-in", async () => {
+    expect((await listV1(getRequest(`${BASE}/community?scope=foryou`))).status).toBe(401);
+  });
+
+  it("puts posts on the viewer's topics first, then followed authors, then the rest, newest first within each tier", async () => {
+    const auth = signInAs(me);
+    db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);
+    db.follow.findMany.mockResolvedValue([{ followingId: "user_pal" }]);
+    // 1st query: boosted candidates (topic or followed author); 2nd: everything else.
+    db.communityPost.findMany
+      .mockResolvedValueOnce([
+        postRow("followed_new", { authorId: "user_pal", createdAt: newer }),
+        postRow("topic_old", { topicId: "t_music", createdAt: older }),
+        postRow("topic_mid", { topicId: "t_music", createdAt: mid }),
+      ])
+      .mockResolvedValueOnce([
+        postRow("rest_newest", { createdAt: newer }),
+        postRow("rest_old", { createdAt: older }),
+      ]);
+
+    const response = await listV1(getRequest(`${BASE}/community?scope=foryou`, auth));
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(ids(body)).toEqual([
+      "topic_mid",
+      "topic_old",
+      "followed_new",
+      "rest_newest",
+      "rest_old",
+    ]);
+    expect(body.data.nextCursor).toBeNull();
+
+    const boosted = db.communityPost.findMany.mock.calls[0]?.[0];
+    expect(JSON.stringify(boosted.where)).toContain('"topicId":{"in":["t_music"]}');
+    expect(JSON.stringify(boosted.where)).toContain('"authorId":{"in":["user_pal"]}');
+    expect(boosted.where).toMatchObject({ parentId: null, hiddenAt: null });
+  });
+
+  it("pages through the ranked list with the last id as cursor", async () => {
+    const auth = signInAs(me);
+    db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);
+    db.follow.findMany.mockResolvedValue([]);
+    const boosted = [
+      postRow("t1", { topicId: "t_music", createdAt: newer }),
+      postRow("t2", { topicId: "t_music", createdAt: mid }),
+    ];
+    const rest = [postRow("r1", { createdAt: newer })];
+    // The boosted query carries a top-level OR (topic / followed author); the rest query does not.
+    db.communityPost.findMany.mockImplementation(async (args: { where: { OR?: unknown } }) =>
+      args.where.OR ? boosted : rest,
+    );
+
+    const first = await (
+      await listV1(getRequest(`${BASE}/community?scope=foryou&take=2`, auth))
+    ).json();
+    expect(ids(first)).toEqual(["t1", "t2"]);
+    expect(first.data.nextCursor).toBe("t2");
+
+    // signInAs resolves the session once; sign in again for the next request.
+    const authAgain = signInAs(me);
+    const second = await (
+      await listV1(getRequest(`${BASE}/community?scope=foryou&take=2&cursor=t2`, authAgain))
+    ).json();
+    expect(ids(second)).toEqual(["r1"]);
+    expect(second.data.nextCursor).toBeNull();
+  });
+
+  it("falls back to newest-first when the viewer has no topics and follows no one", async () => {
+    const auth = signInAs(me);
+    db.userTopic.findMany.mockResolvedValue([]);
+    db.follow.findMany.mockResolvedValue([]);
+    db.communityPost.findMany.mockResolvedValue([postRow("a"), postRow("b")]);
+    const body = await (
+      await listV1(getRequest(`${BASE}/community?scope=foryou`, auth))
+    ).json();
+    expect(ids(body)).toEqual(["a", "b"]);
+    // Nothing to boost on, so a single plain query is enough.
+    expect(db.communityPost.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("never shows blocked authors in For You", async () => {
+    const auth = signInAs(me);
+    db.block.findMany.mockResolvedValue([{ blockerId: me.id, blockedId: "user_bad" }]);
+    db.userTopic.findMany.mockResolvedValue([{ topicId: "t_music" }]);
+    await listV1(getRequest(`${BASE}/community?scope=foryou`, auth));
+    expect(db.communityPost.findMany).toHaveBeenCalled();
+    for (const call of db.communityPost.findMany.mock.calls) {
+      expect(JSON.stringify(call[0].where)).toContain('"notIn":["user_bad"]');
+    }
+  });
+});
+
 describe("GET /api/v1/community/[id]", () => {
   it("returns the post with replies oldest first (max 100)", async () => {
     db.communityPost.findFirst.mockResolvedValue(

@@ -87,6 +87,29 @@ describe("deliverAuthCode over SMTP", () => {
     );
   });
 
+  it("routes replies to The Artist Post's published contact, never a Flux inbox", async () => {
+    stubSmtp();
+    sendMail.mockResolvedValue({ messageId: "m2" });
+
+    await deliverAuthCode({ email: "member@example.test", code: "482913", purpose: "SIGN_IN" });
+
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ replyTo: "Robbie@theartistpost.org" }),
+    );
+  });
+
+  it("lets AUTH_EMAIL_REPLY_TO override the reply-to address", async () => {
+    stubSmtp();
+    vi.stubEnv("AUTH_EMAIL_REPLY_TO", "hello@theartistpost.org");
+    sendMail.mockResolvedValue({ messageId: "m3" });
+
+    await deliverAuthCode({ email: "member@example.test", code: "482913", purpose: "SIGN_IN" });
+
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ replyTo: "hello@theartistpost.org" }),
+    );
+  });
+
   it("reports failure without throwing or logging the code when SMTP rejects", async () => {
     stubSmtp();
     sendMail.mockRejectedValue(new Error("535 auth failed"));

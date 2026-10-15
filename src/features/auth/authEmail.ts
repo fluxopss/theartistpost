@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { site } from "@/content/site";
 
 /**
  * Sign-in code email over SMTP. Used when AUTH_CODE_WEBHOOK_URL is unset.
@@ -67,7 +68,9 @@ export async function sendSignInCodeEmail(
       secure: config.secure,
       auth: { user: config.user, pass: config.pass },
     });
-    await transport.sendMail({ from: config.from, to, ...message });
+    // Replies go to The Artist Post itself (the sending subdomain has no inbox).
+    const replyTo = process.env.AUTH_EMAIL_REPLY_TO?.trim() || site.email;
+    await transport.sendMail({ from: config.from, to, replyTo, ...message });
     return { delivered: true };
   } catch (error) {
     // Never log the message body: it carries the code.

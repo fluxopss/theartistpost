@@ -103,6 +103,39 @@ Not in v1 (say so in review notes): direct messages (D9) and push alerts (D8). B
 - **Web page for Google Play:** `/delete-account` describes the in-app steps and an email fallback. It returns 404 today and goes live with the web release.
 - **Test before submit:** delete a test account on a clean device. Check that the sign-in then fails, and that the profile is gone from another account's view.
 
+## Guideline 3.2.1(vii): artists' payment usernames (person-to-person, link-out)
+
+Founder decision 2026-10-15: an artist may list their own Venmo, Cash App and PayPal.me usernames on their profile. The Artist Post (TAP) does not process these payments and takes no cut.
+
+**The rule.** Guideline 3.2.1(vii): an app may let individual users give a monetary gift to another individual without in-app purchase, if (a) the gift is a completely optional choice by the giver and (b) 100% of the funds go to the receiver. A gift connected at any point to receiving digital content or services must use in-app purchase.
+
+**How the feature meets it:**
+
+| Requirement | What the app does |
+|---|---|
+| Person to person | The money goes from a supporter to the artist's own Venmo, Cash App or PayPal.me account. TAP is never a party and never holds funds. |
+| Optional for the giver | A "Get paid directly" chip sits on an artist profile. Nothing in the app asks for it, and nothing is gated behind it. |
+| 100% to the recipient | TAP takes no cut and runs no checkout. The payment happens inside the other service. |
+| No digital goods | Paying unlocks nothing: no posts, features, badges or access. The app must never imply it does. |
+| No in-app payment UI | The app stores only the username and opens an https link. It has no card entry, amount field, balance or receipt. |
+
+**What reviewers will see**
+
+- **Artist side** (Edit profile, artists and admins only): an optional "Get paid directly" section with three fields (Venmo, Cash App, PayPal.me) and the line: "Payments happen outside the app in these services. The Artist Post doesn't process them or take a cut."
+- **Supporter side** (an artist's profile): small chips labelled Venmo, Cash App and PayPal. Tapping one first shows a confirm: "You're leaving The Artist Post to pay @name on Venmo." Confirming opens the link in the other app or the browser. Cancelling does nothing.
+- **Wording:** the app never calls these "donations". Donations through the app go to TAP itself and use their own flow (see `docs/proposals/2026-10-donations.md`).
+- **Where links come from:** the API builds each link on the server from a stored username that passed validation. Only `https://venmo.com/u/…`, `https://cash.app/$…` and `https://paypal.me/…` can be produced. Suspended artists, unapproved artists, members and test handles never expose links.
+- **Not in v1:** no tipping buttons on posts, no totals, no leaderboards, no notifications about payments. TAP cannot see whether a payment happened.
+
+**Review note to paste:** "Artists may optionally list their own Venmo, Cash App or PayPal.me username. Supporters can follow a link out of the app to send a voluntary personal gift. 100% goes to the artist. The app does not process, hold or take a share of any payment, and nothing in the app is unlocked by paying. This is a person-to-person gift under 3.2.1(vii)."
+
+**Test before submit:**
+
+1. Sign in as an artist. Add each username, then try bad input (spaces, a pasted `cash.app` link in the Venmo field) and read the errors.
+2. Sign in as a member. Confirm the section is not shown.
+3. Open the artist's profile from another account. Confirm the three chips, the confirm sheet, and that Cancel stays in the app.
+4. Suspend the artist in the admin tools. Confirm the chips disappear.
+
 ## App Privacy ("nutrition label") draft
 
 Apple's rule: "Linked to user" means the data is tied to the account. "Tracking" means data used across other companies' apps or sites. The app does neither.
@@ -113,7 +146,7 @@ Apple's rule: "Linked to user" means the data is tied to the account. "Tracking"
 | Contact info: email | Yes | Yes | No | App functionality (sign-in code, account) |
 | Contact info: phone (optional, Get Involved form only) | Yes, if entered | Confirm: is the form linked to an account? | No | App functionality |
 | User content: photos | Yes, if uploaded (avatar, community image, Create) | Yes | No | App functionality |
-| User content: other user content | Yes: bios, headlines, community posts, replies, Wall notes, report notes | Yes | No | App functionality |
+| User content: other user content | Yes: bios, headlines, community posts, replies, Wall notes, report notes, optional artist payment usernames (Venmo, Cash App, PayPal.me; no financial account data) | Yes | No | App functionality |
 | Identifiers: user ID | Yes | Yes | No | App functionality |
 | Location | **No device location.** Profile location is free text the member types (for example, a city). Declare it under Other user content, not Location. | — | No | — |
 | Usage / product interaction | No, unless Pulse analytics ships | — | No | — |
@@ -166,6 +199,7 @@ Notes:
 | 10 | Web release: migration only after a `pg_dump` and Jonathan's go | Jonathan | Open |
 | 11 | Real screenshots approved by Robbie | Robbie | Open |
 | 12 | Privacy label and manifest checked against the build | Engineering | Open |
+| 13 | Payment usernames: migration `20261019120000_artist_payment_usernames` applied (after a `pg_dump`), device check of the confirm sheet, review note pasted | Jonathan (migration GO) | Open |
 
 ## Legacy: Capacitor wrap (superseded by the Expo app)
 

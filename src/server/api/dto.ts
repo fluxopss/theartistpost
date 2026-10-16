@@ -7,6 +7,7 @@ import type {
   PostSummary,
   TagSummary,
 } from "@/features/posts/types";
+import type { PaymentLink } from "@/server/api/paymentLinks";
 import { absoluteUrl, externalUrl } from "@/server/api/urls";
 
 /** Wire shapes for /api/v1. Every URL in them is absolute. */
@@ -65,6 +66,8 @@ export type ArtistProfileDTO = {
   bio: string | null;
   avatarUrl: string | null;
   socialLinks: SocialLinksDTO;
+  /** Optional link-out payment usernames; [] unless an active artist set them. */
+  paymentLinks: PaymentLink[];
 };
 
 export type ContentArtistDTO = {
@@ -180,6 +183,7 @@ export function toArtistProfileDTO(artist: ArtistSummary): ArtistProfileDTO {
     bio: artist.bio ?? null,
     avatarUrl: absoluteUrl(artist.avatarUrl),
     socialLinks: toSocialLinksDTO(artist.socialLinks),
+    paymentLinks: artist.paymentLinks ?? [],
   };
 }
 

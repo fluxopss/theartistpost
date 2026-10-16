@@ -2,6 +2,7 @@ import type { Post, Prisma, Tag, User, ArtistProfile } from "@prisma/client";
 import { assets } from "@/content/site";
 import { POSTS_MAX_TAKE, POSTS_PAGE_SIZE } from "@/shared/lib/constants";
 import { getPrisma } from "@/shared/lib/prisma";
+import { buildPaymentLinks } from "@/server/api/paymentLinks";
 import {
   isDeniedAuthorEmail,
   isDeniedPostSlug,
@@ -274,6 +275,10 @@ function mapArtistProfile(
     bio: profile.bio,
     avatarUrl: sanitizeAvatarUrl(profile.avatarUrl ?? profile.user.image),
     socialLinks: (profile.socialLinks as SocialLinks | null) ?? null,
+    paymentLinks: buildPaymentLinks({
+      ...profile.user,
+      artistProfile: { handle: profile.handle, approved: profile.approved },
+    }),
     postCount,
   };
 }

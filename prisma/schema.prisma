@@ -91,6 +91,13 @@ model User {
   headline        String?
   location        String?
   /**
+   * Optional "get paid directly" usernames for artists. Link-out only: TAP
+   * processes nothing and takes no cut. Stored without the leading @ or $.
+   */
+  venmoUsername    String?
+  cashAppTag       String?
+  paypalMeUsername String?
+  /**
    * Existing content chapter id (content.getChapters()); no FK yet.
    */
   chapterId       String?

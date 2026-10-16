@@ -1,3 +1,5 @@
+import type { PaymentLink } from "@/server/api/paymentLinks";
+
 export type Role = "VIEWER" | "ARTIST" | "ADMIN";
 export type MediaType = "IMAGE" | "VIDEO" | "EMBED" | "CANVAS";
 export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -29,6 +31,8 @@ export interface ArtistSummary {
   bio?: string | null;
   avatarUrl?: string | null;
   socialLinks?: SocialLinks | null;
+  /** Link-out payment usernames, built server-side; omitted = none. */
+  paymentLinks?: PaymentLink[];
 }
 
 export interface PostSummary {

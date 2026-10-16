@@ -302,6 +302,7 @@ describe("GET /api/v1/artists/[handle]", () => {
       bio: "Paints the plaster.",
       avatarUrl: `${ORIGIN}/uploads/avatar.webp`,
       socialLinks: { instagram: "https://instagram.com/realpainter" },
+      paymentLinks: [],
       postCount: 1,
     });
     expect(data.posts).toHaveLength(1);

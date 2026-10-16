@@ -21,6 +21,7 @@ import {
 import { normalizeHandle } from "@/server/api/handles";
 import { notify } from "@/server/api/notifications";
 import { loadCommunityReactionCounts } from "@/server/api/reactions";
+import { buildPaymentLinks, type PaymentLink } from "@/server/api/paymentLinks";
 import { blockedIdsFor } from "@/server/api/safety";
 import { toTopicDTO, type TopicDTO } from "@/server/api/topics";
 import type { Page, PageParams } from "@/server/api/validation";
@@ -41,6 +42,8 @@ export type PersonDTO = PersonSummaryDTO & {
   followsViewer: boolean;
   isSelf: boolean;
   artist: { handle: string; approved: boolean } | null;
+  /** Link-out payment usernames; [] unless an approved, active artist. */
+  paymentLinks: PaymentLink[];
   joinedAt: string;
 };
 
@@ -175,6 +178,7 @@ export async function getPerson(
     followsViewer: Boolean(viewerReverse),
     isSelf: viewerId === person.id,
     artist: artist ? { handle: artist.handle, approved: artist.approved } : null,
+    paymentLinks: buildPaymentLinks(person),
     joinedAt: person.createdAt.toISOString(),
   };
 }

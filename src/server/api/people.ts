@@ -239,9 +239,84 @@ export function parsePeopleQuery(
   return { ok: true, query: { q, topic, suggested, cursor, take } };
 }
 
+/** Candidates scored per request; suggestions rank within the newest of them. */
+export const SUGGESTED_POOL = 200;
+const TOPIC_OVERLAP_WEIGHT = 10;
+const SAME_CHAPTER_WEIGHT = 6;
+
+/**
+ * "People you may like": scored by shared topics (10 each) plus the same home
+ * chapter (6), then name. Someone with no shared topic and a different chapter
+ * scores 0 and is never suggested. Never yourself or anyone you follow; the
+ * caller's `and` already carries visibility and blocks.
+ */
+async function suggestPeople(
+  prisma: PrismaClient,
+  take: number,
+  viewerId: string,
+  and: Prisma.UserWhereInput[],
+): Promise<PersonSummaryDTO[]> {
+  const [mine, following, viewerRow] = await Promise.all([
+    prisma.userTopic.findMany({
+      where: { userId: viewerId },
+      select: { topicId: true },
+    }),
+    prisma.follow.findMany({
+      where: { followerId: viewerId },
+      select: { followingId: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: viewerId },
+      select: { chapterId: true },
+    }),
+  ]);
+  const topicIds = new Set(mine.map((row) => row.topicId));
+  const chapterId = viewerRow?.chapterId ?? null;
+  if (topicIds.size === 0 && !chapterId) return [];
+
+  const signals: Prisma.UserWhereInput[] = [];
+  if (topicIds.size > 0) {
+    signals.push({ topics: { some: { topicId: { in: [...topicIds] } } } });
+  }
+  if (chapterId) signals.push({ chapterId });
+
+  const rows = await prisma.user.findMany({
+    where: {
+      AND: [
+        ...and,
+        {
+          id: { notIn: [viewerId, ...following.map((row) => row.followingId)] },
+          OR: signals,
+        },
+      ],
+    },
+    include: { artistProfile: true, topics: { select: { topicId: true } } },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: SUGGESTED_POOL,
+  });
+
+  return rows
+    .map((row) => ({
+      row,
+      score:
+        row.topics.filter((topic) => topicIds.has(topic.topicId)).length *
+          TOPIC_OVERLAP_WEIGHT +
+        (chapterId && row.chapterId === chapterId ? SAME_CHAPTER_WEIGHT : 0),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.row.name.localeCompare(b.row.name) ||
+        (a.row.id < b.row.id ? -1 : 1),
+    )
+    .slice(0, take)
+    .map((entry) => toPersonSummaryDTO(entry.row, false));
+}
+
 /**
  * People directory: name/handle search, topic filter, and "suggested for you"
- * (shares >= 1 topic, not followed, not self, at most 12).
+ * (ranked by shared topics and home chapter, not followed, not self, at most 12).
  */
 export async function searchPeople(
   prisma: PrismaClient,
@@ -275,36 +350,23 @@ export async function searchPeople(
     and.push({ topics: { some: { topic: { slug: query.topic } } } });
   }
 
-  let take = query.take;
   if (query.suggested && viewerId) {
-    take = Math.min(take, SUGGESTED_MAX);
-    const [mine, following] = await Promise.all([
-      prisma.userTopic.findMany({
-        where: { userId: viewerId },
-        select: { topicId: true },
-      }),
-      prisma.follow.findMany({
-        where: { followerId: viewerId },
-        select: { followingId: true },
-      }),
-    ]);
-    if (mine.length === 0) {
-      return { ok: true, page: { items: [], nextCursor: null } };
-    }
-    and.push({
-      id: { notIn: [viewerId, ...following.map((row) => row.followingId)] },
-      topics: { some: { topicId: { in: mine.map((row) => row.topicId) } } },
-    });
+    const items = await suggestPeople(
+      prisma,
+      Math.min(query.take, SUGGESTED_MAX),
+      viewerId,
+      and,
+    );
+    return { ok: true, page: { items, nextCursor: null } };
   }
 
+  const take = query.take;
   const rows = await prisma.user.findMany({
     where: { AND: and },
     include: { artistProfile: true },
     orderBy: [{ name: "asc" }, { id: "asc" }],
     take: take + 1,
-    ...(query.cursor && !query.suggested
-      ? { skip: 1, cursor: { id: query.cursor } }
-      : {}),
+    ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
   });
 
   const hasMore = rows.length > take;
@@ -319,10 +381,7 @@ export async function searchPeople(
     ok: true,
     page: {
       items: slice.map((row) => toPersonSummaryDTO(row, followed.has(row.id))),
-      nextCursor:
-        hasMore && !query.suggested
-          ? (slice[slice.length - 1]?.id ?? null)
-          : null,
+      nextCursor: hasMore ? (slice[slice.length - 1]?.id ?? null) : null,
     },
   };
 }

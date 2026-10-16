@@ -150,7 +150,7 @@ type Page<T> = { items: T[]; nextCursor: string | null };
 | GET `/people/[handle]/followers` · `/following` | public | `cursor?, take?` | `Page<PersonSummaryDTO>` |
 | GET `/people/[handle]/community` | public | `cursor?` | `Page<CommunityPostDTO>` (top-level only) |
 | GET `/feed?kind=following` | member | `cursor?, take?` | existing feed page; `followingAvailable: true` |
-| GET `/community` | public | `scope=all\|following`, `topic?`, `kind?`, `cursor?`, `take?` (≤30) | `Page<CommunityPostDTO>` top-level, newest first |
+| GET `/community` | public | `scope=all|following|foryou` (foryou = member only, ranked by your topics), `topic?`\|following`, `topic?`, `kind?`, `cursor?`, `take?` (≤30) | `Page<CommunityPostDTO>` top-level, newest first |
 | POST `/community` | community member | `{ kind, body, topicSlug?, imageUrl?, parentId? }` | `CommunityPostDTO` (201) |
 | POST `/community/media` | community member | multipart `file` (image only) | `{ url: string }` |
 | GET `/community/[id]` | public | — | `{ post: CommunityPostDTO; replies: CommunityPostDTO[] }` (replies oldest first, ≤100) |

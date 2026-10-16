@@ -226,6 +226,7 @@ export type AdminPersonDetailDTO = {
 };
 
 const AUDIT_TAKE = 30;
+const REPORT_SCAN_CAP = 500;
 const ACTIVITY_PER_KIND = 5;
 const ACTIVITY_TAKE = 10;
 
@@ -251,6 +252,45 @@ export async function getAdminPersonDetail(
   if (!target) return null;
 
   const profileId = target.artistProfile?.id;
+
+  // Reports about a person include reports on their profile and on what they
+  // posted. Ids are capped; an extreme poster still gets an honest lower bound.
+  const [postIds, commentIds, communityIds] = await Promise.all([
+    prisma.post.findMany({
+      where: { authorId: id },
+      select: { id: true },
+      take: REPORT_SCAN_CAP,
+    }),
+    prisma.comment.findMany({
+      where: { userId: id },
+      select: { id: true },
+      take: REPORT_SCAN_CAP,
+    }),
+    prisma.communityPost.findMany({
+      where: { authorId: id },
+      select: { id: true },
+      take: REPORT_SCAN_CAP,
+    }),
+  ]);
+  const receivedWhere: Prisma.ReportWhereInput = {
+    OR: [
+      { targetType: "USER", targetId: id },
+      ...(postIds.length
+        ? [{ targetType: "POST" as const, targetId: { in: postIds.map((p) => p.id) } }]
+        : []),
+      ...(commentIds.length
+        ? [{ targetType: "COMMENT" as const, targetId: { in: commentIds.map((c) => c.id) } }]
+        : []),
+      ...(communityIds.length
+        ? [
+            {
+              targetType: "COMMUNITY_POST" as const,
+              targetId: { in: communityIds.map((c) => c.id) },
+            },
+          ]
+        : []),
+    ],
+  };
   const auditWhere: Prisma.AuditLogWhereInput = {
     // The person's own sign-in and block events are noise here, and blocks are private.
     NOT: [
@@ -284,7 +324,7 @@ export async function getAdminPersonDetail(
     prisma.follow.count({ where: { followerId: id } }),
     prisma.follow.count({ where: { followingId: id } }),
     prisma.report.count({ where: { reporterId: id } }),
-    prisma.report.count({ where: { targetType: "USER", targetId: id } }),
+    prisma.report.count({ where: receivedWhere }),
     prisma.post.findMany({
       where: { authorId: id },
       orderBy: { createdAt: "desc" },

@@ -244,6 +244,30 @@ describe("GET /admin/users/[id]: member detail", () => {
     });
   });
 
+  it("counts reports on their profile AND on their posts, notes and community posts", async () => {
+    target(userRow({ id: "user_member" }));
+    db.post.findMany.mockResolvedValue([{ id: "p1", title: "T", status: "PUBLISHED", createdAt: new Date() }]);
+    db.comment.findMany.mockResolvedValue([{ id: "c1", body: "b", hiddenAt: null, createdAt: new Date() }]);
+    db.communityPost.findMany.mockResolvedValue([{ id: "cp1", body: "b", hiddenAt: null, createdAt: new Date() }]);
+    db.report.count.mockImplementation(async ({ where }) => (where.OR ? 4 : 0));
+    const response = await detailV1(getRequest(`${BASE}/user_member`, auth(admin)), {
+      params: Promise.resolve({ id: "user_member" }),
+    });
+    const { data } = await response.json();
+    expect(data.counts.reportsReceived).toBe(4);
+    const where = db.report.count.mock.calls
+      .map((c) => c[0].where)
+      .find((w) => w.OR);
+    expect(where.OR).toEqual(
+      expect.arrayContaining([
+        { targetType: "USER", targetId: "user_member" },
+        { targetType: "POST", targetId: { in: ["p1"] } },
+        { targetType: "COMMENT", targetId: { in: ["c1"] } },
+        { targetType: "COMMUNITY_POST", targetId: { in: ["cp1"] } },
+      ]),
+    );
+  });
+
   it("keeps the person's own sign-in and block noise out of the history", async () => {
     target(userRow({ id: "user_member" }));
     db.auditLog.findMany.mockResolvedValue([]);

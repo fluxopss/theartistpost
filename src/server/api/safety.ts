@@ -277,6 +277,8 @@ export type ReportDTO = {
   reportCount: number;
   preview: string | null;
   reporter: { handle: string | null; name: string };
+  /** Who owns the reported thing (the person for USER reports); null once it is gone. */
+  owner: { id: string; name: string; handle: string | null } | null;
   createdAt: string;
 };
 
@@ -329,6 +331,20 @@ async function resolveTargetOwner(
       return post?.authorId ?? null;
     }
   }
+}
+
+async function ownerFor(
+  prisma: PrismaClient,
+  target: TargetRef,
+): Promise<ReportDTO["owner"]> {
+  const ownerId = await resolveTargetOwner(prisma, target);
+  if (!ownerId) return null;
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { id: true, name: true, handle: true },
+  });
+  if (!owner) return null;
+  return { id: owner.id, name: owner.name, handle: owner.handle ?? null };
 }
 
 async function previewFor(
@@ -625,6 +641,7 @@ async function toReportDTO(
     status,
     reportCount,
     preview: await previewFor(prisma, report),
+    owner: await ownerFor(prisma, report),
     reporter: {
       handle: report.reporter.handle ?? null,
       name: report.reporter.name,

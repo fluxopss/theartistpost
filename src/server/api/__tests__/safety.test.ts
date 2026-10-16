@@ -526,9 +526,11 @@ describe("GET /api/v1/admin/reports", () => {
       createdAt: new Date("2026-10-14T10:00:00Z"),
       reporter: { handle: "viewer", name: "Vera" },
     });
-    db.comment.findUnique.mockResolvedValue({ body: "A rude comment" });
+    db.comment.findUnique.mockResolvedValue({ body: "A rude comment", userId: robbi.id });
+    const auth = signInAs(admin);
+    db.user.findUnique.mockResolvedValue({ id: robbi.id, name: "Robbi", handle: "robbi" });
 
-    const response = await adminReportsV1(getRequest(`${BASE}/admin/reports`, signInAs(admin)));
+    const response = await adminReportsV1(getRequest(`${BASE}/admin/reports`, auth));
     expect(response.status).toBe(200);
     const { data } = await response.json();
     expect(data).toEqual({
@@ -542,6 +544,7 @@ describe("GET /api/v1/admin/reports", () => {
           status: "OPEN",
           reportCount: 3,
           preview: "A rude comment",
+          owner: { id: robbi.id, name: "Robbi", handle: "robbi" },
           reporter: { handle: "viewer", name: "Vera" },
           createdAt: "2026-10-14T10:00:00.000Z",
         },

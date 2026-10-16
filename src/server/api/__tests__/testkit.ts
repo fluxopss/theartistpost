@@ -100,6 +100,9 @@ export type UserRow = {
   headline: string | null;
   location: string | null;
   chapterId: string | null;
+  venmoUsername: string | null;
+  cashAppTag: string | null;
+  paypalMeUsername: string | null;
   termsAcceptedAt: Date | null;
   suspendedAt: Date | null;
   createdAt: Date;
@@ -132,6 +135,9 @@ export function userRow(overrides: Partial<UserRow> = {}): UserRow {
     headline: null,
     location: null,
     chapterId: null,
+    venmoUsername: null,
+    cashAppTag: null,
+    paypalMeUsername: null,
     termsAcceptedAt: DATE,
     suspendedAt: null,
     createdAt: DATE,

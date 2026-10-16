@@ -18,6 +18,10 @@ import {
 } from "@/server/api/handles";
 import { IMAGE_MAX_BYTES, storeUploadedMedia } from "@/server/api/media";
 import { toTopicDTO, type TopicDTO } from "@/server/api/topics";
+import {
+  buildPaymentLinks,
+  paymentUsernameField,
+} from "@/server/api/paymentLinks";
 import { absoluteUrl } from "@/server/api/urls";
 import { zodFieldErrors } from "@/server/api/validation";
 
@@ -51,6 +55,9 @@ export const mePatchSchema = z
       .optional()
       .transform((v) => (v === undefined ? undefined : emptyToNull(v))),
     chapterId: z.string().trim().min(1).max(40).nullable().optional(),
+    venmoUsername: paymentUsernameField("venmo"),
+    cashAppTag: paymentUsernameField("cashapp"),
+    paypalMeUsername: paymentUsernameField("paypalme"),
     topicSlugs: z
       .array(z.string().trim().regex(/^[a-z0-9-]{1,40}$/, "Invalid topic."))
       .max(TOPICS_MAX, `Pick up to ${TOPICS_MAX} topics.`)
@@ -65,6 +72,10 @@ export type MeUserDTO = AuthUserDTO & {
   headline: string | null;
   location: string | null;
   chapterId: string | null;
+  /** "Get paid directly" usernames, stored bare (no @ or $). Artists only. */
+  venmoUsername: string | null;
+  cashAppTag: string | null;
+  paypalMeUsername: string | null;
   topics: TopicDTO[];
   termsAcceptedAt: string | null;
   suspended: boolean;
@@ -121,6 +132,9 @@ export async function toMeDTO(
       headline: dbUser.headline ?? null,
       location: dbUser.location ?? null,
       chapterId: dbUser.chapterId ?? null,
+      venmoUsername: dbUser.venmoUsername ?? null,
+      cashAppTag: dbUser.cashAppTag ?? null,
+      paypalMeUsername: dbUser.paypalMeUsername ?? null,
       topics: userTopics.map((row) => toTopicDTO(row.topic)),
       termsAcceptedAt: dbUser.termsAcceptedAt?.toISOString() ?? null,
       suspended: Boolean(dbUser.suspendedAt),
@@ -139,6 +153,7 @@ export async function toMeDTO(
             bio: profile.bio,
             avatarUrl: profile.avatarUrl ?? dbUser.image,
             socialLinks: (profile.socialLinks as SocialLinks | null) ?? null,
+            paymentLinks: buildPaymentLinks(dbUser),
           }),
           approved: profile.approved,
           pendingApproval: !profile.approved,
@@ -152,6 +167,7 @@ export type MePatchResult =
       ok: false;
       code:
         | "validation_failed"
+        | "forbidden"
         | "conflict"
         | "rate_limited"
         | "upstream_unavailable";
@@ -193,6 +209,26 @@ export async function patchMeProfile(
     };
   }
   const input = parsed.data;
+
+  // Payment usernames are an artist feature. Anyone may clear a leftover
+  // value (an ex-artist), but only artists and admins may set one.
+  const settingPayment = [
+    input.venmoUsername,
+    input.cashAppTag,
+    input.paypalMeUsername,
+  ].some((value) => typeof value === "string");
+  if (
+    settingPayment &&
+    dbUser.role !== "ARTIST" &&
+    dbUser.role !== "ADMIN"
+  ) {
+    return {
+      ok: false,
+      code: "forbidden",
+      message:
+        "Payment usernames are for artists. Join as an artist to add yours.",
+    };
+  }
 
   const limit = checkRateLimit(`v1:profile:${dbUser.id}`, {
     windowMs: 60_000,
@@ -282,6 +318,13 @@ export async function patchMeProfile(
     if (input.headline !== undefined) data.headline = input.headline;
     if (input.location !== undefined) data.location = input.location;
     if (input.chapterId !== undefined) data.chapterId = input.chapterId;
+    if (input.venmoUsername !== undefined) {
+      data.venmoUsername = input.venmoUsername;
+    }
+    if (input.cashAppTag !== undefined) data.cashAppTag = input.cashAppTag;
+    if (input.paypalMeUsername !== undefined) {
+      data.paypalMeUsername = input.paypalMeUsername;
+    }
     // An artist repeating their own handle backfills a missing User.handle.
     if (
       input.handle !== undefined &&
@@ -355,6 +398,10 @@ export async function patchMeProfile(
         headline: input.headline !== undefined,
         location: input.location !== undefined,
         chapterId: input.chapterId !== undefined,
+        paymentLinks:
+          input.venmoUsername !== undefined ||
+          input.cashAppTag !== undefined ||
+          input.paypalMeUsername !== undefined,
         topics: input.topicSlugs !== undefined,
       },
     });

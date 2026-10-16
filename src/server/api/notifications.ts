@@ -32,6 +32,7 @@ export type NotificationDTO = {
     | { kind: "post"; slug: string }
     | { kind: "community"; id: string }
     | { kind: "person"; handle: string }
+    | { kind: "event"; id: string }
     | null;
   preview: string | null;
   readAt: string | null;
@@ -115,6 +116,8 @@ function toTarget(row: NotificationRow): NotificationDTO["target"] {
       return { kind: "community", id: row.targetRef };
     case "person":
       return { kind: "person", handle: row.targetRef };
+    case "event":
+      return { kind: "event", id: row.targetRef };
     default:
       return null;
   }

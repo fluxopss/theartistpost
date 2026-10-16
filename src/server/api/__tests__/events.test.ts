@@ -73,7 +73,8 @@ describe("GET /api/v1/events", () => {
       "live",
       "upcoming",
     ]);
-    expect(data[0]).toEqual({
+    // The original fields are unchanged; managed-event fields are additive.
+    expect(data[0]).toMatchObject({
       id: "early",
       title: "Night early",
       artist: "The Artist Post",
@@ -84,6 +85,13 @@ describe("GET /api/v1/events", () => {
       description: "Test night",
       comingSoon: true,
       status: "closed",
+    });
+    expect(data[0]).toMatchObject({
+      source: "content",
+      cancelled: false,
+      capacity: null,
+      venueAddress: null,
+      coverImageUrl: null,
     });
     expect(data[1].comingSoon).toBe(false);
   });

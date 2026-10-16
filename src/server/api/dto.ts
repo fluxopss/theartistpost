@@ -22,7 +22,18 @@ export type EventDTO = {
   venue: string;
   description: string;
   comingSoon: boolean;
+  /** Where the night is in time. A cancelled night is always "closed". */
   status: NightPhase;
+  /** "db" = managed by admins (RSVPs and check-ins work); "content" = seed schedule. */
+  source: "db" | "content";
+  cancelled: boolean;
+  timeZone: string;
+  venueAddress: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  /** Total seats; null = unlimited. */
+  capacity: number | null;
+  coverImageUrl: string | null;
 };
 
 export type TagDTO = { slug: string; name: string };
@@ -102,6 +113,14 @@ export function toEventDTO(event: ContentEvent, now = new Date()): EventDTO {
     description: event.description,
     comingSoon: event.comingSoon ?? false,
     status: nightPhase(event, now),
+    source: "content",
+    cancelled: false,
+    timeZone: "America/New_York",
+    venueAddress: null,
+    latitude: null,
+    longitude: null,
+    capacity: null,
+    coverImageUrl: null,
   };
 }
 

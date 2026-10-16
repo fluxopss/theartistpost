@@ -46,6 +46,7 @@ enum NotificationType {
   REPLY
   SUPPORT
   MENTION
+  EVENT
 }
 
 /**
@@ -121,6 +122,9 @@ model User {
   notifications      Notification[]      @relation("NotificationRecipient")
   notificationsActed Notification[]      @relation("NotificationActor")
   reportsFiled       Report[]
+  eventsCreated      Event[]             @relation("EventCreator")
+  eventRsvps         EventRsvp[]
+  eventCheckIns      EventCheckIn[]
 
   @@index([role])
 }
@@ -369,4 +373,89 @@ model Report {
   @@unique([reporterId, targetType, targetId])
   @@index([status, createdAt])
   @@index([targetType, targetId])
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum RsvpStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+/// A night on the board, managed by admins. Public reads fall back to the
+/// content service only for events that have no row here (see `sourceId`).
+/// Times are absolute instants; `timeZone` is how the house reads them.
+model Event {
+  id            String      @id @default(cuid())
+  /// Content-service event id this row supersedes (hides the seed entry).
+  sourceId      String?     @unique
+  title         String
+  description   String      @default("")
+  artist        String      @default("")
+  medium        String      @default("community")
+  startsAt      DateTime
+  endsAt        DateTime
+  timeZone      String      @default("America/New_York")
+  venueName     String
+  venueAddress  String?
+  /// Optional venue point; only used to confirm a check-in is near the door.
+  latitude      Float?
+  longitude     Float?
+  /// Total seats (sum of party sizes). Null = unlimited.
+  capacity      Int?
+  status        EventStatus @default(DRAFT)
+  coverImageUrl String?
+  comingSoon    Boolean     @default(false)
+  createdById   String?
+  publishedAt   DateTime?
+  cancelledAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  createdBy User?          @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  rsvps     EventRsvp[]
+  checkIns  EventCheckIn[]
+
+  @@index([status, startsAt])
+}
+
+model EventRsvp {
+  id           String     @id @default(cuid())
+  eventId      String
+  userId       String
+  status       RsvpStatus
+  party        Int        @default(1)
+  note         String?
+  /// Set while a GOING response is waiting for a seat (FIFO by this time).
+  waitlistedAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId, status])
+  @@index([userId, createdAt])
+}
+
+/// "I'm here." Privacy: only the moment and whether the person was near the
+/// venue are kept. No coordinates, accuracy or track are ever stored.
+model EventCheckIn {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  checkedInAt DateTime @default(now())
+  verified    Boolean  @default(false)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId, checkedInAt])
 }

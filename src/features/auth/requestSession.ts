@@ -5,6 +5,7 @@ import {
   readSessionFromCookie,
   SESSION_MAX_AGE,
 } from "@/features/auth/sessionCookie";
+import { isSameOriginWrite } from "@/features/auth/sameOrigin";
 import { getAuthSecret } from "@/features/auth/secret";
 import {
   looksLikeJwt,
@@ -67,8 +68,34 @@ export async function resolveRequestAuth(
   }
 
   const cookieSession = await readSessionFromCookie();
-  if (cookieSession) return { kind: "hmac", session: cookieSession };
-  return { kind: "none" };
+  if (!cookieSession) return { kind: "none" };
+
+  const sameOrigin = isSameOriginWrite(
+    {
+      method: request.method,
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+      host: request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
+    },
+    { canonicalHost: process.env.CANONICAL_HOST, legacyHosts: process.env.LEGACY_HOSTS },
+  );
+  if (!sameOrigin) {
+    console.warn("[auth] cross-origin cookie write refused", {
+      method: request.method,
+      originHost: safeHost(request.headers.get("origin") ?? request.headers.get("referer")),
+    });
+    return { kind: "none" };
+  }
+  return { kind: "hmac", session: cookieSession };
+}
+
+function safeHost(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    return new URL(raw).host;
+  } catch {
+    return "unparseable";
+  }
 }
 
 /**

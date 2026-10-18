@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { LEGACY_REDIRECTS } from "./src/shared/lib/legacyRedirects";
 
 /**
  * Baseline security headers for every route. HSTS has no includeSubDomains and
@@ -41,6 +42,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      ...LEGACY_REDIRECTS.map((r) => ({ ...r, permanent: true })),
       {
         source: "/brand/love-all.png",
         destination: "/brand/love-all.webp",

@@ -4,7 +4,9 @@ import path from "node:path";
 import { uploadDir } from "@/server/api/uploadStore";
 import { absoluteUrl } from "@/server/api/urls";
 
-export const IMAGE_MAX_BYTES = 2.5 * 1024 * 1024;
+import { IMAGE_MAX_BYTES } from "@/shared/lib/limits";
+
+export { IMAGE_MAX_BYTES };
 export const VIDEO_MAX_BYTES = 25 * 1024 * 1024;
 
 const IMAGE_TYPES = new Set([

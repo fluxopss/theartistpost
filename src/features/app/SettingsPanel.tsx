@@ -73,6 +73,22 @@ export function SettingsPanel() {
                 : ""}
             </p>
             <p className="text-xs text-paper-muted">{user.email}</p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/settings/profile"
+                className="inline-flex h-10 items-center rounded-full border border-spark-teal px-4 text-sm font-medium text-spark-teal transition hover:bg-accent-soft"
+              >
+                Edit your profile
+              </Link>
+              {user.handle ? (
+                <Link
+                  href={`/u/${encodeURIComponent(user.handle)}`}
+                  className="inline-flex h-10 items-center rounded-full border border-line px-4 text-sm font-medium text-paper transition hover:border-spark-teal"
+                >
+                  View your profile
+                </Link>
+              ) : null}
+            </div>
             <Button
               type="button"
               variant="outline"

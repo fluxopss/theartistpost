@@ -12,23 +12,28 @@ import { cn } from "@/shared/lib/cn";
 export function AccountMenu({ className }: { className?: string }) {
   const pathname = usePathname() ?? "/";
   const { user, signOut, signingOut } = useSession();
-  const [open, setOpen] = useState(false);
+  // Remember which page the menu was opened on: navigating closes it with no effect.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const setOpen = (next: boolean | ((v: boolean) => boolean)) =>
+    setOpenOn(() => {
+      const value = typeof next === "function" ? next(open) : next;
+      return value ? pathname : null;
+    });
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
-
-  useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpen(false);
+        setOpenOn(null);
         buttonRef.current?.focus();
       }
     };
     const onPointer = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpenOn(null);
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);

@@ -4,6 +4,8 @@ import { SetupExpoExperience } from "@/features/expo-setup/SetupExpoExperience";
 
 export const metadata: Metadata = {
   title: "Setup latest Expo Go",
+  // Teammate-only tester page: keep it out of search after launch.
+  robots: { index: false, follow: false },
   description: `Open the native ${site.name} tip in Expo Go over the live Metro tunnel — iPhone, Android, or Mac Simulator.`,
 };
 

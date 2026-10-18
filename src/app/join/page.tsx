@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getSession } from "@/features/auth/adapter";
 import { JoinExperience } from "@/features/auth/JoinExperience";
 import { PageShell } from "@/shared/ui/PageShell";
 import { assets } from "@/content/site";
+import { safeNextPath } from "@/shared/lib/safeNext";
 
 export const metadata: Metadata = {
   title: "Join",
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
 export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ door?: string }>;
+  searchParams: Promise<{ door?: string; next?: string }>;
 }) {
   const params = await searchParams;
   const door =
@@ -27,10 +30,14 @@ export default async function JoinPage({
     params.door === "return"
       ? params.door
       : null;
+  const nextPath = safeNextPath(params.next);
+
+  // Already signed in and sent here to get back somewhere: go straight there.
+  if (nextPath && (await getSession())) redirect(nextPath);
 
   return (
     <PageShell className="!pt-6 sm:!pt-8">
-      <JoinExperience initialDoor={door} />
+      <JoinExperience initialDoor={door} nextPath={nextPath} />
     </PageShell>
   );
 }

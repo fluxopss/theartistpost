@@ -11,12 +11,12 @@ export function CursorTrail() {
 
   const enabled = !touch && !reduce;
 
+  // Decorative glow that follows the pointer. The real system cursor always
+  // stays visible on top (never `cursor: none`): on dark sections a hidden
+  // pointer was impossible to find, links lost the hand cursor and text
+  // fields lost the text cursor.
   useEffect(() => {
-    if (!enabled) {
-      document.documentElement.classList.remove("cursor-trail-active");
-      return;
-    }
-    document.documentElement.classList.add("cursor-trail-active");
+    if (!enabled) return;
 
     const onMove = (e: MouseEvent) => {
       setPos({ x: e.clientX, y: e.clientY });
@@ -29,7 +29,6 @@ export function CursorTrail() {
     return () => {
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);
-      document.documentElement.classList.remove("cursor-trail-active");
     };
   }, [enabled]);
 

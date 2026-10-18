@@ -60,3 +60,22 @@ export function canonicalRedirectTarget(
 
   return `https://${canonical}${input.pathname}${input.search}`;
 }
+
+/**
+ * `Link: <https://canonical/path>; rel="canonical"` for a page served on the
+ * canonical host. Search engines read rel=canonical from this header the same
+ * as from a <link> tag, and the proxy knows the exact path (a root-layout
+ * metadata canonical would point every page at "/"). Query strings are left
+ * out so filter and tracking variants fold into one page. Null when the
+ * feature is off, for other hosts, and for non-page paths.
+ */
+export function canonicalLinkHeader(
+  input: { host: string | null; pathname: string },
+  env: CanonicalEnv,
+): string | null {
+  const canonical = normalizeHost(env.canonicalHost);
+  if (!canonical) return null;
+  if (normalizeHost(input.host) !== canonical) return null;
+  if (isRedirectExemptPath(input.pathname)) return null;
+  return `<https://${canonical}${input.pathname}>; rel="canonical"`;
+}

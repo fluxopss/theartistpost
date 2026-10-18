@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const readSessionFromCookie = vi.fn();
-const writeSessionCookie = vi.fn(async (_user: unknown) => true);
+const writeSessionCookie = vi.fn<(user: unknown) => Promise<boolean>>(async () => true);
 const findUnique = vi.fn();
 
 vi.mock("@/features/auth/sessionCookie", () => ({

@@ -505,6 +505,8 @@ async function listFollowEdges(
   const otherUser: Prisma.UserWhereInput = {
     ...visiblePersonWhere(),
     ...(blocked.size > 0 ? { id: { notIn: [...blocked] } } : {}),
+    // App Review demo accounts stay out of public lists (same as the directory).
+    AND: [{ NOT: { handle: { startsWith: APP_REVIEW_HANDLE_PREFIX } } }],
   };
 
   const isFollowers = side === "followers";

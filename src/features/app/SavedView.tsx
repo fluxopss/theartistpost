@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { getSaves, type SavedLibrary } from "@/features/app/storage";
+import { useHydrated } from "@/hooks/useHydrated";
+
+const EMPTY_LIBRARY: SavedLibrary = { posts: [], events: [] };
 
 export function SavedView() {
-  const [library, setLibrary] = useState<SavedLibrary>({ posts: [], events: [] });
-
-  useEffect(() => {
-    setLibrary(getSaves());
-  }, []);
+  const hydrated = useHydrated();
+  const library = useMemo(
+    () => (hydrated ? getSaves() : EMPTY_LIBRARY),
+    [hydrated],
+  );
 
   const empty = library.posts.length === 0 && library.events.length === 0;
 

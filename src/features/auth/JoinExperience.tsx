@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -33,6 +33,10 @@ type InitialDoor = "member" | "artist" | "return";
 
 const MEDIUMS = tapGenres.map((g) => g.label);
 
+function isInitialDoor(value: unknown): value is InitialDoor {
+  return value === "member" || value === "artist" || value === "return";
+}
+
 function returnSuccessCopy(user: SessionUser, pendingApproval?: boolean) {
   if (user.role === "ADMIN") return RETURNING_SUCCESS_COPY.admin;
   if (user.role === "ARTIST") {
@@ -52,12 +56,14 @@ export function JoinExperience({
   const { user } = useSession();
   const reduce = useReducedMotion();
   const [door, setDoor] = useState<Door>(
-    initialDoor === "member" ||
-      initialDoor === "artist" ||
-      initialDoor === "return"
-      ? initialDoor
-      : "pick",
+    isInitialDoor(initialDoor) ? initialDoor : "pick",
   );
+  // A new ?door= on the same page opens that door (adjust state on prop change, no effect).
+  const [seenInitialDoor, setSeenInitialDoor] = useState(initialDoor);
+  if (initialDoor !== seenInitialDoor) {
+    setSeenInitialDoor(initialDoor);
+    if (isInitialDoor(initialDoor)) setDoor(initialDoor);
+  }
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -77,16 +83,6 @@ export function JoinExperience({
   const [returnHint, setReturnHint] = useState<string | null>(null);
   const [returnUser, setReturnUser] = useState<SessionUser | null>(null);
   const [returnPendingApproval, setReturnPendingApproval] = useState(false);
-
-  useEffect(() => {
-    if (
-      initialDoor === "member" ||
-      initialDoor === "artist" ||
-      initialDoor === "return"
-    ) {
-      setDoor(initialDoor);
-    }
-  }, [initialDoor]);
 
   function openMember(e: React.FormEvent) {
     e.preventDefault();

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useHydratedState } from "@/hooks/useHydrated";
 import { assets, site } from "@/content/site";
 import {
   LOGO_INTRO_KEY,
@@ -12,25 +13,29 @@ import {
 
 type Phase = "idle" | "play" | "out";
 
+function readShouldPlay(): boolean {
+  return shouldPlayLogoIntro({
+    seen: sessionStorage.getItem(LOGO_INTRO_KEY) === "1",
+    reduceMotion: readReduceMotion(),
+    force: readLogoIntroForce(window.location.search),
+  });
+}
+
 export function LogoIntro() {
-  const [phase, setPhase] = useState<Phase>("idle");
+  // Decided once after hydration; the effect below marks the session as seen.
+  const [play] = useHydratedState("logo-intro", readShouldPlay, false);
+  const [stage, setStage] = useState<Phase>("play");
+  const phase: Phase = play ? stage : "idle";
   const leaveTimer = useRef<number | null>(null);
   const outTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    const force = readLogoIntroForce(window.location.search);
-    const play = shouldPlayLogoIntro({
-      seen: sessionStorage.getItem(LOGO_INTRO_KEY) === "1",
-      reduceMotion: readReduceMotion(),
-      force,
-    });
     if (!play) return;
 
     sessionStorage.setItem(LOGO_INTRO_KEY, "1");
-    setPhase("play");
     document.documentElement.classList.add("logo-intro-active");
 
-    leaveTimer.current = window.setTimeout(() => setPhase("out"), 3800);
+    leaveTimer.current = window.setTimeout(() => setStage("out"), 3800);
     outTimer.current = window.setTimeout(() => finish(), 4600);
 
     return () => {
@@ -38,13 +43,13 @@ export function LogoIntro() {
       if (outTimer.current) window.clearTimeout(outTimer.current);
       document.documentElement.classList.remove("logo-intro-active");
     };
-  }, []);
+  }, [play]);
 
   function finish() {
     if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
     if (outTimer.current) window.clearTimeout(outTimer.current);
     document.documentElement.classList.remove("logo-intro-active");
-    setPhase("idle");
+    setStage("idle");
   }
 
   if (phase === "idle") return null;

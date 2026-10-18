@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { canonicalRedirectTarget, isRedirectExemptPath } from "../canonicalHost";
+import {
+  canonicalLinkHeader,
+  canonicalRedirectTarget,
+  isRedirectExemptPath,
+} from "../canonicalHost";
 
 const env = {
   canonicalHost: "theartistpost.org",
@@ -55,5 +59,28 @@ describe("canonicalRedirectTarget", () => {
     expect(canonicalRedirectTarget(req({ host: "TheArtistPost.FluxLab.Agency." }), env)).toBe(
       "https://theartistpost.org/about",
     );
+  });
+});
+
+describe("canonicalLinkHeader", () => {
+  const page = (over: Partial<{ host: string | null; pathname: string }> = {}) => ({
+    host: "theartistpost.org",
+    pathname: "/u/robbi",
+    ...over,
+  });
+
+  it("is inert until CANONICAL_HOST is set", () => {
+    expect(canonicalLinkHeader(page(), {})).toBeNull();
+  });
+
+  it("points each page at its own canonical URL, not the home page", () => {
+    expect(canonicalLinkHeader(page(), env)).toBe('<https://theartistpost.org/u/robbi>; rel="canonical"');
+    expect(canonicalLinkHeader(page({ pathname: "/" }), env)).toBe('<https://theartistpost.org/>; rel="canonical"');
+  });
+
+  it("only applies on the canonical host and only to pages", () => {
+    expect(canonicalLinkHeader(page({ host: "theartistpost.fluxlab.agency" }), env)).toBeNull();
+    expect(canonicalLinkHeader(page({ pathname: "/api/v1/topics" }), env)).toBeNull();
+    expect(canonicalLinkHeader(page({ pathname: "/uploads/a.jpg" }), env)).toBeNull();
   });
 });

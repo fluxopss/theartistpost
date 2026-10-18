@@ -1,0 +1,150 @@
+# Domain cutover switch for theartistpost.org. workflow_dispatch only.
+#
+#   mode=cutover  Refuses unless theartistpost.org already points ONLY at the
+#                 VPS, has a valid certificate and serves this app
+#                 (scripts/ops/cutover-guard.sh). Then sets CANONICAL_HOST,
+#                 LEGACY_HOSTS and NEXT_PUBLIC_SITE_URL on the VPS, rebuilds,
+#                 restarts and runs scripts/ops/cutover-verify.sh.
+#   mode=rollback Removes CANONICAL_HOST/LEGACY_HOSTS, puts NEXT_PUBLIC_SITE_URL
+#                 back on the Flux address, rebuilds and restarts. No DNS check,
+#                 so it is safe to run while DNS is being put back.
+#
+# The app's API host (theartistpost.fluxlab.agency/api) is never redirected in
+# either mode, so installed app builds keep working throughout.
+# Every run backs up .env first. Values are never printed.
+name: Cutover to theartistpost.org
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "cutover (after DNS points at the VPS) or rollback"
+        required: true
+        type: choice
+        options: [cutover, rollback]
+      confirm:
+        description: "Type theartistpost.org to confirm"
+        required: true
+        type: string
+
+concurrency:
+  group: cutover-to-org
+  cancel-in-progress: false
+
+env:
+  CANONICAL: theartistpost.org
+  LEGACY: theartistpost.fluxlab.agency
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm input
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.confirm }}" != "$CANONICAL" ]; then
+            echo "::error::Type exactly $CANONICAL in the confirm box."
+            exit 1
+          fi
+
+      - name: Guard - DNS, certificate and app must already be live on the domain
+        if: inputs.mode == 'cutover'
+        run: CANONICAL_HOST="$CANONICAL" LEGACY_HOST="$LEGACY" bash scripts/ops/cutover-guard.sh
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          if [ -z "${VPS_SSH_KEY:-}" ]; then
+            echo "::error::VPS_SSH_KEY secret missing"
+            exit 1
+          fi
+          key="${VPS_SSH_KEY//$'\r'/}"
+          key="${key//\\n/$'\n'}"
+          printf '%s\n' "$key" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+          HOST="${{ secrets.VPS_HOST || vars.VPS_HOST }}"
+          USER="${{ secrets.VPS_USER || vars.VPS_USER || 'deploy' }}"
+          if [ -z "$HOST" ]; then
+            echo "::error::VPS_HOST is not set"
+            exit 1
+          fi
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Set env, rebuild, restart
+        run: |
+          set -euo pipefail
+          {
+            printf 'export MODE=%q\n' "${{ inputs.mode }}"
+            printf 'export CANONICAL=%q\n' "$CANONICAL"
+            printf 'export LEGACY=%q\n' "$LEGACY"
+            cat <<'REMOTE'
+          set -euo pipefail
+          APP_DIR=/var/www/theartistpost
+          ENV_FILE="$APP_DIR/.env"
+          if [[ "$(whoami)" == "root" ]]; then
+            echo "ERROR: refuse to mutate .env as root"
+            exit 1
+          fi
+          [[ -f "$ENV_FILE" ]] || { echo "ERROR: missing $ENV_FILE"; exit 1; }
+
+          umask 077
+          cp -a "$ENV_FILE" "${ENV_FILE}.bak.$(date -u +%Y%m%dT%H%M%SZ)"
+          tmp="$(mktemp)"
+          grep -Ev '^(#\s*)?(CANONICAL_HOST|LEGACY_HOSTS|NEXT_PUBLIC_SITE_URL)=' "$ENV_FILE" > "$tmp" || true
+          {
+            cat "$tmp"
+            if [[ "$MODE" == "cutover" ]]; then
+              printf '\n# Domain cutover (theartistpost.org is live)\n'
+              printf 'CANONICAL_HOST=%s\n' "$CANONICAL"
+              printf 'LEGACY_HOSTS=%s\n' "$LEGACY"
+              printf 'NEXT_PUBLIC_SITE_URL=https://%s\n' "$CANONICAL"
+            else
+              printf '\n# Domain cutover rolled back\n'
+              printf 'NEXT_PUBLIC_SITE_URL=https://%s\n' "$LEGACY"
+            fi
+          } > "$ENV_FILE"
+          rm -f "$tmp"
+          chmod 600 "$ENV_FILE"
+
+          echo "Cutover env now:"
+          grep -E '^(CANONICAL_HOST|LEGACY_HOSTS|NEXT_PUBLIC_SITE_URL)=' "$ENV_FILE" || echo "(no cutover keys)"
+
+          cd "$APP_DIR"
+          git rev-parse --short HEAD
+          # NEXT_PUBLIC_* is baked at build time, so rebuild before restarting.
+          # Non-interactive SSH may not load the login PATH; find pnpm or use corepack.
+          export PATH="$HOME/.local/share/pnpm:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
+          if command -v pnpm >/dev/null 2>&1; then PNPM=(pnpm); else PNPM=(corepack pnpm); fi
+          "${PNPM[@]}" install --frozen-lockfile
+          "${PNPM[@]}" build
+          pm2 restart theartistpost --update-env
+          pm2 save
+          sleep 5
+          echo "local GET / -> $(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:3013/ || echo 000)"
+          REMOTE
+          } | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER@$HOST" 'bash -s'
+
+      - name: Verify (cutover)
+        if: inputs.mode == 'cutover'
+        run: |
+          sleep 10
+          CANONICAL_HOST="$CANONICAL" LEGACY_HOST="$LEGACY" bash scripts/ops/cutover-verify.sh
+
+      - name: Verify (rollback)
+        if: inputs.mode == 'rollback'
+        run: |
+          set -euo pipefail
+          sleep 10
+          about=$(curl -s -o /dev/null -w '%{http_code}' "https://$LEGACY/about")
+          api=$(curl -s -o /dev/null -w '%{http_code}' "https://$LEGACY/api/v1/topics")
+          echo "legacy /about -> $about (expect 200, no redirect) | legacy API -> $api (expect 200)"
+          [ "$about" = "200" ] && [ "$api" = "200" ]

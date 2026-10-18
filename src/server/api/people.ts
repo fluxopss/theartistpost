@@ -1,6 +1,10 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { checkRateLimit } from "@/features/auth/rateLimit";
-import { DENIED_AUTHOR_EMAILS, TEST_HANDLE_PREFIX } from "@/features/posts/denylist";
+import {
+  APP_REVIEW_HANDLE_PREFIX,
+  DENIED_AUTHOR_EMAILS,
+  TEST_HANDLE_PREFIX,
+} from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
 import { content } from "@/lib/content";
 import {
@@ -339,7 +343,11 @@ export async function searchPeople(
     ? await blockedIdsFor(prisma, viewerId)
     : new Set<string>();
 
-  const and: Prisma.UserWhereInput[] = [visiblePersonWhere()];
+  const and: Prisma.UserWhereInput[] = [
+    visiblePersonWhere(),
+    // Directory listing only: App Review demo accounts stay reachable by handle.
+    { NOT: { handle: { startsWith: APP_REVIEW_HANDLE_PREFIX } } },
+  ];
   if (blocked.size > 0) and.push({ id: { notIn: [...blocked] } });
 
   if (query.q) {

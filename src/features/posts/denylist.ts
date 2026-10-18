@@ -12,6 +12,13 @@ export const DENIED_POST_SLUGS = [
 /** Handle prefix reserved for E2E test artists — never on public reads. */
 export const TEST_HANDLE_PREFIX = "e2eart";
 
+/**
+ * Handle prefix of the Apple App Review demo accounts. They stay fully usable
+ * (own profile, follows, posting) but are never listed in the public people
+ * directory or "people you may like".
+ */
+export const APP_REVIEW_HANDLE_PREFIX = "appreview-";
+
 export const DENIED_AUTHOR_EMAILS = [
   "luna@theartistpost.org",
   "kai@theartistpost.org",

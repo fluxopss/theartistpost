@@ -126,6 +126,7 @@ export const navMarketing = [
   { href: "/artist-schedule", label: "Schedule" },
   { href: "/kindness-always", label: "Kindness Always" },
   { href: "/explore", label: "The Wall" },
+  { href: "/community", label: "Community" },
   { href: "/about", label: "About" },
   { href: "/history", label: "History" },
 ] as const;

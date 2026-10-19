@@ -56,4 +56,12 @@ describe("AccountMenu", () => {
     render(<AccountMenu />);
     expect(screen.getByRole("button", { name: /account menu/i }).querySelector("img")).toHaveAttribute("src", "/uploads/rae.jpg");
   });
+
+  it("signed out keeps its pill layout when the header hides it on phones", () => {
+    render(<AccountMenu className="hidden sm:block" />);
+    const link = screen.getByRole("link", { name: "Sign in" });
+    expect(link.className).toContain("inline-flex");
+    expect(link.className).toContain("items-center");
+    expect(link.parentElement?.className).toContain("sm:block");
+  });
 });

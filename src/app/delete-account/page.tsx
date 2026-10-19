@@ -13,8 +13,13 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function DeleteAccountPage() {
+export default async function DeleteAccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ done?: string }>;
+}) {
   const user = await getSession();
+  const done = !user && (await searchParams).done === "1";
   return (
     <LegalLayout kicker="Your data" title="Delete your account">
       <p>
@@ -22,7 +27,12 @@ export default async function DeleteAccountPage() {
         website or in the app. It takes less than a minute.
       </p>
 
-      {user ? (
+      {done ? (
+        <p role="status" className="rounded-2xl border border-spark-teal/40 bg-accent-soft p-4 text-paper">
+          Your account is deleted. Thank you for being part of {site.name}. You
+          are always welcome back.
+        </p>
+      ) : user ? (
         <>
           <h2>Delete it here</h2>
           <DeleteAccountForm />

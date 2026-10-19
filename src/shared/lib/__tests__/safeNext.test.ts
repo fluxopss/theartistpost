@@ -6,7 +6,7 @@ describe("safeNextPath", () => {
     ["/settings/profile", "/settings/profile"],
     ["/u/robbi?tab=posts", "/u/robbi?tab=posts"],
     ["/", "/"],
-    ["%2Fsettings%2Fprofile", "/settings/profile"],
+    ["/explore?q=a%26b", "/explore?q=a%26b"],
   ])("keeps %s", (input, expected) => {
     expect(safeNextPath(input)).toBe(expected);
   });
@@ -34,13 +34,22 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/joined")).toBe("/joined");
   });
 
+  it("returns a header-safe, percent-encoded path for non-Latin text", () => {
+    expect(safeNextPath("/explore?q=日本")).toBe("/explore?q=%E6%97%A5%E6%9C%AC");
+  });
+
+  it("does not decode again (Next already decoded searchParams)", () => {
+    expect(safeNextPath("%2Fsettings%2Fprofile")).toBeNull();
+  });
+
   it("refuses null and undefined", () => {
     expect(safeNextPath(null)).toBeNull();
     expect(safeNextPath(undefined)).toBeNull();
   });
 
-  it("refuses a malformed percent-encoding instead of throwing", () => {
-    expect(safeNextPath("/%E0%A4%A")).toBeNull();
+  it("a malformed percent-encoding never throws and stays on this site", () => {
+    expect(() => safeNextPath("/%E0%A4%A")).not.toThrow();
+    expect(safeNextPath("/%E0%A4%A")).toMatch(/^\/[^/]/);
   });
 });
 

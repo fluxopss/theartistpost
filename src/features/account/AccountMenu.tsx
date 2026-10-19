@@ -47,15 +47,14 @@ export function AccountMenu({ className }: { className?: string }) {
 
   if (!user) {
     return (
-      <Link
-        href={links[0]!.href}
-        className={cn(
-          "inline-flex h-10 items-center rounded-full border border-line bg-surface-glass px-4 text-sm font-medium text-paper transition hover:border-spark-teal",
-          className,
-        )}
-      >
-        Sign in
-      </Link>
+      <div className={className}>
+        <Link
+          href={links[0]!.href}
+          className="inline-flex h-10 items-center rounded-full border border-line bg-surface-glass px-4 text-sm font-medium text-paper transition hover:border-spark-teal"
+        >
+          Sign in
+        </Link>
+      </div>
     );
   }
 

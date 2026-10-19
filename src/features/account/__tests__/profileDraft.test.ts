@@ -3,6 +3,7 @@ import { clearDraft, loadDraft, saveDraft, type ProfileDraft } from "../profileD
 
 const draft: ProfileDraft = {
   name: "Rae",
+  handle: "rae",
   headline: "Painter",
   bio: "",
   location: "",

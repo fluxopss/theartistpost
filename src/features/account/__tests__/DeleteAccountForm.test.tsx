@@ -36,7 +36,7 @@ describe("DeleteAccountForm", () => {
     await userEvent.type(screen.getByLabelText(/type delete/i), "DELETE");
     await userEvent.click(screen.getByRole("button", { name: /delete my account/i }));
     expect(webApi).toHaveBeenCalledWith("/me", { method: "DELETE", json: { confirm: "DELETE" } });
-    expect(assign).toHaveBeenCalledWith("/?deleted=1");
+    expect(assign).toHaveBeenCalledWith("/delete-account?done=1");
   });
 
   it("shows the server's message and stays put when it fails", async () => {

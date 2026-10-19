@@ -16,15 +16,22 @@ describe("/delete-account", () => {
 
   it("signed in: offers the delete form right here", async () => {
     getSession.mockResolvedValue({ id: "u1", name: "Rae" });
-    const el = JSON.stringify(await DeleteAccountPage());
+    const el = JSON.stringify(await DeleteAccountPage({ searchParams: Promise.resolve({}) }));
     expect(el).toContain("Delete it here");
     expect(el).not.toContain("Sign in to delete it yourself");
   });
 
   it("signed out: sign in and come back here to delete", async () => {
     getSession.mockResolvedValue(null);
-    const el = JSON.stringify(await DeleteAccountPage());
+    const el = JSON.stringify(await DeleteAccountPage({ searchParams: Promise.resolve({}) }));
     expect(el).toContain('"href":"/join?door=return&next=%2Fdelete-account"');
     expect(el).toContain("Sign in to delete it yourself");
+  });
+
+  it("after deleting: confirms it's done", async () => {
+    getSession.mockResolvedValue(null);
+    const el = JSON.stringify(await DeleteAccountPage({ searchParams: Promise.resolve({ done: "1" }) }));
+    expect(el).toContain("Your account is deleted");
+    expect(el).not.toContain("Sign in to delete it yourself");
   });
 });

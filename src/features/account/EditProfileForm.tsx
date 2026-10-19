@@ -11,6 +11,7 @@ import { draftFromMe, hasChanges, profilePatch } from "@/features/account/profil
 import { webApi } from "@/features/account/webApi";
 import { initialsOf } from "@/features/account/accountLinks";
 import { Button } from "@/shared/ui/Button";
+import { communityGuidelines } from "@/content/guidelines";
 import { cn } from "@/shared/lib/cn";
 import {
   BIO_MAX,
@@ -48,6 +49,12 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
   const [uploading, startUploading] = useTransition();
+  const [accepting, startAccepting] = useTransition();
+  const [termsAccepted, setTermsAccepted] = useState(Boolean(me.user.termsAcceptedAt));
+  const [askedForGuidelines] = useState(!me.user.termsAcceptedAt);
+  const [agreed, setAgreed] = useState(false);
+  const [guidelinesError, setGuidelinesError] = useState<string | null>(null);
+  const isArtist = Boolean(me.profile);
 
   const suspended = me.user.suspended;
   const isApprovedArtist = Boolean(me.profile?.approved);
@@ -56,6 +63,31 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
   useEffect(() => {
     if (hasChanges(initial, draft)) saveDraft(userId, draft);
   }, [draft, initial, userId]);
+
+  /** Best effort: the save already worked, a hiccup here must never look like a failure. */
+  async function refreshHeader() {
+    try {
+      await refreshSessionCookieAction();
+    } catch {
+      // Next full navigation re-reads the database anyway.
+    }
+    router.refresh();
+  }
+
+  function acceptGuidelines() {
+    startAccepting(async () => {
+      const result = await webApi<{ termsAcceptedAt: string }>("/me/terms", {
+        method: "POST",
+        json: { accept: true },
+      });
+      if (!result.ok) {
+        setGuidelinesError(result.error.message);
+        return;
+      }
+      setTermsAccepted(true);
+      router.refresh();
+    });
+  }
 
   function set<K extends keyof ProfileDraft>(field: K, value: ProfileDraft[K]) {
     setDraft((d) => ({ ...d, [field]: value }));
@@ -93,8 +125,7 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
       setDraft(next);
       setFieldErrors({});
       setMessage({ tone: "ok", text: "Saved. Your profile is updated on the app too." });
-      await refreshSessionCookieAction();
-      router.refresh();
+      await refreshHeader();
     });
   }
 
@@ -120,8 +151,7 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
         return;
       }
       setAvatar(result.data.avatarUrl);
-      await refreshSessionCookieAction();
-      router.refresh();
+      await refreshHeader();
     });
   }
 
@@ -167,6 +197,24 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
       <section className="space-y-4">
         <Field label="Name" error={fieldErrors.name}>
           <input id="pf-name" className={input} value={draft.name} maxLength={NAME_MAX} onChange={(e) => set("name", e.target.value)} />
+        </Field>
+        <Field
+          label="Handle"
+          hint={isArtist ? "Set by the house team" : "Your link: /u/your-handle"}
+          error={fieldErrors.handle}
+        >
+          <input
+            id="pf-handle"
+            className={cn(input, isArtist && "opacity-70")}
+            value={draft.handle}
+            readOnly={isArtist}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={40}
+            placeholder="rae-lin"
+            onChange={(e) => set("handle", e.target.value)}
+          />
         </Field>
         <Field label="Headline" hint={`${draft.headline.length}/${HEADLINE_MAX}`} error={fieldErrors.headline}>
           <input id="pf-headline" className={input} value={draft.headline} maxLength={HEADLINE_MAX} placeholder="Muralist, poet, DJ…" onChange={(e) => set("headline", e.target.value)} />
@@ -229,6 +277,57 @@ export function EditProfileForm({ me, topics, chapters }: Props) {
           <Field label="PayPal.Me username" error={fieldErrors.paypalMeUsername}>
             <input id="pf-paypal" className={input} value={draft.paypalMeUsername} onChange={(e) => set("paypalMeUsername", e.target.value)} />
           </Field>
+        </section>
+      ) : null}
+
+      {askedForGuidelines ? (
+        <section className="space-y-4 rounded-2xl border border-line p-5" aria-labelledby="guidelines-title">
+          <h2 id="guidelines-title" className="display text-2xl text-paper">
+            {communityGuidelines.title}
+          </h2>
+          {termsAccepted ? (
+            <p role="status" className="text-sm text-spark-teal">
+              Thanks for agreeing. You can follow, post and reply here and in the app.
+            </p>
+          ) : (
+            <>
+              <div className="max-h-72 space-y-3 overflow-y-auto pr-2 text-sm text-paper-muted">
+                {communityGuidelines.sections.map((section, index) => (
+                  <div key={section.heading ?? `intro-${index}`}>
+                    {section.heading ? <h3 className="font-semibold text-paper">{section.heading}</h3> : null}
+                    {section.list === "bullets" ? (
+                      <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                        {section.body.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      section.body.map((line) => <p key={line} className="mt-1">{line}</p>)
+                    )}
+                  </div>
+                ))}
+              </div>
+              <label className="flex items-center gap-3 text-sm text-paper">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="h-5 w-5 accent-[var(--color-spark-teal,#2dd4bf)]"
+                />
+                I have read and agree to the Community Guidelines.
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                disabled={!agreed || accepting || suspended}
+                onClick={acceptGuidelines}
+              >
+                {accepting ? "Saving…" : "Agree to the guidelines"}
+              </Button>
+              {guidelinesError ? <p className="text-xs text-spark-coral">{guidelinesError}</p> : null}
+            </>
+          )}
         </section>
       ) : null}
 

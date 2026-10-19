@@ -6,6 +6,7 @@ export function draftFromMe(me: MeDTO): ProfileDraft {
   const u = me.user;
   return {
     name: u.name ?? "",
+    handle: u.handle ?? "",
     headline: u.headline ?? "",
     bio: u.bio ?? "",
     location: u.location ?? "",
@@ -21,6 +22,7 @@ const NULLABLE_TEXT = ["headline", "bio", "location", "venmoUsername", "cashAppT
 
 export type ProfilePatch = Partial<{
   name: string;
+  handle: string;
   headline: string | null;
   bio: string | null;
   location: string | null;
@@ -35,6 +37,9 @@ export type ProfilePatch = Partial<{
 export function profilePatch(initial: ProfileDraft, draft: ProfileDraft): ProfilePatch {
   const patch: ProfilePatch = {};
   if (draft.name.trim() !== initial.name.trim()) patch.name = draft.name.trim();
+  // A handle can be chosen or changed, never cleared (the API has no "no handle").
+  const handle = draft.handle.trim().replace(/^@/, "");
+  if (handle !== "" && handle !== initial.handle.trim()) patch.handle = handle;
   for (const field of NULLABLE_TEXT) {
     const next = draft[field].trim();
     if (next !== initial[field].trim()) patch[field] = next === "" ? null : next;

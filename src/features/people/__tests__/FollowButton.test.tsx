@@ -80,4 +80,11 @@ describe("FollowBar", () => {
     render(<FollowBar {...base} initialFollowerCount={1} />);
     expect(screen.getByRole("link", { name: /1 follower$/i })).toBeInTheDocument();
   });
+
+  it("when the profile isn't finished yet, points to Edit profile instead of a dead end", async () => {
+    webApi.mockResolvedValue({ ok: false, status: 403, error: { code: "forbidden", message: "Finish your profile and accept the Community Guidelines first." } });
+    render(<FollowBar {...base} />);
+    await userEvent.click(screen.getByRole("button", { name: "Follow" }));
+    expect(await screen.findByRole("link", { name: /finish your profile/i })).toHaveAttribute("href", "/settings/profile");
+  });
 });

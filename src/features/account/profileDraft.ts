@@ -6,6 +6,7 @@
  */
 export type ProfileDraft = {
   name: string;
+  handle: string;
   headline: string;
   bio: string;
   location: string;
@@ -18,7 +19,7 @@ export type ProfileDraft = {
 
 const key = (userId: string) => `tap:profile-draft:${userId}`;
 
-const STRING_FIELDS = ["name", "headline", "bio", "location", "venmoUsername", "cashAppTag", "paypalMeUsername"] as const;
+const STRING_FIELDS = ["name", "handle", "headline", "bio", "location", "venmoUsername", "cashAppTag", "paypalMeUsername"] as const;
 
 function isDraft(value: unknown): value is ProfileDraft {
   if (!value || typeof value !== "object") return false;

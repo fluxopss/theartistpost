@@ -8,7 +8,7 @@ import DeleteAccountPage from "@/app/delete-account/page";
 
 describe("delete account page", () => {
   it("renders the heading, the in-app steps and the support address", async () => {
-    render(await DeleteAccountPage());
+    render(await DeleteAccountPage({ searchParams: Promise.resolve({}) }));
     expect(
       screen.getByRole("heading", { level: 1, name: "Delete your account" }),
     ).toBeInTheDocument();

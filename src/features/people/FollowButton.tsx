@@ -33,6 +33,7 @@ export function FollowBar({
   const [following, setFollowing] = useState(initialFollowing);
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
   const [error, setError] = useState<string | null>(null);
+  const [needsProfile, setNeedsProfile] = useState(false);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const base = `/u/${encodeURIComponent(handle)}`;
@@ -42,6 +43,7 @@ export function FollowBar({
     inFlight.current = true;
     setBusy(true);
     setError(null);
+    setNeedsProfile(false);
     const before = { following, followerCount };
     setFollowing(!following);
     setFollowerCount(Math.max(0, followerCount + (following ? -1 : 1)));
@@ -56,7 +58,12 @@ export function FollowBar({
     } else {
       setFollowing(before.following);
       setFollowerCount(before.followerCount);
-      setError(result.status === 429 ? "Try again in a moment." : result.error.message);
+      if (result.status === 403 && result.error.code === "forbidden") {
+        // Web-registered members have no handle or guidelines yet: send them to finish.
+        setNeedsProfile(true);
+      } else {
+        setError(result.status === 429 ? "Try again in a moment." : result.error.message);
+      }
     }
     inFlight.current = false;
     setBusy(false);
@@ -106,6 +113,15 @@ export function FollowBar({
         </button>
       )}
 
+      {needsProfile ? (
+        <p role="status" className="w-full text-xs text-paper-muted">
+          One step first:{" "}
+          <Link href="/settings/profile" className="font-semibold text-spark-teal underline">
+            Finish your profile
+          </Link>{" "}
+          (pick a handle and agree to the Community Guidelines), then follow away.
+        </p>
+      ) : null}
       {error ? (
         <p role="status" className="w-full text-xs text-spark-coral">
           {error}

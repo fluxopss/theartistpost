@@ -5,7 +5,7 @@ import type { MeDTO } from "@/server/api/meProfile";
 
 const webApi = vi.fn();
 const refresh = vi.fn();
-const refreshSessionCookieAction = vi.fn(async () => ({ ok: true }));
+const refreshSessionCookieAction = vi.fn<() => Promise<{ ok: boolean }>>(async () => ({ ok: true }));
 
 vi.mock("@/features/account/webApi", () => ({ webApi: (...args: unknown[]) => webApi(...args) }));
 vi.mock("@/features/account/actions", () => ({ refreshSessionCookieAction: () => refreshSessionCookieAction() }));
@@ -62,7 +62,7 @@ beforeEach(() => {
 
 describe("profilePatch", () => {
   it("sends only changed fields, empty optional text as null", () => {
-    const base = { name: "Rae", headline: "Painter", bio: "", location: "", chapterId: null, topicSlugs: [], venmoUsername: "", cashAppTag: "", paypalMeUsername: "" };
+    const base = { name: "Rae", handle: "", headline: "Painter", bio: "", location: "", chapterId: null, topicSlugs: [], venmoUsername: "", cashAppTag: "", paypalMeUsername: "" };
     expect(profilePatch(base, { ...base, headline: "Muralist" })).toEqual({ headline: "Muralist" });
     expect(profilePatch(base, { ...base, headline: "" })).toEqual({ headline: null });
     expect(profilePatch(base, { ...base, topicSlugs: ["t1"] })).toEqual({ topicSlugs: ["t1"] });
@@ -109,7 +109,7 @@ describe("EditProfileForm", () => {
   });
 
   it("does not show a notice for a draft identical to the saved profile", () => {
-    saveDraft("u1", { name: "Rae Lin", headline: "Painter", bio: "", location: "", chapterId: null, topicSlugs: [], venmoUsername: "", cashAppTag: "", paypalMeUsername: "" });
+    saveDraft("u1", { name: "Rae Lin", handle: "rae", headline: "Painter", bio: "", location: "", chapterId: null, topicSlugs: [], venmoUsername: "", cashAppTag: "", paypalMeUsername: "" });
     renderForm();
     expect(screen.queryByText(/unsaved changes are back/i)).toBeNull();
   });
@@ -150,5 +150,46 @@ describe("EditProfileForm", () => {
     await userEvent.upload(screen.getByLabelText(/profile photo/i), big);
     expect(await screen.findByText(/under 2.5MB/i)).toBeInTheDocument();
     expect(webApi).not.toHaveBeenCalled();
+  });
+
+  it("a failed header refresh after a good save still says Saved", async () => {
+    webApi.mockResolvedValue({ ok: true, data: makeMe({ headline: "Muralist" }) });
+    refreshSessionCookieAction.mockRejectedValueOnce(new Error("network"));
+    renderForm();
+    const headline = screen.getByLabelText(/headline/i);
+    await userEvent.clear(headline);
+    await userEvent.type(headline, "Muralist");
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+    expect(await screen.findByText(/updated on the app too/i)).toBeInTheDocument();
+  });
+
+  it("members can pick their handle", async () => {
+    webApi.mockResolvedValue({ ok: true, data: makeMe({ handle: "rae-lin" }) });
+    renderForm(makeMe({ handle: undefined }));
+    await userEvent.type(screen.getByLabelText(/^handle/i), "rae-lin");
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(webApi).toHaveBeenCalledWith("/me", { method: "PATCH", json: { handle: "rae-lin" } }));
+  });
+
+  it("artist handles are shown but set by the house team", () => {
+    renderForm(makeMe({ role: "ARTIST" }, { approved: true, pendingApproval: false } as MeDTO["profile"]));
+    expect(screen.getByLabelText(/^handle/i)).toHaveAttribute("readonly");
+  });
+
+  it("asks for the Community Guidelines once, with an explicit checkbox", async () => {
+    webApi.mockResolvedValue({ ok: true, data: { termsAcceptedAt: "2026-10-18T00:00:00.000Z" } });
+    renderForm(makeMe({ termsAcceptedAt: null }));
+    expect(screen.getByRole("heading", { name: /community guidelines/i })).toBeInTheDocument();
+    const agree = screen.getByRole("button", { name: /agree to the guidelines/i });
+    expect(agree).toBeDisabled();
+    await userEvent.click(screen.getByRole("checkbox", { name: /i have read and agree/i }));
+    await userEvent.click(agree);
+    await waitFor(() => expect(webApi).toHaveBeenCalledWith("/me/terms", { method: "POST", json: { accept: true } }));
+    expect(await screen.findByText(/thanks for agreeing/i)).toBeInTheDocument();
+  });
+
+  it("does not ask again once agreed", () => {
+    renderForm(makeMe({ termsAcceptedAt: "2026-10-01T00:00:00.000Z" }));
+    expect(screen.queryByRole("heading", { name: /community guidelines/i })).toBeNull();
   });
 });

@@ -16,7 +16,7 @@ export type WebApiResult<T> =
   | { ok: false; status: number; error: WebApiError };
 
 export type WebApiInit = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   json?: unknown;
   form?: FormData;
   /** "redirect" (default) sends a signed-out person to sign in and back. */

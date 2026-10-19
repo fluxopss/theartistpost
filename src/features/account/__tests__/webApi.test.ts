@@ -86,4 +86,10 @@ describe("webApi", () => {
     fetchMock.mockReturnValue(Promise.resolve(new Response("<html>502</html>", { status: 502 })));
     await expect(webApi("/me")).resolves.toMatchObject({ ok: false, status: 502, error: { code: "server_error" } });
   });
+
+  it("supports PUT for reactions", async () => {
+    fetchMock.mockReturnValue(respond(200, { ok: true, data: {} }));
+    await webApi("/community/p1/reaction", { method: "PUT", json: { reaction: "LOVE" } });
+    expect((fetchMock.mock.calls[0]![1] as RequestInit).method).toBe("PUT");
+  });
 });

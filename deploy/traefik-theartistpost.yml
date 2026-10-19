@@ -13,6 +13,10 @@ http:
         - websecure
       tls:
         certResolver: letsencrypt
+        domains:
+          - main: theartistpost.org
+            sans:
+              - www.theartistpost.org
       service: theartistpost
   services:
     theartistpost:

@@ -5,11 +5,6 @@ html {
   scroll-behavior: smooth;
 }
 
-html.cursor-trail-active,
-html.cursor-trail-active * {
-  cursor: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

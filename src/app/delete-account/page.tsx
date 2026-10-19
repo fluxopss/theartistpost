@@ -1,19 +1,41 @@
 import type { Metadata } from "next";
 import { site } from "@/content/site";
+import Link from "next/link";
 import { LegalLayout } from "@/features/app/LegalLayout";
+import { DeleteAccountForm } from "@/features/account/DeleteAccountForm";
+import { getSession } from "@/features/auth/adapter";
+import { joinHref } from "@/shared/lib/safeNext";
 
 export const metadata: Metadata = {
   title: "Delete your account",
   description: `How to delete your ${site.name} account and what happens to your data.`,
 };
 
-export default function DeleteAccountPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DeleteAccountPage() {
+  const user = await getSession();
   return (
     <LegalLayout kicker="Your data" title="Delete your account">
       <p>
-        You can delete your {site.name} account yourself, any time, in the app.
-        It takes less than a minute.
+        You can delete your {site.name} account yourself, any time, on this
+        website or in the app. It takes less than a minute.
       </p>
+
+      {user ? (
+        <>
+          <h2>Delete it here</h2>
+          <DeleteAccountForm />
+        </>
+      ) : (
+        <>
+          <h2>On the website</h2>
+          <p>
+            <Link href={joinHref("/delete-account")}>Sign in to delete it yourself</Link>{" "}
+            with a code sent to your email, and you&apos;ll land right back here.
+          </p>
+        </>
+      )}
 
       <h2>In the app</h2>
       <ol className="list-decimal space-y-1 pl-5">
@@ -35,7 +57,7 @@ export default function DeleteAccountPage() {
         only a one-way hash of the email address, never the address itself.
       </p>
 
-      <h2>Can&apos;t open the app?</h2>
+      <h2>Can&apos;t sign in?</h2>
       <p>
         Email <a href={`mailto:${site.email}`}>{site.email}</a> from the address
         on your account and we will delete it for you.

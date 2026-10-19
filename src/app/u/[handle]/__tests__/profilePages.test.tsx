@@ -20,6 +20,8 @@ vi.mock("@/server/api/people", () => ({
   listFollowing: (...a: unknown[]) => listFollowing(...a),
 }));
 vi.mock("@/features/people/FollowButton", () => ({ FollowBar: () => null }));
+vi.mock("@/features/community/gate", () => ({ communityGate: async (s: unknown) => (s ? "ready" : "signedOut") }));
+vi.mock("@/features/community/CommunityCard", () => ({ CommunityCard: () => null }));
 
 import ProfilePage from "@/app/u/[handle]/page";
 import FollowersPage, { dynamic as followersDynamic, metadata as followersMeta } from "@/app/u/[handle]/followers/page";
@@ -72,6 +74,17 @@ describe("/u/[handle] knows who is looking", () => {
     const el = JSON.stringify(await ProfilePage({ params: params() }));
     expect(getPerson).toHaveBeenCalledWith(expect.anything(), "rae", null);
     expect(el).toContain('"signedIn":false');
+  });
+});
+
+describe("/u/[handle] recent posts", () => {
+  it("render as full community cards with the viewer's gate", async () => {
+    getSession.mockResolvedValue({ id: "u1", role: "VIEWER", email: "v@example.com", name: "V", handle: "vera" });
+    listPersonCommunity.mockResolvedValue({ ok: true, page: { items: [{ id: "p1", kind: "ASK", body: "hi" }], nextCursor: null } });
+    const el = JSON.stringify(await ProfilePage({ params: params() }));
+    expect(el).toContain('"post":{"id":"p1"');
+    expect(el).toContain('"gate":"ready"');
+    expect(el).toContain('"href":"/community"');
   });
 });
 

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/content/site";
 import { LegalLayout } from "@/features/app/LegalLayout";
 import { getSession } from "@/features/auth/adapter";
 import { FollowBar } from "@/features/people/FollowButton";
+import { CommunityCard } from "@/features/community/CommunityCard";
+import { communityGate } from "@/features/community/gate";
 import { isPlausibleHandle } from "@/server/api/posts";
 import { getPerson, listPersonCommunity } from "@/server/api/people";
 import { getPrisma } from "@/shared/lib/prisma";
@@ -27,7 +30,7 @@ async function loadProfile(handle: string) {
       { take: 10 },
       viewer,
     );
-    return { person, posts: posts.ok ? posts.page.items : [], signedIn: Boolean(viewer) };
+    return { person, posts: posts.ok ? posts.page.items : [], signedIn: Boolean(viewer), gate: await communityGate(session), viewerHandle: session?.handle ?? null };
   } catch (error) {
     console.error("[u/[handle]]", error);
     return null;
@@ -48,20 +51,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const KIND_LABEL: Record<string, string> = {
-  SHOUTOUT: "Shout-out",
-  COLLAB: "Collab call",
-  SHOWING: "I'm showing",
-  ASK: "Ask the house",
-  KINDNESS: "Kindness",
-  UPDATE: "Studio update",
-};
-
 export default async function PublicProfilePage({ params }: Props) {
   const { handle } = await params;
   const profile = await loadProfile(handle);
   if (!profile) notFound();
-  const { person, posts, signedIn } = profile;
+  const { person, posts, signedIn, gate, viewerHandle } = profile;
 
   return (
     <LegalLayout kicker={person.isArtist ? "Artist" : "Member"} title={person.name}>
@@ -127,17 +121,15 @@ export default async function PublicProfilePage({ params }: Props) {
       {posts.length === 0 ? (
         <p>Nothing posted yet.</p>
       ) : (
-        <ul className="!list-none !pl-0 space-y-4">
+        <div className="not-prose space-y-4">
           {posts.map((post) => (
-            <li key={post.id} className="rounded-2xl border border-line p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-spark-coral">
-                {KIND_LABEL[post.kind] ?? post.kind}
-              </p>
-              <p className="mt-1 whitespace-pre-wrap text-paper">{post.body}</p>
-            </li>
+            <CommunityCard key={post.id} post={post} gate={gate} here={`/u/${person.handle}`} viewerHandle={viewerHandle} />
           ))}
-        </ul>
+        </div>
       )}
+      <p>
+        <Link href="/community">See the whole community board</Link>
+      </p>
 
       {signedIn ? null : (
         <p>

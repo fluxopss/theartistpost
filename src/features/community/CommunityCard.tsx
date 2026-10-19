@@ -24,6 +24,7 @@ export function CommunityCard({
   here,
   viewerHandle,
   onDeleted,
+  onBlocked,
 }: {
   post: CommunityPostDTO;
   variant?: Variant;
@@ -31,6 +32,7 @@ export function CommunityCard({
   here?: string;
   viewerHandle?: string | null;
   onDeleted?: () => void;
+  onBlocked?: (handle: string) => void;
 }) {
   const isReply = variant === "reply";
   const isOwn = Boolean(viewerHandle) && viewerHandle!.toLowerCase() === post.author.handle.toLowerCase();
@@ -75,7 +77,7 @@ export function CommunityCard({
             </span>
           </span>
         </Link>
-        <PostActions post={post} gate={gate} here={here ?? thread} isOwn={isOwn} onDeleted={onDeleted} />
+        <PostActions post={post} gate={gate} here={here ?? thread} isOwn={isOwn} onDeleted={onDeleted} onBlocked={onBlocked} />
       </header>
 
       {!isReply ? (

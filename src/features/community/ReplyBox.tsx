@@ -28,8 +28,8 @@ export function ReplyBox({
   const [error, setError] = useState<string | null>(null);
   const [needsProfile, setNeedsProfile] = useState(false);
 
-  if (gate !== "ready" || needsProfile) {
-    return <GateHint gate={gate === "ready" ? "needsProfile" : gate} here={here ?? `/community/${parentId}`} action="reply" />;
+  if (gate !== "ready") {
+    return <GateHint gate={gate} here={here ?? `/community/${parentId}`} action="reply" />;
   }
 
   const count = graphemeLength(body.trim());
@@ -71,6 +71,7 @@ export function ReplyBox({
           {busy ? "Sending…" : "Reply"}
         </Button>
       </div>
+      {needsProfile ? <GateHint gate="needsProfile" action="reply" /> : null}
       {error ? (
         <p role="status" className="text-xs text-spark-coral">
           {error}

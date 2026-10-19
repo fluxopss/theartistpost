@@ -51,4 +51,13 @@ describe("ReplyBox", () => {
     expect(screen.queryByLabelText(/your reply/i)).toBeNull();
     expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute("href", "/join?door=return&next=%2Fcommunity%2Fp1");
   });
+
+  it("a 403 keeps the words on screen and says how to finish", async () => {
+    webApi.mockResolvedValue({ ok: false, status: 403, error: { code: "forbidden", message: "Finish your profile and accept the Community Guidelines first." } });
+    render(<ReplyBox parentId="p1" kind="ASK" gate="ready" />);
+    await userEvent.type(screen.getByLabelText(/your reply/i), "A long kind reply");
+    await userEvent.click(screen.getByRole("button", { name: /^reply$/i }));
+    expect(await screen.findByRole("link", { name: /finish your profile/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/your reply/i)).toHaveValue("A long kind reply");
+  });
 });

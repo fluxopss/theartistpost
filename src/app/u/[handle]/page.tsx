@@ -6,7 +6,7 @@ import { LegalLayout } from "@/features/app/LegalLayout";
 import { getSession } from "@/features/auth/adapter";
 import { FollowBar } from "@/features/people/FollowButton";
 import { CommunityCard } from "@/features/community/CommunityCard";
-import { communityGate } from "@/features/community/gate";
+import { communityViewer } from "@/features/community/gate";
 import { isPlausibleHandle } from "@/server/api/posts";
 import { getPerson, listPersonCommunity } from "@/server/api/people";
 import { getPrisma } from "@/shared/lib/prisma";
@@ -30,7 +30,14 @@ async function loadProfile(handle: string) {
       { take: 10 },
       viewer,
     );
-    return { person, posts: posts.ok ? posts.page.items : [], signedIn: Boolean(viewer), gate: await communityGate(session), viewerHandle: session?.handle ?? null };
+    const community = await communityViewer(session);
+    return {
+      person,
+      posts: posts.ok ? posts.page.items : [],
+      signedIn: Boolean(viewer),
+      gate: community.gate,
+      viewerHandle: community.handle,
+    };
   } catch (error) {
     console.error("[u/[handle]]", error);
     return null;

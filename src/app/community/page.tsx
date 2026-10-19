@@ -4,7 +4,7 @@ import { HeartHandshake, PenLine } from "lucide-react";
 import { getSession } from "@/features/auth/adapter";
 import { CommunityBoard, type BoardQuery } from "@/features/community/CommunityBoard";
 import { FilterChips } from "@/features/community/FilterChips";
-import { communityGate } from "@/features/community/gate";
+import { communityViewer } from "@/features/community/gate";
 import { COMMUNITY_KINDS } from "@/features/community/domain/compose";
 import { COMMUNITY_DEFAULT_TAKE, listCommunity } from "@/server/api/community";
 import { listTopics } from "@/server/api/topics";
@@ -44,7 +44,7 @@ function href(query: BoardQuery, change: Partial<BoardQuery>): string {
 export default async function CommunityPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = readQuery(await searchParams);
   const session = await getSession();
-  const gate = await communityGate(session);
+  const { gate, handle: viewerHandle } = await communityViewer(session);
   const signedIn = gate !== "signedOut";
   const viewer = signedIn && session ? { id: session.id, role: session.role } : null;
   const prisma = getPrisma();
@@ -110,7 +110,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: Pr
 
       <div className="mt-6">
         {needsJoin ? (
-          <Empty title="Join the house" body="Sign in to see posts from the people you follow." action={{ href: joinHref(href(query, {})), label: "Sign in" }} />
+          <Empty title="Join the house" body={query.scope === "foryou" ? "Sign in to see posts on the topics you love." : "Sign in to see posts from the people you follow."} action={{ href: joinHref(href(query, {})), label: "Sign in" }} />
         ) : !result || !result.ok ? (
           <Empty title="The board is resting" body="We couldn't load the board just now. Try again in a moment." action={{ href: href(query, {}), label: "Try again" }} />
         ) : result.page.items.length === 0 ? (
@@ -130,7 +130,7 @@ export default async function CommunityPage({ searchParams }: { searchParams: Pr
             initialCursor={result.page.nextCursor}
             query={query}
             gate={gate}
-            viewerHandle={session?.handle ?? null}
+            viewerHandle={viewerHandle}
           />
         )}
       </div>

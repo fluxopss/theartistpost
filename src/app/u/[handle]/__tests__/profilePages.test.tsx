@@ -20,7 +20,7 @@ vi.mock("@/server/api/people", () => ({
   listFollowing: (...a: unknown[]) => listFollowing(...a),
 }));
 vi.mock("@/features/people/FollowButton", () => ({ FollowBar: () => null }));
-vi.mock("@/features/community/gate", () => ({ communityGate: async (s: unknown) => (s ? "ready" : "signedOut") }));
+vi.mock("@/features/community/gate", () => ({ communityViewer: async (s: unknown) => (s ? { gate: "ready", handle: "vera-db" } : { gate: "signedOut", handle: null }) }));
 vi.mock("@/features/community/CommunityCard", () => ({ CommunityCard: () => null }));
 
 import ProfilePage from "@/app/u/[handle]/page";
@@ -85,6 +85,7 @@ describe("/u/[handle] recent posts", () => {
     expect(el).toContain('"post":{"id":"p1"');
     expect(el).toContain('"gate":"ready"');
     expect(el).toContain('"href":"/community"');
+    expect(el).toContain('"viewerHandle":"vera-db"');
   });
 });
 

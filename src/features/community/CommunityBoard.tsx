@@ -70,6 +70,9 @@ export function CommunityBoard({
           here={`/community?${boardSearch(query)}`}
           viewerHandle={viewerHandle}
           onDeleted={() => setItems((current) => current.filter((p) => p.id !== post.id))}
+          onBlocked={(handle) =>
+            setItems((current) => current.filter((p) => p.author.handle.toLowerCase() !== handle.toLowerCase()))
+          }
         />
       ))}
       {error ? (

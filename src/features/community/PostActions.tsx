@@ -21,12 +21,15 @@ export function PostActions({
   here,
   isOwn = false,
   onDeleted,
+  onBlocked,
 }: {
   post: { id: string; canDelete: boolean; author: { handle: string } };
   gate: CommunityGate;
   here?: string;
   isOwn?: boolean;
   onDeleted?: () => void;
+  /** Lets a list drop every post by this author at once. */
+  onBlocked?: (handle: string) => void;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("closed");
@@ -38,11 +41,12 @@ export function PostActions({
   const panelId = useId();
 
   useEffect(() => {
-    if (mode !== "menu") return;
+    if (mode !== "menu" && !message) return;
     const close = (event: Event) => {
       if (event instanceof KeyboardEvent && event.key !== "Escape") return;
       if (event instanceof PointerEvent && rootRef.current?.contains(event.target as Node)) return;
-      setMode("closed");
+      if (mode === "menu") setMode("closed");
+      setMessage(null);
     };
     document.addEventListener("keydown", close);
     document.addEventListener("pointerdown", close);
@@ -50,7 +54,7 @@ export function PostActions({
       document.removeEventListener("keydown", close);
       document.removeEventListener("pointerdown", close);
     };
-  }, [mode]);
+  }, [mode, message]);
 
   async function run(action: () => Promise<{ ok: boolean; error?: { message: string } }>, done: string) {
     setBusy(true);
@@ -82,7 +86,9 @@ export function PostActions({
       () => webApi("/blocks", { method: "POST", json: { handle: post.author.handle } }),
       `You blocked @${post.author.handle}. You won't see each other's posts.`,
     );
-    if (ok) router.refresh();
+    if (!ok) return;
+    onBlocked?.(post.author.handle);
+    router.refresh();
   }
 
   async function remove() {
@@ -200,9 +206,12 @@ export function PostActions({
       ) : null}
 
       {message ? (
-        <p role="status" className={`absolute right-0 top-10 z-20 w-64 rounded-xl border border-line bg-ink-elevated p-3 text-xs shadow-lg ${message.tone === "ok" ? "text-paper" : "text-spark-coral"}`}>
-          {message.text}
-        </p>
+        <div role="status" className={`absolute right-0 top-10 z-20 flex w-64 items-start gap-2 rounded-xl border border-line bg-ink-elevated p-3 text-xs shadow-lg ${message.tone === "ok" ? "text-paper" : "text-spark-coral"}`}>
+          <p className="flex-1">{message.text}</p>
+          <button type="button" aria-label="Dismiss" onClick={() => setMessage(null)} className="text-paper-muted hover:text-paper">
+            ×
+          </button>
+        </div>
       ) : null}
     </div>
   );

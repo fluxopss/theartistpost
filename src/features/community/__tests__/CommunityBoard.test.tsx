@@ -52,4 +52,14 @@ describe("CommunityBoard", () => {
     await userEvent.click(screen.getByRole("button", { name: /yes, delete/i }));
     expect(screen.queryAllByRole("article")).toHaveLength(0);
   });
+
+  it("blocking someone removes all their posts from the board right away", async () => {
+    webApi.mockResolvedValue({ ok: true, data: { blocked: true } });
+    render(<CommunityBoard {...props} initialItems={[makePost({ id: "a1" }), makePost({ id: "a2" }), makePost({ id: "b1", author: { handle: "sam", name: "Sam", avatarUrl: null, isArtist: false } })]} />);
+    await userEvent.click(screen.getAllByRole("button", { name: /more for this post/i })[0]!);
+    await userEvent.click(screen.getByRole("menuitem", { name: /block @rae/i }));
+    await userEvent.click(screen.getByRole("button", { name: /yes, block/i }));
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(screen.getByText("Sam")).toBeInTheDocument();
+  });
 });

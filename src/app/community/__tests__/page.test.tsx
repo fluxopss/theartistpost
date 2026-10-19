@@ -11,7 +11,10 @@ vi.mock("@/server/api/community", async (orig) => ({
   ...(await orig<typeof import("@/server/api/community")>()),
   listCommunity: (...a: unknown[]) => listCommunity(...a),
 }));
-vi.mock("@/features/community/gate", () => ({ communityGate: (...a: unknown[]) => communityGate(...a) }));
+vi.mock("@/features/community/gate", () => ({
+  communityViewer: async (...a: unknown[]) => ({ gate: await communityGate(...a), handle: dbHandle }),
+}));
+let dbHandle: string | null = null;
 vi.mock("@/features/community/CommunityBoard", () => ({ CommunityBoard: () => null }));
 
 import CommunityPage, { dynamic, metadata } from "@/app/community/page";
@@ -32,8 +35,9 @@ describe("/community", () => {
   });
 
   it("reads the board as the signed-in viewer with the chosen filters", async () => {
-    getSession.mockResolvedValue({ id: "u1", role: "ARTIST", handle: "vera" });
+    getSession.mockResolvedValue({ id: "u1", role: "ARTIST", handle: undefined });
     communityGate.mockResolvedValue("ready");
+    dbHandle = "vera";
     listCommunity.mockResolvedValue({ ok: true, page: { items: [{ id: "p1" }], nextCursor: null } });
     const el = JSON.stringify(await run({ scope: "following", kind: "ASK", topic: "murals" }));
     expect(listCommunity).toHaveBeenCalledWith(

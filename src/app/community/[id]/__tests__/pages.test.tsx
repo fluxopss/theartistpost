@@ -15,7 +15,7 @@ vi.mock("@/server/api/community", async (orig) => ({
   getCommunityThread: (...a: unknown[]) => getCommunityThread(...a),
   listReactors: (...a: unknown[]) => listReactors(...a),
 }));
-vi.mock("@/features/community/gate", () => ({ communityGate: async () => "ready" }));
+vi.mock("@/features/community/gate", () => ({ communityViewer: async () => ({ gate: "ready", handle: "vera-db" }) }));
 vi.mock("@/features/community/ThreadView", () => ({ ThreadView: () => null }));
 
 import ThreadPage, { dynamic } from "@/app/community/[id]/page";
@@ -34,6 +34,7 @@ describe("/community/[id]", () => {
     const el = JSON.stringify(await ThreadPage({ params: params("p1") }));
     expect(getCommunityThread).toHaveBeenCalledWith(expect.anything(), "p1", { id: "u1", role: "VIEWER" });
     expect(el).toContain('"gate":"ready"');
+    expect(el).toContain('"viewerHandle":"vera-db"');
   });
 
   it("a gone post shows a calm message, not a crash", async () => {

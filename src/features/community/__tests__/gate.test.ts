@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const findUnique = vi.fn();
 vi.mock("@/shared/lib/prisma", () => ({ getPrisma: () => ({ user: { findUnique } }) }));
 
-import { communityGate } from "../gate";
+import { communityGate, communityViewer } from "../gate";
 
 const session = { id: "u1", name: "Rae", email: "Rae@Example.com", role: "VIEWER" as const };
 beforeEach(() => findUnique.mockReset());
@@ -31,5 +31,11 @@ describe("communityGate", () => {
   it("treats a cookie whose account is gone as signed out", async () => {
     findUnique.mockResolvedValue(null);
     await expect(communityGate(session)).resolves.toBe("signedOut");
+  });
+
+  it("communityViewer returns the database handle, not the cookie's", async () => {
+    findUnique.mockResolvedValue({ id: "u1", handle: "rae-from-app", termsAcceptedAt: new Date(), suspendedAt: null });
+    await expect(communityViewer({ ...session, handle: undefined })).resolves.toEqual({ gate: "ready", handle: "rae-from-app" });
+    await expect(communityViewer(null)).resolves.toEqual({ gate: "signedOut", handle: null });
   });
 });

@@ -66,4 +66,16 @@ describe("PostActions", () => {
     await open();
     expect(screen.getByRole("menuitem", { name: /sign in to report or block/i })).toHaveAttribute("href", "/join?door=return&next=%2Fcommunity%2Fp1");
   });
+
+  it("the confirmation note can be dismissed and does not stay over the post", async () => {
+    webApi.mockResolvedValue({ ok: true, data: { id: "r1" } });
+    render(<PostActions post={makePost()} gate="ready" />);
+    await open();
+    await userEvent.click(screen.getByRole("menuitem", { name: /report/i }));
+    await userEvent.click(screen.getByRole("radio", { name: "Spam or scams" }));
+    await userEvent.click(screen.getByRole("button", { name: /send report/i }));
+    expect(await screen.findByText(/reviews reports within 24 hours/i)).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByText(/reviews reports within 24 hours/i)).toBeNull();
+  });
 });

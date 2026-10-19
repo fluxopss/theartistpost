@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession } from "@/features/auth/adapter";
-import { communityGate } from "@/features/community/gate";
+import { communityViewer } from "@/features/community/gate";
 import { ThreadView } from "@/features/community/ThreadView";
 import { getCommunityThread } from "@/server/api/community";
 import { getPrisma } from "@/shared/lib/prisma";
@@ -15,7 +15,7 @@ const ID = /^[A-Za-z0-9_-]{1,64}$/;
 export default async function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
-  const gate = await communityGate(session);
+  const { gate, handle: viewerHandle } = await communityViewer(session);
   const viewer = gate !== "signedOut" && session ? { id: session.id, role: session.role } : null;
   const prisma = getPrisma();
   const result = prisma && ID.test(id) ? await getCommunityThread(prisma, id, viewer) : null;
@@ -27,7 +27,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       </Link>
       <div className="mt-6">
         {result && result.ok ? (
-          <ThreadView post={result.post} replies={result.replies} gate={gate} viewerHandle={session?.handle ?? null} />
+          <ThreadView post={result.post} replies={result.replies} gate={gate} viewerHandle={viewerHandle} />
         ) : (
           <div className="rounded-2xl border border-dashed border-line px-6 py-10 text-center">
             <h1 className="display text-2xl text-paper">That post is gone</h1>

@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/shared/ui/Button";
 import { useToast } from "@/design-system/primitives/Toast";
 import { useSession } from "@/features/auth/AuthProvider";
+import { DeleteAccountForm } from "@/features/account/DeleteAccountForm";
 import {
   applyMotionPreference,
   clearLocalAppData,
@@ -73,6 +74,22 @@ export function SettingsPanel() {
                 : ""}
             </p>
             <p className="text-xs text-paper-muted">{user.email}</p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/settings/profile"
+                className="inline-flex h-10 items-center rounded-full border border-spark-teal px-4 text-sm font-medium text-spark-teal transition hover:bg-accent-soft"
+              >
+                Edit your profile
+              </Link>
+              {user.handle ? (
+                <Link
+                  href={`/u/${encodeURIComponent(user.handle)}`}
+                  className="inline-flex h-10 items-center rounded-full border border-line px-4 text-sm font-medium text-paper transition hover:border-spark-teal"
+                >
+                  View your profile
+                </Link>
+              ) : null}
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -193,20 +210,17 @@ export function SettingsPanel() {
 
       <section className="space-y-3">
         <h2 className="display text-2xl text-paper">Account deletion</h2>
-        <p className="text-sm text-paper-muted">
-          To remove a member or pending artist account and its data, email{" "}
-          <a
-            href="mailto:Robbie@theartistpost.org?subject=Delete%20my%20Artist%20Post%20account"
-            className="text-spark-teal underline-offset-2 hover:underline"
-          >
-            Robbie@theartistpost.org
-          </a>
-          . In-app deletion lands with the next auth pass.{" "}
-          <Link href="/join" className="text-spark-teal underline-offset-2 hover:underline">
-            Join doors
-          </Link>
-          .
-        </p>
+        {isAuthenticated && user ? (
+          <DeleteAccountForm />
+        ) : (
+          <p className="text-sm text-paper-muted">
+            Sign in to delete your account yourself, or see{" "}
+            <Link href="/delete-account" className="text-spark-teal underline-offset-2 hover:underline">
+              how account deletion works
+            </Link>
+            .
+          </p>
+        )}
       </section>
     </div>
   );

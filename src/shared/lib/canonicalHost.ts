@@ -22,7 +22,7 @@ export type CanonicalEnv = {
   legacyHosts?: string;
 };
 
-function normalizeHost(raw: string | null | undefined): string {
+export function normalizeHost(raw: string | null | undefined): string {
   return (raw ?? "").trim().toLowerCase().replace(/:\d+$/, "").replace(/\.$/, "");
 }
 

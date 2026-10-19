@@ -45,8 +45,11 @@ function returnSuccessCopy(user: SessionUser, pendingApproval?: boolean) {
 
 export function JoinExperience({
   initialDoor,
+  nextPath = null,
 }: {
   initialDoor?: InitialDoor | null;
+  /** Same-site path to return to after sign-in (already passed safeNextPath). */
+  nextPath?: string | null;
 }) {
   const router = useRouter();
   const { user } = useSession();
@@ -160,6 +163,7 @@ export function JoinExperience({
       setReturnUser(result.user);
       setReturnPendingApproval(Boolean(result.pendingApproval));
       setDoor("returnDone");
+      if (nextPath) router.replace(nextPath);
       router.refresh();
     });
   }
@@ -688,6 +692,11 @@ export function JoinExperience({
               or support the mission.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              {nextPath ? (
+                <ButtonLink href={nextPath} className="rounded-full">
+                  Continue where you were
+                </ButtonLink>
+              ) : null}
               <ButtonLink href="/explore" className="rounded-full">
                 Open the Wall
               </ButtonLink>
@@ -728,6 +737,11 @@ export function JoinExperience({
               browser tab. Publishing unlocks only after Robbie approves you.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              {nextPath ? (
+                <ButtonLink href={nextPath} className="rounded-full">
+                  Continue where you were
+                </ButtonLink>
+              ) : null}
               <ButtonLink
                 href="/install"
                 className="rounded-full !bg-spark-coral !text-[#020b1a]"

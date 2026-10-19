@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ButtonLink } from "@/shared/ui/Button";
 import { cn } from "@/shared/lib/cn";
 import { TrackClick } from "@/components/TrackClick";
+import { AccountDrawerSection, AccountMenu } from "@/features/account/AccountMenu";
 
 export function NavBar() {
   const pathname = usePathname();
@@ -86,6 +87,7 @@ export function NavBar() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <AccountMenu className="hidden sm:block" />
             <ThemeToggle className="hidden sm:inline-flex" />
             <TrackClick event="cta_donate" payload={{ source: "nav" }}>
             <ButtonLink
@@ -136,7 +138,8 @@ export function NavBar() {
               </button>
             </div>
           </div>
-          <p className="px-4 pt-2 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-spark-gold">
+          <AccountDrawerSection onNavigate={() => setOpen(false)} />
+          <p className="px-4 pt-4 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-spark-gold">
             Pick a room
           </p>
           <nav className="tap-nav-board" aria-label="Mobile">

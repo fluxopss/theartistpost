@@ -25,17 +25,16 @@ import {
 import { absoluteUrl } from "@/server/api/urls";
 import { zodFieldErrors } from "@/server/api/validation";
 
-export const BIO_MAX = 480;
-export const HEADLINE_MAX = 80;
-export const LOCATION_MAX = 60;
-export const TOPICS_MAX = 8;
+import { BIO_MAX, HEADLINE_MAX, LOCATION_MAX, NAME_MAX, NAME_MIN, TOPICS_MAX } from "@/shared/lib/limits";
+
+export { BIO_MAX, HEADLINE_MAX, LOCATION_MAX, TOPICS_MAX };
 
 const emptyToNull = (value: string | null) =>
   value === null || value === "" ? null : value;
 
 export const mePatchSchema = z
   .object({
-    name: z.string().trim().min(2).max(80).optional(),
+    name: z.string().trim().min(NAME_MIN).max(NAME_MAX).optional(),
     handle: handleSchema.optional(),
     bio: z.string().trim().max(BIO_MAX).nullable().optional().transform((v) =>
       v === undefined ? undefined : emptyToNull(v),

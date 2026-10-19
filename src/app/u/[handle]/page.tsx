@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { site } from "@/content/site";
 import { LegalLayout } from "@/features/app/LegalLayout";
+import { getSession } from "@/features/auth/adapter";
+import { FollowBar } from "@/features/people/FollowButton";
 import { isPlausibleHandle } from "@/server/api/posts";
 import { getPerson, listPersonCommunity } from "@/server/api/people";
 import { getPrisma } from "@/shared/lib/prisma";
@@ -15,15 +17,17 @@ async function loadProfile(handle: string) {
   const prisma = getPrisma();
   if (!prisma) return null;
   try {
-    const person = await getPerson(prisma, handle, null);
+    const session = await getSession();
+    const viewer = session ? { id: session.id, role: session.role } : null;
+    const person = await getPerson(prisma, handle, viewer?.id ?? null);
     if (!person) return null;
     const posts = await listPersonCommunity(
       prisma,
       handle,
       { take: 10 },
-      null,
+      viewer,
     );
-    return { person, posts: posts.ok ? posts.page.items : [] };
+    return { person, posts: posts.ok ? posts.page.items : [], signedIn: Boolean(viewer) };
   } catch (error) {
     console.error("[u/[handle]]", error);
     return null;
@@ -57,7 +61,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const { handle } = await params;
   const profile = await loadProfile(handle);
   if (!profile) notFound();
-  const { person, posts } = profile;
+  const { person, posts, signedIn } = profile;
 
   return (
     <LegalLayout kicker={person.isArtist ? "Artist" : "Member"} title={person.name}>
@@ -102,11 +106,16 @@ export default async function PublicProfilePage({ params }: Props) {
         </ul>
       ) : null}
 
-      <p>
-        <strong>{person.followerCount}</strong> followers ·{" "}
-        <strong>{person.followingCount}</strong> following ·{" "}
-        <strong>{person.communityPostCount}</strong> posts
-      </p>
+      <FollowBar
+        handle={person.handle}
+        initialFollowing={person.viewerFollows}
+        initialFollowerCount={person.followerCount}
+        followingCount={person.followingCount}
+        postCount={person.communityPostCount}
+        signedIn={signedIn}
+        isSelf={person.isSelf}
+        followsViewer={person.followsViewer}
+      />
 
       {person.artist?.approved ? (
         <p>
@@ -130,10 +139,12 @@ export default async function PublicProfilePage({ params }: Props) {
         </ul>
       )}
 
-      <p>
-        Open {site.name} in the app to follow {person.name} and join the
-        conversation.
-      </p>
+      {signedIn ? null : (
+        <p>
+          Sign in to follow {person.name}, or open {site.name} in the app to
+          join the conversation.
+        </p>
+      )}
     </LegalLayout>
   );
 }

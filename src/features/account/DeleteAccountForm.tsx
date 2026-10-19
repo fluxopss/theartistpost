@@ -28,6 +28,8 @@ export function DeleteAccountForm() {
         setError(result.error.message);
         return;
       }
+      // Full reload on purpose: the account is gone, drop every bit of client state.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign("/?deleted=1");
     });
   }

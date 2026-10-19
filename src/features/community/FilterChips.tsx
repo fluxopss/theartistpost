@@ -14,7 +14,7 @@ export function FilterChips({
   hrefFor: (id: string) => string;
 }) {
   return (
-    <nav aria-label={label} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+    <nav aria-label={label} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
       {options.map((option) => {
         const active = option.id === value;
         return (

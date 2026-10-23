@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { assets, copy } from "@/content/site";
 import { content } from "@/lib/content";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -30,6 +31,7 @@ export default async function ArtistSchedulePage() {
           {copy.schedule.showcaseTitle}
         </h2>
         <ScheduleView events={events} />
+        <AdSlot placement="schedule-end" />
       </PageShell>
     </>
   );

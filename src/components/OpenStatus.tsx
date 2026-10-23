@@ -26,7 +26,9 @@ export function OpenStatus({ className }: { className?: string }) {
       <span className="font-medium text-paper">
         {ready ? label : "Checking hours…"}
       </span>
-      <span className="text-paper-muted">· {hoursLabel}</span>
+      {hoursLabel ? (
+        <span className="text-paper-muted">· {hoursLabel}</span>
+      ) : null}
     </div>
   );
 }

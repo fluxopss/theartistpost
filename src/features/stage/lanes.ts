@@ -1,21 +1,26 @@
 import type { WallFilters, WallPiece } from "@/features/wall/types";
-import { tapGenres, type TapGenre } from "@/content/stage";
+import { houseGenres, type HouseGenre } from "@/content/stage";
 
 /** Wall mediums a TAP genre can honestly open. Shared lanes are called out in the line. */
 type LaneMedium = Exclude<WallFilters["medium"], "all">;
 
-export type TapLane = TapGenre & {
+export type TapLane = HouseGenre & {
   medium: LaneMedium;
   wallLine: string;
 };
 
 const laneFacts: Record<
-  TapGenre["id"],
+  HouseGenre["id"],
   { medium: LaneMedium; wallLine: string }
 > = {
   music: {
     medium: "music",
     wallLine: "Musicians. The music frames are lit.",
+  },
+  culinary: {
+    medium: "culinary",
+    wallLine:
+      "Chefs, bakers, food trucks and food makers. The culinary frame is lit.",
   },
   photo: {
     medium: "visual",
@@ -47,18 +52,18 @@ const laneFacts: Record<
 
 export function tapLane(id: string | null | undefined): TapLane | null {
   if (!id) return null;
-  const genre = tapGenres.find((item) => item.id === id);
+  const genre = houseGenres.find((item) => item.id === id);
   const facts = genre ? laneFacts[genre.id] : undefined;
   if (!genre || !facts) return null;
   return { ...genre, ...facts };
 }
 
-export function laneHref(id: TapGenre["id"]): string {
+export function laneHref(id: HouseGenre["id"]): string {
   return `/explore?lane=${id}`;
 }
 
 export function allLanes(): TapLane[] {
-  return tapGenres.map((genre) => {
+  return houseGenres.map((genre) => {
     const lane = tapLane(genre.id);
     if (!lane) throw new Error(`Missing lane for ${genre.id}`);
     return lane;

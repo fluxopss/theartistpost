@@ -16,7 +16,7 @@ import {
   RETURNING_SUCCESS_COPY,
 } from "@/features/auth/returningSignIn";
 import type { SessionUser } from "@/features/auth/types";
-import { tapGenres } from "@/content/stage";
+import { houseGenres } from "@/content/stage";
 import { links } from "@/content/site";
 import { Button, ButtonLink } from "@/shared/ui/Button";
 
@@ -31,7 +31,7 @@ type Door =
 
 type InitialDoor = "member" | "artist" | "return";
 
-const MEDIUMS = tapGenres.map((g) => g.label);
+const MEDIUMS = houseGenres.map((g) => g.label);
 
 function returnSuccessCopy(user: SessionUser, pendingApproval?: boolean) {
   if (user.role === "ADMIN") return RETURNING_SUCCESS_COPY.admin;

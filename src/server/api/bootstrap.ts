@@ -23,10 +23,14 @@ export type BootstrapPayload = {
     mapsUrl: string;
   };
   hours: {
+    /** Legacy single window (installed app builds). New clients read `weekly`. */
     openMinutes: number;
     closeMinutes: number;
     label: string;
     timeZone: string;
+    /** 0 = Sunday. closeMinutes may be 1440 (midnight) or more (past midnight). */
+    weekly: Array<{ day: number; openMinutes: number; closeMinutes: number }>;
+    note: string;
   };
   social: Array<{ id: SocialNetwork; label: string; url: string }>;
   donate: {
@@ -90,6 +94,12 @@ export async function buildBootstrap(): Promise<Bootstrap> {
       closeMinutes: hours.closeMinutes,
       label: hours.label,
       timeZone: hours.timeZone,
+      weekly: hours.weekly.map((d) => ({
+        day: d.day,
+        openMinutes: d.openMinutes,
+        closeMinutes: d.closeMinutes,
+      })),
+      note: hours.note,
     },
     social: (Object.keys(links.social) as SocialNetwork[]).map((id) => ({
       id,

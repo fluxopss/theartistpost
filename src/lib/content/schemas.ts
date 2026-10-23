@@ -5,6 +5,7 @@ export const artistMediumSchema = z.enum([
   "theater",
   "visual",
   "dance",
+  "culinary",
   "literary",
   "multidisciplinary",
 ]);

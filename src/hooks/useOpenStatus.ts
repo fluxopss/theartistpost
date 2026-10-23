@@ -1,36 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { hours } from "@/content/site";
+import { houseSchedule } from "@/content/site";
+import { isOpenAt, todayLabel } from "@/lib/hours";
 
-const TZ = hours.timeZone;
-const OPEN_MINUTES = hours.openMinutes;
-const CLOSE_MINUTES = hours.closeMinutes;
-
-function minutesInTz(date: Date): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    hour: "numeric",
-    minute: "numeric",
-    hour12: false,
-  }).formatToParts(date);
-  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
-  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
-  return hour * 60 + minute;
-}
-
+/** Is Hacienda open right now (Eastern time), per the weekly schedule in site.ts. */
 export function isOpenNow(date = new Date()): boolean {
-  const m = minutesInTz(date);
-  return m >= OPEN_MINUTES && m < CLOSE_MINUTES;
+  return isOpenAt(houseSchedule, date);
 }
 
 export function useOpenStatus() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [today, setToday] = useState("");
 
   useEffect(() => {
     const tick = () => {
-      setOpen(isOpenNow());
+      const now = new Date();
+      setOpen(isOpenNow(now));
+      setToday(todayLabel(houseSchedule, now));
       setReady(true);
     };
     tick();
@@ -42,6 +30,7 @@ export function useOpenStatus() {
     open,
     ready,
     label: open ? "Open now" : "Closed",
-    hoursLabel: "09:00 am – 09:30 pm",
+    /** Today's window once mounted (client clock), e.g. "11 AM – Midnight". */
+    hoursLabel: ready ? `Today ${today}` : "",
   };
 }

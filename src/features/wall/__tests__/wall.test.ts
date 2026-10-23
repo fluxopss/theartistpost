@@ -81,6 +81,31 @@ describe("filterWallPieces", () => {
     expect(visual.length).toBeGreaterThan(0);
   });
 
+  it("hangs a lit, empty culinary frame until a culinary artist is approved", () => {
+    const culinary = filterWallPieces(pieces, {
+      ...DEFAULT_WALL_FILTERS,
+      medium: "culinary",
+    });
+    expect(culinary.map((p) => p.id)).toContain("reserved-culinary");
+    const frame = culinary.find((p) => p.id === "reserved-culinary");
+    expect(frame?.subtitle).toBe("Culinary · frame reserved");
+    expect(frame?.image).toBeUndefined();
+  });
+
+  it("keeps every wall piece inside the canvas without overlapping the culinary frame", () => {
+    const frame = pieces.find((p) => p.id === "reserved-culinary")!;
+    const overlaps = pieces.filter(
+      (p) =>
+        p.id !== frame.id &&
+        p.kind !== "kindness" &&
+        p.x < frame.x + frame.w &&
+        frame.x < p.x + p.w &&
+        p.y < frame.y + frame.h &&
+        frame.y < p.y + p.h,
+    );
+    expect(overlaps.map((p) => p.id)).toEqual([]);
+  });
+
   it("filters by neighborhood and availability", () => {
     const open = filterWallPieces(pieces, {
       ...DEFAULT_WALL_FILTERS,

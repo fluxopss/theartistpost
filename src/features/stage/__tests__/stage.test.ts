@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tapGenres, tapMedia, tapOrigin } from "@/content/stage";
+import { houseGenres, tapGenres, tapMedia, tapOrigin } from "@/content/stage";
 import { allLanes, focusPan, laneHref, tapLane } from "@/features/stage/lanes";
 
 describe("original TAP stage", () => {
@@ -22,9 +22,28 @@ describe("original TAP stage", () => {
     expect(tapOrigin.line).toMatch(/photographs, video, and sound/i);
   });
 
-  it("opens a real wall lane for every 2016 genre", () => {
+  it("adds Culinary Arts as a primary lane without rewriting 2016 history", () => {
+    expect(tapGenres.map((genre) => genre.id as string)).not.toContain("culinary");
+    expect(houseGenres.map((genre) => genre.id)).toEqual([
+      "music",
+      "culinary",
+      "photo",
+      "dance",
+      "film",
+      "stage",
+      "laugh",
+      "frame",
+    ]);
+    expect(tapLane("culinary")).toMatchObject({
+      label: "Culinary Artists",
+      medium: "culinary",
+    });
+    expect(laneHref("culinary")).toBe("/explore?lane=culinary");
+  });
+
+  it("opens a real wall lane for every house genre", () => {
     expect(allLanes().map((lane) => lane.id)).toEqual(
-      tapGenres.map((genre) => genre.id),
+      houseGenres.map((genre) => genre.id),
     );
     expect(tapLane("music")?.medium).toBe("music");
     expect(tapLane("dance")?.medium).toBe("dance");

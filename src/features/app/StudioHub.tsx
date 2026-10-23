@@ -15,7 +15,7 @@ import {
   Bookmark,
   DoorOpen,
 } from "lucide-react";
-import { appCopy, assets, moreMenu, site } from "@/content/site";
+import { appCopy, assets, hours, moreMenu, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { getSaves, getStudio } from "@/features/app/storage";
 import { useSession } from "@/features/auth/AuthProvider";
@@ -129,7 +129,7 @@ export function StudioHub() {
         </p>
         <h2 className="display mt-2 text-2xl text-paper">Hacienda on Clematis</h2>
         <p className="mt-2 text-sm text-paper-muted">{site.address.full}</p>
-        <p className="mt-1 text-sm text-paper-muted">Today {site.hoursToday}</p>
+        <p className="mt-1 text-sm text-paper-muted">{hours.label}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <ButtonLink
             href={`tel:${site.phoneTel}`}

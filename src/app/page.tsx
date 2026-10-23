@@ -7,6 +7,7 @@ import { MantraStrip } from "@/features/involve/MantraStrip";
 import { OpeningDoor } from "@/features/night/OpeningDoor";
 import { featuredNight } from "@/features/night/program";
 import { content } from "@/lib/content";
+import { AdSlot } from "@/components/ads/AdSlot";
 
 export default async function HomePage() {
   const [artists, events] = await Promise.all([
@@ -23,6 +24,7 @@ export default async function HomePage() {
       <HistoryTeaser />
       <HomeKindnessDeferred />
       <FeaturedArtistsSection artists={artists} />
+      <AdSlot placement="home-lower" />
       <HomeLowerDeferred />
     </>
   );

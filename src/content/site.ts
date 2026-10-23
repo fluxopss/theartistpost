@@ -3,6 +3,8 @@
  * Keep marketing copy here — not a CMS in v1.
  */
 
+import { weeklyLabel, type DayHours, type WeeklyHours } from "@/lib/hours";
+
 export const site = {
   name: "The Artist Post",
   mark: "The Artist Post®",
@@ -34,20 +36,49 @@ export const site = {
   },
   mapsUrl:
     "https://www.google.com/maps/search/?api=1&query=522+Clematis+Street+West+Palm+Beach+FL",
-  hoursToday: "09:00 am – 09:30 pm",
   copyright: "Copyright © 2026 The Artist Post Inc - All Rights Reserved.",
   founded: "2014",
   foundedMonth: "2014-12",
   founder: "Robbie Alvarez",
 } as const;
 
-/** Daily open hours at Hacienda, in the venue's time zone. */
-export const hours = {
-  openMinutes: 9 * 60, // 09:00
-  closeMinutes: 21 * 60 + 30, // 21:30
-  label: "9:00 AM – 9:30 PM",
+/**
+ * Official Hacienda hours, supplied by Hacienda management through Robbie
+ * (Oct 2026): 11 AM – 11 PM Sunday to Thursday, 11 AM – midnight Friday and
+ * Saturday. These are the required hours; artists may stay open later.
+ * Change them here only — every surface reads this one schedule.
+ */
+const HOUSE_WEEKLY = [
+  { day: 0, openMinutes: 11 * 60, closeMinutes: 23 * 60 }, // Sun
+  { day: 1, openMinutes: 11 * 60, closeMinutes: 23 * 60 }, // Mon
+  { day: 2, openMinutes: 11 * 60, closeMinutes: 23 * 60 }, // Tue
+  { day: 3, openMinutes: 11 * 60, closeMinutes: 23 * 60 }, // Wed
+  { day: 4, openMinutes: 11 * 60, closeMinutes: 23 * 60 }, // Thu
+  { day: 5, openMinutes: 11 * 60, closeMinutes: 24 * 60 }, // Fri, to midnight
+  { day: 6, openMinutes: 11 * 60, closeMinutes: 24 * 60 }, // Sat, to midnight
+] as const satisfies readonly DayHours[];
+
+const HOUSE_SCHEDULE: WeeklyHours = {
   timeZone: "America/New_York",
+  weekly: HOUSE_WEEKLY,
+};
+
+export const hours = {
+  timeZone: HOUSE_SCHEDULE.timeZone,
+  weekly: HOUSE_WEEKLY,
+  /** "Sun–Thu 11 AM – 11 PM · Fri–Sat 11 AM – Midnight" */
+  label: weeklyLabel(HOUSE_SCHEDULE),
+  /** Artists may keep their spot open past the posted close. */
+  note: "Artists are welcome to stay open later.",
+  /**
+   * Single-window fields kept for app builds already installed (bootstrap v1
+   * contract): the window every day shares. New clients read `weekly`.
+   */
+  openMinutes: 11 * 60,
+  closeMinutes: 23 * 60,
 } as const;
+
+export const houseSchedule = HOUSE_SCHEDULE;
 
 export const links = {
   /** Hosted PayPal Donate button — one-time; monthly when enabled on the nonprofit account. */

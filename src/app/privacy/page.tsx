@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalLayout kicker="Legal" title="Privacy Policy">
-      <p>Last updated August 28, 2026.</p>
+      <p>Last updated October 22, 2026.</p>
       <p>
         {site.legalName} ({site.nonprofitLine} EIN {site.ein}) operates The
         Artist Post at {site.address.full}. Contact{" "}
@@ -41,6 +41,25 @@ export default function PrivacyPage() {
           record anonymous product events such as Donate or Get Involved taps.
         </li>
       </ul>
+
+      <h2>Advertising</h2>
+      <p>
+        To help keep showcase and vending opportunities free for artists, this
+        site may show ads from Google. When it does, Google and its partners may
+        use cookies to serve ads based on your visits to this and other sites.
+        You can turn off personalized ads in{" "}
+        <a href="https://adssettings.google.com" rel="noreferrer">
+          Google Ads Settings
+        </a>{" "}
+        and read how Google uses this information at{" "}
+        <a
+          href="https://policies.google.com/technologies/partner-sites"
+          rel="noreferrer"
+        >
+          policies.google.com
+        </a>
+        . Ads never change what is free: artists are never charged to take part.
+      </p>
 
       <h2>What we do not do</h2>
       <p>

@@ -29,7 +29,7 @@ function Rail({
       {variant === "stage" ? (
         <p className="genre-stage__kicker">{tapOrigin.kicker}</p>
       ) : null}
-      <ul className="genre-rail" aria-label="Genres on the original TAP stage">
+      <ul className="genre-rail" aria-label="TAP lanes">
         {lanes.map((genre) => {
           const current = activeId === genre.id;
           return (

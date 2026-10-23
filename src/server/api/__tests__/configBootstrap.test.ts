@@ -44,12 +44,16 @@ describe("GET /api/v1/content/bootstrap", () => {
 
     expect(data.contentVersion).toMatch(/^[0-9a-f]{12}$/);
     expect(data.contact.email).toBe("Robbie@theartistpost.org");
-    expect(data.hours).toEqual({
-      openMinutes: 540,
-      closeMinutes: 1290,
-      label: "9:00 AM – 9:30 PM",
+    // Legacy single window stays for installed app builds; `weekly` is the truth.
+    expect(data.hours).toMatchObject({
+      openMinutes: 660,
+      closeMinutes: 1380,
+      label: "Sun–Thu 11 AM – 11 PM · Fri–Sat 11 AM – Midnight",
       timeZone: "America/New_York",
     });
+    expect(data.hours.weekly).toHaveLength(7);
+    expect(data.hours.weekly[5]).toEqual({ day: 5, openMinutes: 660, closeMinutes: 1440 });
+    expect(data.hours.weekly[0]).toEqual({ day: 0, openMinutes: 660, closeMinutes: 1380 });
     expect(data.social.map((s: { id: string }) => s.id)).toContain("instagram");
     expect(data.donate.venmo).toBe("@theartistpost");
     expect(Array.isArray(data.chapters)).toBe(true);

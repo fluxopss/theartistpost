@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { links, site } from "@/content/site";
+import { hours, links, site } from "@/content/site";
 import { LegalLayout } from "@/features/app/LegalLayout";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function SupportPage() {
     <LegalLayout kicker="Help" title="Support">
       <p>
         Robbie reads the inbox. Better yet, see us in person at Hacienda during
-        posted hours ({site.hoursToday}).
+        posted hours ({hours.label}). {hours.note}
       </p>
       <ul>
         <li>

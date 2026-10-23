@@ -28,6 +28,7 @@ export const ARTIST_MEDIUM_OPTIONS: {
   { value: "theater", label: "Theater" },
   { value: "visual", label: "Visual" },
   { value: "dance", label: "Dance" },
+  { value: "culinary", label: "Culinary" },
   { value: "literary", label: "Literary" },
   { value: "multidisciplinary", label: "Multi" },
 ];

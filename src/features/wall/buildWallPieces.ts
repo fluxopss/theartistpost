@@ -20,6 +20,7 @@ const RESERVED_SLOTS: Array<{
   { id: "reserved-multi", medium: "multidisciplinary", x: 2320, y: 1100, w: 280, h: 380, rotate: -1.1 },
   { id: "reserved-dance", medium: "dance", x: 1080, y: 1380, w: 240, h: 260, rotate: 2.2 },
   { id: "reserved-literary", medium: "literary", x: 1480, y: 1400, w: 240, h: 250, rotate: -1.6 },
+  { id: "reserved-culinary", medium: "culinary", x: 2300, y: 660, w: 260, h: 340, rotate: 1.2 },
 ];
 
 const ARTIST_SLOTS = [
@@ -39,6 +40,8 @@ function mediumLabel(medium: ArtistMedium | "community" | "kindness"): string {
       return "Visual";
     case "dance":
       return "Dance";
+    case "culinary":
+      return "Culinary";
     case "literary":
       return "Literary";
     case "multidisciplinary":
@@ -68,6 +71,7 @@ function eventMedium(
     case "theater":
     case "visual":
     case "dance":
+    case "culinary":
     case "literary":
     case "multidisciplinary":
       return medium;

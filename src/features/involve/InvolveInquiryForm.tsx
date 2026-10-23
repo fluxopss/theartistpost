@@ -8,7 +8,7 @@ import { parseInvolveInquiry } from "@/features/involve/validation";
 import { Button } from "@/shared/ui/Button";
 import { trackEvent } from "@/lib/analytics";
 
-const MEDIA = ["music", "visual", "theater", "multidisciplinary", "other"] as const;
+const MEDIA = ["music", "culinary", "visual", "theater", "multidisciplinary", "other"] as const;
 
 export function InvolveInquiryForm({ intent }: { intent: InvolveIntent }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");

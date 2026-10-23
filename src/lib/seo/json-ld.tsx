@@ -1,4 +1,5 @@
-import { assets, links, site } from "@/content/site";
+import { assets, houseSchedule, links, site } from "@/content/site";
+import { openingHoursSpecification } from "@/lib/hours";
 import { SITE_URL } from "@/shared/lib/constants";
 import type { ContentEvent } from "@/lib/content";
 
@@ -34,6 +35,18 @@ export function organizationJsonLd() {
       addressLocality: site.address.city,
       addressRegion: site.address.state,
       addressCountry: site.address.country,
+    },
+    location: {
+      "@type": "Place",
+      name: "The Artist Post at Hacienda",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: site.address.line1,
+        addressLocality: site.address.city,
+        addressRegion: site.address.state,
+        addressCountry: site.address.country,
+      },
+      openingHoursSpecification: openingHoursSpecification(houseSchedule),
     },
     sameAs: Object.values(links.social),
     slogan: site.tagline,

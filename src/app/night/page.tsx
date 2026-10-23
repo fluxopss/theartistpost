@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { assets, copy, site } from "@/content/site";
+import { assets, copy, hours, site } from "@/content/site";
 import { content } from "@/lib/content";
 import { NightRoom } from "@/features/night/NightRoom";
 import { GenreRail } from "@/features/stage/GenreRail";
@@ -46,7 +46,7 @@ export default async function NightPage() {
         </p>
         <GenreRail />
         <p className="text-sm text-paper">
-          {site.address.full} · {site.hoursToday}
+          {site.address.full} · {hours.label}
         </p>
         <div className="flex flex-wrap gap-3">
           <ButtonLink href="/get-involved" className="rounded-full">

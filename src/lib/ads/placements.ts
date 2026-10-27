@@ -86,7 +86,9 @@ const SLOT_ID = /^\d{6,20}$/;
 /**
  * Approved spots → AdSense ad-unit slot IDs, from
  * ADSENSE_SLOTS="history-end:1234567890,about-end:2345678901".
- * Unknown spots, malformed IDs and spots on ad-free pages are dropped.
+ * Unknown spots and malformed IDs are dropped. The ad-free rule is enforced
+ * where it can actually fail, at render time on the real route: <AdSlot>
+ * renders nothing on an ad-free page (components/ads/AdRouteGuard).
  */
 export function approvedSlots(env: Env = process.env): Map<AdPlacementId, string> {
   const out = new Map<AdPlacementId, string>();
@@ -96,7 +98,6 @@ export function approvedSlots(env: Env = process.env): Map<AdPlacementId, string
     const [id, slot] = pair.split(":").map((s) => s?.trim());
     const placement = AD_PLACEMENTS.find((p) => p.id === id);
     if (!placement || !slot || !SLOT_ID.test(slot)) continue;
-    if (isAdFreePath(placement.path)) continue;
     out.set(placement.id, slot);
   }
   return out;

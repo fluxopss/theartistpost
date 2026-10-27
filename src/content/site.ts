@@ -401,7 +401,15 @@ export const copy = {
     supportLine: "Come support our scheduled local artisans.",
     showcaseTitle: "Artisan Showcase",
     venue: "Hacienda",
-    status: "Artist Schedule Coming Soon!",
+    status: "Nights at Hacienda, booked with local artists.",
+    emptyTitle: "The next nights are being booked.",
+    emptyBody:
+      "Follow along or get involved. New nights land here as soon as they are on the calendar.",
+    emptyInvolve: "Get involved",
+    emptyCommunity: "Join the community",
+    cancelledLabel: "Cancelled",
+    cancelledNote:
+      "This night has been cancelled. We are sorry to miss you — the next nights are on the schedule.",
     ready: "Ready to take the FIRST step?",
     step1: "STEP 1: Review & Sign The Agreement To Get Started!",
     step1Cta: "Get Started",

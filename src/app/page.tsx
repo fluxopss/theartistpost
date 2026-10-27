@@ -7,11 +7,15 @@ import { MantraStrip } from "@/features/involve/MantraStrip";
 import { OpeningDoor } from "@/features/night/OpeningDoor";
 import { featuredNight } from "@/features/night/program";
 import { content } from "@/lib/content";
+import { listUpcomingSiteEvents } from "@/server/api/siteEvents";
+
+/** The next night comes from the database (Manage events), so read it per request. */
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [artists, events] = await Promise.all([
     content.getArtists(),
-    content.getEvents(),
+    listUpcomingSiteEvents(),
   ]);
   const night = featuredNight(events);
 

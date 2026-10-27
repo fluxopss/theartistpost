@@ -231,6 +231,11 @@ function VolunteerWorld() {
 function EventsWorld({ events }: { events: ContentEvent[] }) {
   return (
     <div className="mt-8 space-y-3">
+      {events.length === 0 ? (
+        <p className="rounded-2xl border border-line bg-ink/20 px-4 py-4 text-sm text-paper-muted">
+          {copy.schedule.emptyTitle} {copy.schedule.emptyBody}
+        </p>
+      ) : null}
       {events.map((event) => (
         <a
           key={event.id}

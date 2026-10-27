@@ -7,7 +7,7 @@ import {
 import { InvolveHero } from "@/features/involve/InvolveHero";
 import { InvolveExperience } from "@/features/involve/InvolveExperience";
 import { MantraStrip } from "@/features/involve/MantraStrip";
-import { content } from "@/lib/content";
+import { listUpcomingSiteEvents } from "@/server/api/siteEvents";
 
 export const metadata: Metadata = {
   title: "Get Involved",
@@ -27,7 +27,7 @@ export default async function GetInvolvedPage({
   const door: InvolveDoorId = isInvolveDoorId(params.door)
     ? params.door
     : "space";
-  const events = await content.getEvents();
+  const events = await listUpcomingSiteEvents();
 
   return (
     <>

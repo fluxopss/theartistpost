@@ -53,7 +53,7 @@ export function organizationJsonLd() {
   };
 }
 
-export function eventJsonLd(event: ContentEvent) {
+export function eventJsonLd(event: ContentEvent & { cancelled?: boolean }) {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -61,8 +61,8 @@ export function eventJsonLd(event: ContentEvent) {
     description: event.description,
     startDate: event.start,
     endDate: event.end,
-    eventStatus: event.comingSoon
-      ? "https://schema.org/EventScheduled"
+    eventStatus: event.cancelled
+      ? "https://schema.org/EventCancelled"
       : "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     location: {

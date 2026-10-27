@@ -59,7 +59,7 @@ function upload(headers: Record<string, string>, ip = "203.0.113.70") {
 }
 
 describe("POST /api/upload (legacy studio upload)", () => {
-  it("refuses a cross-origin cookie write before touching the session", async () => {
+  it("refuses a cross-origin cookie write before any DB lookup", async () => {
     const response = await POST(upload({ origin: "https://evil.example" }));
     expect(response.status).toBe(403);
     expect(findUnique).not.toHaveBeenCalled();

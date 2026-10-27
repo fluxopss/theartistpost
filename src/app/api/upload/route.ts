@@ -79,17 +79,18 @@ function sameOrigin(request: Request): boolean {
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) {
-    return NextResponse.json(
-      { error: "Uploads must come from The Artist Post site." },
-      { status: 403 },
-    );
-  }
-
   const session = await getSession();
   if (!session || isMockGuestSession(session)) {
     return NextResponse.json(
       { error: "Uploads are closed until an artist is approved." },
+      { status: 403 },
+    );
+  }
+
+  // The session rides a cookie, so the write must come from our own host.
+  if (!sameOrigin(request)) {
+    return NextResponse.json(
+      { error: "Uploads must come from The Artist Post site." },
       { status: 403 },
     );
   }

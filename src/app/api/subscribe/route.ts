@@ -1,6 +1,10 @@
 import { submitSubscribe } from "@/server/api/leads/subscribe";
+import { limitWebLead } from "@/server/api/leadRoute";
 
 export async function POST(request: Request) {
+  const limited = limitWebLead(request, "subscribe");
+  if (limited) return limited;
+
   try {
     const body: unknown = await request.json();
     const outcome = await submitSubscribe(body);

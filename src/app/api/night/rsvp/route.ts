@@ -1,6 +1,10 @@
 import { submitNightRsvp } from "@/server/api/leads/nightRsvp";
+import { limitWebLead } from "@/server/api/leadRoute";
 
 export async function POST(request: Request) {
+  const limited = limitWebLead(request, "night/rsvp");
+  if (limited) return limited;
+
   try {
     const body: unknown = await request.json();
     const outcome = await submitNightRsvp(body);

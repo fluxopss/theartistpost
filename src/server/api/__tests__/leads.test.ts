@@ -16,6 +16,8 @@ import { POST as involveV1 } from "@/app/api/v1/involve/route";
 import { POST as subscribeV1 } from "@/app/api/v1/subscribe/route";
 import { POST as subscribeLegacy } from "@/app/api/subscribe/route";
 import { POST as involveLegacy } from "@/app/api/involve/route";
+import { POST as rsvpLegacy } from "@/app/api/night/rsvp/route";
+import { POST as stewardLegacy } from "@/app/api/donate/steward/route";
 import { resetRateLimits } from "@/features/auth/rateLimit";
 import { passCode } from "@/features/night/rsvp";
 
@@ -238,27 +240,91 @@ describe("POST /api/v1/night/rsvp", () => {
   });
 });
 
-describe("website lead routes are unchanged", () => {
+describe("website lead routes keep their shapes", () => {
   it("/api/subscribe keeps its shape and sends no platform", async () => {
     const response = await subscribeLegacy(post("/api/subscribe", subscriber));
     expect(await response.json()).toEqual({ ok: true });
     expect(sentLead()).not.toHaveProperty("platform");
   });
 
-  it("/api/involve still reports the upstream error with a 502", async () => {
+  it("/api/involve answers a 502 with the friendly message, never the webhook error", async () => {
     fetchMock.mockImplementation(async () => new Response("down", { status: 503 }));
     const response = await involveLegacy(post("/api/involve", inquiry));
     expect(response.status).toBe(502);
+    const body = await response.json();
+    expect(body.ok).toBe(false);
+    expect(typeof body.error).toBe("string");
+    expect(body.error).not.toMatch(/GHL|webhook|503/i);
+  });
+
+  it("/api/night/rsvp keeps its success shape", async () => {
+    const response = await rsvpLegacy(post("/api/night/rsvp", seat));
+    expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      ok: false,
-      error: "GHL webhook failed (503)",
+      ok: true,
+      delivered: true,
+      code: passCode("e9", "ada@gmail.com"),
     });
   });
 
-  it("website routes are not rate limited by the v1 budget", async () => {
-    for (let i = 0; i < 7; i += 1) {
-      const response = await subscribeLegacy(post("/api/subscribe", subscriber));
-      expect(response.status).toBe(200);
+  it("/api/donate/steward keeps its success shape", async () => {
+    const response = await stewardLegacy(
+      post("/api/donate/steward", { name: "Dana Donor", email: "dana@gmail.com" }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+  });
+});
+
+describe("website lead routes are rate limited", () => {
+  const routes = [
+    ["/api/subscribe", () => subscribeLegacy, subscriber],
+    ["/api/involve", () => involveLegacy, inquiry],
+    ["/api/night/rsvp", () => rsvpLegacy, seat],
+    [
+      "/api/donate/steward",
+      () => stewardLegacy,
+      { name: "Dana Donor", email: "dana@gmail.com" },
+    ],
+  ] as const;
+
+  for (const [path, handler, body] of routes) {
+    it(`${path}: five per IP, then a friendly 429 the form can show`, async () => {
+      for (let i = 0; i < 5; i += 1) {
+        const ok = await handler()(post(path, body));
+        expect(ok.status).toBe(200);
+      }
+      const limited = await handler()(post(path, body));
+      expect(limited.status).toBe(429);
+      expect(limited.headers.get("Retry-After")).toMatch(/^\d+$/);
+      const json = await limited.json();
+      expect(json.ok).toBe(false);
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
+
+      // A different caller still gets through.
+      const other = await handler()(post(path, body, "198.51.100.99"));
+      expect(other.status).toBe(200);
+    });
+  }
+
+  it("a spoofed leading x-forwarded-for does not reset the budget", async () => {
+    for (let i = 0; i < 5; i += 1) {
+      await subscribeLegacy(
+        post("/api/subscribe", subscriber, `10.0.0.${i}, 203.0.113.50`),
+      );
     }
+    const limited = await subscribeLegacy(
+      post("/api/subscribe", subscriber, "10.9.9.9, 203.0.113.50"),
+    );
+    expect(limited.status).toBe(429);
+  });
+
+  it("the website and v1 budgets are separate", async () => {
+    for (let i = 0; i < 5; i += 1) {
+      await subscribeV1(post("/api/v1/subscribe", subscriber));
+    }
+    const web = await subscribeLegacy(post("/api/subscribe", subscriber));
+    expect(web.status).toBe(200);
   });
 });

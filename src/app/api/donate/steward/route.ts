@@ -1,7 +1,11 @@
 import { submitDonorSteward } from "@/server/api/leads/donor";
+import { limitWebLead } from "@/server/api/leadRoute";
 
 /** Legacy-shaped steward route (mirrors /api/subscribe style). Prefer /api/v1/donate/steward. */
 export async function POST(request: Request) {
+  const limited = limitWebLead(request, "donate/steward");
+  if (limited) return limited;
+
   try {
     const body: unknown = await request.json();
     const outcome = await submitDonorSteward(body);

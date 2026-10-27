@@ -23,6 +23,27 @@ const REASON_CODE: Record<LeadFailureReason, ApiErrorCode> = {
   undelivered: "upstream_unavailable",
 };
 
+const RATE_LIMITED_MESSAGE = "Too many tries. Wait a bit and send it again.";
+
+/**
+ * Same budget as the v1 lead routes, for the website's own form routes
+ * (/api/subscribe, /api/involve, /api/night/rsvp, /api/donate/steward).
+ * Separate keys, so the website and the app never spend each other's budget.
+ * Returns a 429 in the website's `{ ok: false, error }` shape, or null to go on.
+ */
+export function limitWebLead(request: Request, route: string): Response | null {
+  const limit = checkRateLimit(`web:${route}:${clientIp(request)}`, LEAD_RATE_LIMIT);
+  if (limit.ok) return null;
+  const retryAfterSec = Math.max(1, Math.ceil(limit.retryAfterMs / 1000));
+  return Response.json(
+    { ok: false, error: RATE_LIMITED_MESSAGE },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSec), "Cache-Control": "no-store" },
+    },
+  );
+}
+
 type PlatformResult =
   | { ok: true; platform?: LeadPlatform }
   | { ok: false; error: string };
@@ -58,7 +79,7 @@ export function handleLeadPost<T>(
       LEAD_RATE_LIMIT,
     );
     if (!limit.ok) {
-      return apiError("rate_limited", "Too many tries. Wait a bit and send it again.", {
+      return apiError("rate_limited", RATE_LIMITED_MESSAGE, {
         retryAfterSec: Math.max(1, Math.ceil(limit.retryAfterMs / 1000)),
       });
     }

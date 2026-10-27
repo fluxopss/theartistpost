@@ -1,44 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+function subscribeMedia(queries: string[], onChange: () => void) {
+  const lists = queries.map((query) => window.matchMedia(query));
+  lists.forEach((mq) => mq.addEventListener("change", onChange));
+  return () => lists.forEach((mq) => mq.removeEventListener("change", onChange));
+}
+
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+const TOUCH_QUERIES = ["(pointer: coarse)", "(hover: none)"];
+
+const subscribeReducedMotion = (onChange: () => void) =>
+  subscribeMedia([REDUCED_MOTION], onChange);
+const subscribeTouch = (onChange: () => void) =>
+  subscribeMedia(TOUCH_QUERIES, onChange);
 
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION).matches,
+    () => false,
+  );
 }
 
 /** Defaults to touch (mobile-first) so desktop-only effects do not load on first paint. */
 export function useIsTouchDevice(): boolean {
-  const [touch, setTouch] = useState(true);
-
-  useEffect(() => {
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    const noHover = window.matchMedia("(hover: none)").matches;
-    setTouch(coarse || noHover);
-  }, []);
-
-  return touch;
+  return useSyncExternalStore(
+    subscribeTouch,
+    () => TOUCH_QUERIES.some((query) => window.matchMedia(query).matches),
+    () => true,
+  );
 }
 
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    setMatches(mq.matches);
-    const onChange = () => setMatches(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [query]);
-
-  return matches;
+  const subscribe = useCallback(
+    (onChange: () => void) => subscribeMedia([query], onChange),
+    [query],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }

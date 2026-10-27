@@ -4,9 +4,6 @@ import {
   approvedSlots,
   isAdFreePath,
 } from "@/lib/ads/placements";
-import { adsenseScriptEnabled } from "@/lib/adsense";
-
-const PUB = { ADSENSE_PUBLISHER_ID: "pub-4113707647961773" };
 
 describe("ad placements", () => {
   it("never proposes a spot on an ad-free page", () => {
@@ -42,22 +39,5 @@ describe("ad placements", () => {
       ["home-lower", "5555555555"],
     ]);
     expect(approvedSlots({}).size).toBe(0);
-  });
-});
-
-describe("ad script loading", () => {
-  it("stays off with only the publisher ID (site link, no ads)", () => {
-    expect(adsenseScriptEnabled(PUB)).toBe(false);
-  });
-
-  it("loads once a spot is approved, or Auto ads is opted in", () => {
-    expect(
-      adsenseScriptEnabled({ ...PUB, ADSENSE_SLOTS: "history-end:1234567890" }),
-    ).toBe(true);
-    expect(adsenseScriptEnabled({ ...PUB, ADSENSE_AUTO_ADS: "1" })).toBe(true);
-  });
-
-  it("never loads without a publisher ID, even with spots", () => {
-    expect(adsenseScriptEnabled({ ADSENSE_SLOTS: "history-end:1234567890" })).toBe(false);
   });
 });

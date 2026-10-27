@@ -10,17 +10,16 @@
  *                         Shows no ads by itself.
  *   ADSENSE_SLOTS         Approved spots → AdSense ad-unit IDs, e.g.
  *                         "history-end:1234567890" (see lib/ads/placements).
- *                         Any approved spot loads the ad script.
- *   ADSENSE_AUTO_ADS=1    Also load Google's ad script, which lets the
- *                         AdSense account serve ads (Auto ads or units).
- *                         Leave unset until placements are approved — the
- *                         founder's rule: ads never overwhelm the art.
+ *
+ * Google's ad script is never loaded site-wide (not from the root layout).
+ * It loads only alongside an approved <AdSlot> unit (components/ads/AdUnit),
+ * so pages without an approved spot, and every ad-free page, never load it.
+ * Auto ads must stay OFF in the AdSense dashboard; placements are
+ * code-controlled and approved by The Artist Post.
  *
  * Publisher IDs are public (they appear in every page that runs ads), so they
  * live in env for convenience, not secrecy.
  */
-
-import { approvedSlots } from "@/lib/ads/placements";
 
 type Env = Record<string, string | undefined>;
 
@@ -43,16 +42,7 @@ export function adsenseClient(env: Env = process.env): string | null {
   return id ? `ca-${id}` : null;
 }
 
-/**
- * Load Google's ad script when ads may actually serve: Auto ads opted in, or
- * at least one approved spot (ADSENSE_SLOTS). Keep Auto ads OFF in the
- * AdSense dashboard when using spots, or Google places extra ads on its own.
- */
-export function adsenseScriptEnabled(env: Env = process.env): boolean {
-  if (!adsenseClient(env)) return false;
-  return env.ADSENSE_AUTO_ADS === "1" || approvedSlots(env).size > 0;
-}
-
+/** Google's ad script URL. Loaded only by an approved AdUnit, never site-wide. */
 export function adsenseScriptSrc(client: string): string {
   return `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(client)}`;
 }

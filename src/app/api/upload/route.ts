@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getSession } from "@/features/auth/adapter";
+import { isSameOriginWrite } from "@/features/auth/sameOrigin";
 import {
   authorizePublisher,
   isMockGuestSession,
@@ -64,7 +65,27 @@ function sniffImageMime(buffer: Buffer): string | null {
   return null;
 }
 
+/** Same cookie-write origin check `resolveRequestAuth` applies to /api/v1. */
+function sameOrigin(request: Request): boolean {
+  return isSameOriginWrite(
+    {
+      method: request.method,
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+      host: request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
+    },
+    { canonicalHost: process.env.CANONICAL_HOST, legacyHosts: process.env.LEGACY_HOSTS },
+  );
+}
+
 export async function POST(request: Request) {
+  if (!sameOrigin(request)) {
+    return NextResponse.json(
+      { error: "Uploads must come from The Artist Post site." },
+      { status: 403 },
+    );
+  }
+
   const session = await getSession();
   if (!session || isMockGuestSession(session)) {
     return NextResponse.json(
@@ -82,7 +103,7 @@ export async function POST(request: Request) {
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: session.email },
+    where: { email: session.email.trim().toLowerCase() },
     include: { artistProfile: true },
   });
   const gate = authorizePublisher(session, dbUser);

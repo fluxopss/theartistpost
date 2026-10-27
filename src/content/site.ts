@@ -220,7 +220,7 @@ export const appCopy = {
   sessionArtistLine: "Studio session open — publish waits on approval.",
   installTitle: "Get the app",
   installLead:
-    "The Artist Post is a real app — same house on your home screen, offline shell, and the binary Robbie wraps for the App Store.",
+    "The Artist Post is a real app — the same house on your home screen, ready even when the signal drops.",
   installBenefits: [
     {
       title: "Home-screen studio",
@@ -231,8 +231,8 @@ export const appCopy = {
       body: "The last visit of Home, The Wall, Schedule, and Kindness stays on this device. Reconnect to write Robbie or subscribe.",
     },
     {
-      title: "One codebase",
-      body: "This site is the product. Capacitor wraps the live Flux VPS app — there is no second stack.",
+      title: "One house",
+      body: "The website and the app are the same Artist Post: same account, same nights, same community.",
     },
   ],
   comingNextTitle: "Designed next",

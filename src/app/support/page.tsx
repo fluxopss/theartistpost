@@ -41,8 +41,7 @@ export default function SupportPage() {
       <h2>How do I install the app?</h2>
       <p>
         On iPhone: Share → Add to Home Screen. On Android: use the Install
-        banner or the browser menu. The App Store binary is this same web app in
-        a native wrapper.
+        banner or the browser menu.
       </p>
 
       <h2>Donations and merch</h2>

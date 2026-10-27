@@ -9,6 +9,7 @@ import {
   PUBLISHING_CLOSED_ERROR,
 } from "@/features/auth/publishGate";
 import { uploadDir } from "@/server/api/uploadStore";
+import { clientIp } from "@/shared/lib/clientIp";
 import { getPrisma } from "@/shared/lib/prisma";
 
 export const runtime = "nodejs";
@@ -28,12 +29,6 @@ const MAGIC: Array<{ mime: string; bytes: number[] }> = [
 const uploadHits = new Map<string, { count: number; resetAt: number }>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 20;
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();

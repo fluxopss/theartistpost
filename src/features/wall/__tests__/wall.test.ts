@@ -20,11 +20,15 @@ describe("house doors", () => {
   });
 });
 
+/** A clock before the seed nights, so they still count as upcoming. */
+const BEFORE_SEED_NIGHTS = new Date("2026-08-01T00:00:00-04:00");
+
 describe("buildWallPieces", () => {
   const pieces = buildWallPieces({
     artists: [],
     events,
     notes: kindnessSeeds.slice(0, 3),
+    now: BEFORE_SEED_NIGHTS,
   });
 
   it("does not invent named artists when the roster is empty", () => {
@@ -70,6 +74,7 @@ describe("filterWallPieces", () => {
     artists: [],
     events,
     notes: kindnessSeeds.slice(0, 2),
+    now: BEFORE_SEED_NIGHTS,
   });
 
   it("filters reserved frames by medium", () => {
@@ -128,5 +133,34 @@ describe("filterWallPieces", () => {
     );
     expect(upcoming.every((p) => p.showcaseDate)).toBe(true);
     expect(upcoming.length).toBeGreaterThan(0);
+  });
+
+  it("hangs only nights people can still go to", () => {
+    const now = new Date("2026-09-15T12:00:00-04:00");
+    const hung = buildWallPieces({
+      artists: [],
+      events: [
+        ...events,
+        {
+          ...events[3]!,
+          id: "cancelled-night",
+          start: "2026-10-30T18:00:00-04:00",
+          end: "2026-10-30T22:00:00-04:00",
+          cancelled: true,
+        },
+      ],
+      notes: [],
+      now,
+    });
+    const nights = hung.filter((p) => p.kind === "event").map((p) => p.id);
+    // e1 (Sept 5) and e2 (Sept 12) have ended; the cancelled night is out.
+    expect(nights).toEqual(["event-e3", "event-e4"]);
+    expect(hung.find((p) => p.kind === "venue")?.eventIds).toEqual(["e3", "e4"]);
+  });
+
+  it("marks every hung night as upcoming", () => {
+    const nights = pieces.filter((p) => p.kind === "event");
+    expect(nights.length).toBeGreaterThan(0);
+    expect(nights.every((p) => p.availability === "upcoming")).toBe(true);
   });
 });

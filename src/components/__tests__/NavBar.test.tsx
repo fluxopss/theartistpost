@@ -9,6 +9,17 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
 }));
 
+// NavBar renders the account menu, which reads the session; a signed-out guest is enough here.
+vi.mock("@/features/auth/AuthProvider", () => ({
+  useSession: () => ({
+    user: null,
+    isAuthenticated: false,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    signingOut: false,
+  }),
+}));
+
 afterEach(() => {
   cleanup();
   pathname = "/";

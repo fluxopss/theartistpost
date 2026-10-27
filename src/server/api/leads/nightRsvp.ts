@@ -1,5 +1,5 @@
-import { content } from "@/lib/content";
 import { sendLeadToGhl } from "@/lib/ghl";
+import { findSiteEvent } from "@/server/api/siteEvents";
 import { nightPhase } from "@/features/night/program";
 import {
   isNightHoneypot,
@@ -37,12 +37,21 @@ export async function submitNightRsvp(
     return { ok: true, data: { code } };
   }
 
-  const event = await content.getEventById(eventId);
+  // Same source as the pages: nights published in Manage events, then the schedule.
+  const event = await findSiteEvent(eventId);
   if (!event) {
     return {
       ok: false,
       reason: "not_found",
       error: "That night is not on the board.",
+    };
+  }
+
+  if (event.cancelled) {
+    return {
+      ok: false,
+      reason: "closed",
+      error: "This night has been cancelled.",
     };
   }
 

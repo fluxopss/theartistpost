@@ -112,4 +112,12 @@ describe("device studio storage", () => {
     expect(isLiked("p1")).toBe(false);
     expect(getStudio().displayName).toBe("Studio Guest");
   });
+
+  it("clearing also removes kindness notes and the analytics visitor id", () => {
+    localStorage.setItem("tap-kindness-notes", JSON.stringify([{ id: "k1" }]));
+    localStorage.setItem("fp_uid", "abc123");
+    clearLocalAppData();
+    expect(localStorage.getItem("tap-kindness-notes")).toBeNull();
+    expect(localStorage.getItem("fp_uid")).toBeNull();
+  });
 });

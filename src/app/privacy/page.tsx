@@ -90,9 +90,9 @@ export default function PrivacyPage() {
 
       <h2>On this device</h2>
       <p>
-        Your theme, motion setting, saved nights and works, studio name and
-        kindness notes you leave on this device stay in your browser or phone
-        storage. You can clear them in Settings.
+        Your theme, motion setting, saved nights and works, studio name,
+        kindness notes you leave on this device and the analytics visitor id
+        stay in your browser or phone storage. You can clear them in Settings.
       </p>
 
       <h2>Donations and merch</h2>
@@ -102,9 +102,18 @@ export default function PrivacyPage() {
 
       <h2>Analytics</h2>
       <p>
-        When it is switched on, we count simple, anonymous product events such
-        as Donate or Get Involved taps to learn what helps people find the
-        house.
+        When analytics is switched on, a small script from Flux Labs, the team
+        that builds this site, sends a note to its analytics service at
+        pulse.fluxlab.agency: one page view for each page you open, then a
+        short check-in about every 15 seconds while the tab is visible, plus a
+        note when you tap buttons such as Donate or Get Involved. Each note
+        carries the page address (including anything after the ?), the site
+        that sent you here (the referrer), your screen width, how far down the
+        page you scrolled, and any campaign (UTM) tags in the link. To tell
+        visits apart it keeps a random visitor id in your browser&apos;s local
+        storage; it is not your name or email. We use this only to learn which
+        pages help people find the house. It is not sold, and no ads profile is
+        built from it.
       </p>
 
       <h2>Advertising</h2>

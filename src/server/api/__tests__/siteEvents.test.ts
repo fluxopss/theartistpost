@@ -115,6 +115,94 @@ describe("listSiteEvents", () => {
   });
 });
 
+describe("site lists only load nights that are still relevant", () => {
+  it("asks the database only for nights ending after now minus a day (adopted rows always)", async () => {
+    await listSiteEvents(NOW);
+    expect(db.event.findMany).toHaveBeenCalledTimes(1);
+    expect(db.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: { in: ["PUBLISHED", "CANCELLED"] },
+          OR: [
+            { endsAt: { gte: new Date("2026-10-27T12:00:00Z") } },
+            { sourceId: { not: null } },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("an old adopted night still hides the schedule night it replaced", async () => {
+    fixtures.events = [
+      { ...pastSeed, id: "e7", start: "2099-01-01T18:00:00-05:00", end: "2099-01-01T21:00:00-05:00" },
+    ];
+    db.event.findMany.mockResolvedValue([
+      row({
+        id: "evt_old",
+        sourceId: "e7",
+        startsAt: new Date("2026-01-01T22:00:00Z"),
+        endsAt: new Date("2026-01-02T02:00:00Z"),
+      }),
+    ]);
+    const upcoming = await listUpcomingSiteEvents(NOW);
+    expect(upcoming).toEqual([]);
+  });
+
+  it("carries the sponsor and vendors through the recent-nights loader", async () => {
+    db.event.findMany.mockResolvedValue([
+      row({
+        medium: "culinary",
+        sponsorName: "Clematis Coffee",
+        sponsorUrl: "https://clematis.coffee/",
+        vendors: [{ name: "Taco Bus", offering: "Tacos" }],
+      }),
+    ]);
+    const [night] = await listUpcomingSiteEvents(NOW);
+    expect(night).toMatchObject({
+      id: "evt_launch",
+      presentedBy: { name: "Clematis Coffee", url: "https://clematis.coffee/", logoUrl: null },
+      vendors: [{ name: "Taco Bus", offering: "Tacos", url: null }],
+    });
+    // Still the recent-nights query, with every column selected explicitly.
+    const args = db.event.findMany.mock.calls[0][0];
+    expect(args.where.OR).toBeDefined();
+    expect(args.select).toMatchObject({ sponsorName: true, vendors: true });
+  });
+
+  it("keeps the recent-nights filter on the pre-migration retry", async () => {
+    db.event.findMany
+      .mockRejectedValueOnce(Object.assign(new Error("column missing"), { code: "P2022" }))
+      .mockResolvedValueOnce([row()]);
+    const events = await listSiteEvents(NOW);
+    expect(events.map((e) => e.id)).toEqual(["e4", "evt_launch"]);
+    expect(events[1]).toMatchObject({ presentedBy: null, vendors: [] });
+    const retry = db.event.findMany.mock.calls[1][0];
+    expect(retry.where.OR).toBeDefined();
+    expect(retry.select.sponsorName).toBeUndefined();
+  });
+
+  it("listUpcomingSiteEvents makes one query", async () => {
+    await listUpcomingSiteEvents(NOW);
+    expect(db.event.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("a past night stays reachable by id", async () => {
+    db.event.findFirst.mockResolvedValue(
+      row({
+        id: "evt_past",
+        startsAt: new Date("2026-01-01T22:00:00Z"),
+        endsAt: new Date("2026-01-02T02:00:00Z"),
+      }),
+    );
+    await expect(findSiteEvent("evt_past", NOW)).resolves.toMatchObject({
+      id: "evt_past",
+      status: "closed",
+    });
+    const where = db.event.findFirst.mock.calls[0]?.[0]?.where;
+    expect(where).not.toHaveProperty("endsAt");
+  });
+});
+
 describe("listUpcomingSiteEvents", () => {
   it("shows only published nights that have not ended", async () => {
     db.event.findMany.mockResolvedValue([

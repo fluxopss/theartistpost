@@ -83,16 +83,34 @@ function byStart(a: EventDTO, b: EventDTO): number {
 export async function listPublicEvents(
   prisma: PrismaClient | null,
   now = new Date(),
+  options: {
+    /**
+     * Only load DB nights ending at or after this moment. Rows adopted from a
+     * schedule night (sourceId set) are always loaded, so an old adopted night
+     * keeps hiding the schedule night it replaced. Omit for every night
+     * (the /api/v1/events default).
+     */
+    endedAfter?: Date;
+  } = {},
 ): Promise<EventDTO[]> {
   const schedule = await content.getEvents();
   let rows: EventRow[] = [];
   if (prisma) {
+    const status = { in: [...PUBLIC_STATUSES] };
     try {
       rows = (await withEventColumns(
         (select) =>
           prisma.event.findMany({
             select,
-            where: { status: { in: [...PUBLIC_STATUSES] } },
+            where: options.endedAfter
+              ? {
+                  status,
+                  OR: [
+                    { endsAt: { gte: options.endedAfter } },
+                    { sourceId: { not: null } },
+                  ],
+                }
+              : { status },
             orderBy: { startsAt: "asc" },
           }),
         fillRows,

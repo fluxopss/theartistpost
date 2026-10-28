@@ -288,34 +288,71 @@ describe("website lead routes are rate limited", () => {
     ],
   ] as const;
 
+  /** Same body with a different guest's email, as at a shared venue Wi-Fi. */
+  const asGuest = (body: object, i: number) => ({
+    ...body,
+    email: `guest${i}@gmail.com`,
+  });
+
+  async function expectFriendly429(response: Response) {
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toMatch(/^\d+$/);
+    const json = await response.json();
+    expect(json).toEqual({
+      ok: false,
+      error: "Too many tries. Wait a bit and send it again.",
+    });
+  }
+
   for (const [path, handler, body] of routes) {
-    it(`${path}: five per IP, then a friendly 429 the form can show`, async () => {
+    it(`${path}: 20 guests on one venue IP all get through`, async () => {
+      for (let i = 0; i < 20; i += 1) {
+        const ok = await handler()(post(path, asGuest(body, i)));
+        expect(ok.status).toBe(200);
+      }
+    });
+
+    it(`${path}: the same email five times, then a friendly 429`, async () => {
       for (let i = 0; i < 5; i += 1) {
         const ok = await handler()(post(path, body));
         expect(ok.status).toBe(200);
       }
-      const limited = await handler()(post(path, body));
-      expect(limited.status).toBe(429);
-      expect(limited.headers.get("Retry-After")).toMatch(/^\d+$/);
-      const json = await limited.json();
-      expect(json.ok).toBe(false);
-      expect(typeof json.error).toBe("string");
-      expect(json.error.length).toBeGreaterThan(0);
+      await expectFriendly429(await handler()(post(path, body)));
+
+      // Even from another IP: the email has its own budget.
+      await expectFriendly429(
+        await handler()(post(path, body, "198.51.100.99")),
+      );
+      // Same email typed with other casing and spaces counts as the same person.
+      await expectFriendly429(
+        await handler()(
+          post(path, { ...body, email: `  ${body.email.toUpperCase()} ` }, "198.51.100.98"),
+        ),
+      );
+      // Another guest is not held back by it.
+      expect((await handler()(post(path, asGuest(body, 99)))).status).toBe(200);
+    });
+
+    it(`${path}: forty per IP, then a friendly 429`, async () => {
+      for (let i = 0; i < 40; i += 1) {
+        await handler()(post(path, asGuest(body, i)));
+      }
+      await expectFriendly429(await handler()(post(path, asGuest(body, 40))));
 
       // A different caller still gets through.
-      const other = await handler()(post(path, body, "198.51.100.99"));
+      const other = await handler()(post(path, asGuest(body, 41), "198.51.100.99"));
       expect(other.status).toBe(200);
     });
   }
 
   it("a spoofed leading x-forwarded-for does not reset the budget", async () => {
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 40; i += 1) {
       await subscribeLegacy(
-        post("/api/subscribe", subscriber, `10.0.0.${i}, 203.0.113.50`),
+        post("/api/subscribe", asGuest(subscriber, i), `10.0.0.${i}, 203.0.113.50`),
       );
     }
     const limited = await subscribeLegacy(
-      post("/api/subscribe", subscriber, "10.9.9.9, 203.0.113.50"),
+      post("/api/subscribe", asGuest(subscriber, 40), "10.9.9.9, 203.0.113.50"),
     );
     expect(limited.status).toBe(429);
   });
@@ -326,5 +363,16 @@ describe("website lead routes are rate limited", () => {
     }
     const web = await subscribeLegacy(post("/api/subscribe", subscriber));
     expect(web.status).toBe(200);
+  });
+
+  it("v1 keeps five per IP per route, whatever the email", async () => {
+    for (let i = 0; i < 5; i += 1) {
+      const ok = await subscribeV1(post("/api/v1/subscribe", asGuest(subscriber, i)));
+      expect(ok.status).toBe(200);
+    }
+    const limited = await subscribeV1(
+      post("/api/v1/subscribe", asGuest(subscriber, 5)),
+    );
+    expect(limited.status).toBe(429);
   });
 });

@@ -1,5 +1,7 @@
 import { sendLeadToGhl } from "@/lib/ghl";
 import { findSiteEvent } from "@/server/api/siteEvents";
+import { seatSummary } from "@/server/api/eventRsvp";
+import { getPrisma } from "@/shared/lib/prisma";
 import { nightPhase } from "@/features/night/program";
 import {
   isNightHoneypot,
@@ -14,6 +16,29 @@ import {
 
 export const RSVP_UNDELIVERED_ERROR =
   "Your seat was not sent. Try again in a moment.";
+
+export const RSVP_FULL_ERROR = "This night is full.";
+
+/**
+ * Seats left on a managed (Manage events) night with a seat limit, counted
+ * from the in-app RSVP list. Null when there is no limit to check (schedule
+ * nights and unlimited nights). Throws when the count cannot be read, so the
+ * caller fails closed instead of over-booking.
+ *
+ * Web seat holds have no account, so they are recorded in the CRM only and
+ * never written to EventRsvp; the door team checks both lists.
+ */
+async function seatsLeftFor(event: {
+  id: string;
+  source: "db" | "content";
+  capacity: number | null;
+}): Promise<number | null> {
+  if (event.source !== "db" || event.capacity === null) return null;
+  const prisma = getPrisma();
+  if (!prisma) throw new Error("database unavailable for a managed night");
+  const summary = await seatSummary(prisma, event.id, event.capacity);
+  return summary.seatsLeft;
+}
 
 /** Hold a seat for a night: validate, check the night is open, tell the CRM. */
 export async function submitNightRsvp(
@@ -61,6 +86,22 @@ export async function submitNightRsvp(
       reason: "closed",
       error: "That night has already closed.",
     };
+  }
+
+  let seatsLeft: number | null;
+  try {
+    seatsLeft = await seatsLeftFor(event);
+  } catch (error) {
+    console.error("[night-rsvp] seat count unavailable", error);
+    return {
+      ok: false,
+      reason: "undelivered",
+      error: RSVP_UNDELIVERED_ERROR,
+      upstreamError: "seat count unavailable",
+    };
+  }
+  if (seatsLeft !== null && seatsLeft < party) {
+    return { ok: false, reason: "closed", error: RSVP_FULL_ERROR };
   }
 
   const result = await sendLeadToGhl({

@@ -13,6 +13,7 @@ vi.mock("@/lib/content", () => ({
 }));
 
 import { db, resetDb } from "./testkit";
+import { EVENT_SELECT } from "@/server/api/eventColumns";
 import {
   eventRowToDTO,
   findPublicEvent,
@@ -147,6 +148,18 @@ describe("listPublicEvents", () => {
     );
     const list = await listPublicEvents(prisma, NOW);
     expect(list.map((e) => e.id)).toEqual(["e1"]);
+  });
+});
+
+describe("listPublicEvents default (used by /api/v1/events)", () => {
+  it("has no date filter unless the caller asks for one", async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+    await listPublicEvents(prisma, NOW);
+    expect(prisma.event.findMany.mock.calls.at(-1)?.[0]).toEqual({
+      select: EVENT_SELECT,
+      where: { status: { in: ["PUBLISHED", "CANCELLED"] } },
+      orderBy: { startsAt: "asc" },
+    });
   });
 });
 

@@ -65,4 +65,31 @@ describe("/privacy describes what the house actually collects", () => {
     // Check-in never keeps coordinates (prisma EventCheckIn stores only a boolean).
     expect(text).toMatch(/never stored|not stored|do not store|don't store/);
   });
+
+  it("describes what the Pulse analytics beacon actually sends", () => {
+    const { container } = render(<PrivacyPage />);
+    const heading = screen.getByRole("heading", { name: "Analytics" });
+    const section = heading.nextElementSibling?.textContent ?? "";
+    for (const fact of [
+      /page view/i,
+      /every 15 seconds/i,
+      /visible/i,
+      /page address/i,
+      /referr/i,
+      /screen width/i,
+      /scroll/i,
+      /campaign/i,
+      /random visitor id/i,
+      /local storage/i,
+      /pulse\.fluxlab\.agency/,
+      /Flux Labs/,
+      /not sold|never sold|do not sell/i,
+      /ads profile|advertising profile/i,
+    ]) {
+      expect(section, String(fact)).toMatch(fact);
+    }
+    expect(section).not.toMatch(/anonymous product events/i);
+    expect(container.textContent).toMatch(/clear them in Settings/i);
+  });
 });
+

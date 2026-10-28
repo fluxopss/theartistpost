@@ -1,5 +1,5 @@
 import { submitInvolveInquiry } from "@/server/api/leads/involve";
-import { limitWebLead } from "@/server/api/leadRoute";
+import { limitWebLead, limitWebLeadEmail } from "@/server/api/leadRoute";
 
 export async function POST(request: Request) {
   const limited = limitWebLead(request, "involve");
@@ -7,6 +7,9 @@ export async function POST(request: Request) {
 
   try {
     const body: unknown = await request.json();
+    const emailLimited = limitWebLeadEmail("involve", body);
+    if (emailLimited) return emailLimited;
+
     const outcome = await submitInvolveInquiry(body);
 
     if (outcome.ok) {

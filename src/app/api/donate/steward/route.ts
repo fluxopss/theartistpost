@@ -1,5 +1,5 @@
 import { submitDonorSteward } from "@/server/api/leads/donor";
-import { limitWebLead } from "@/server/api/leadRoute";
+import { limitWebLead, limitWebLeadEmail } from "@/server/api/leadRoute";
 
 /** Legacy-shaped steward route (mirrors /api/subscribe style). Prefer /api/v1/donate/steward. */
 export async function POST(request: Request) {
@@ -8,6 +8,9 @@ export async function POST(request: Request) {
 
   try {
     const body: unknown = await request.json();
+    const emailLimited = limitWebLeadEmail("donate/steward", body);
+    if (emailLimited) return emailLimited;
+
     const outcome = await submitDonorSteward(body);
 
     if (outcome.ok) {

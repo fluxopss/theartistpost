@@ -2,12 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { assets, copy, site } from "@/content/site";
 import type { ContentEvent } from "@/lib/content";
+import type { EventDTO } from "@/server/api/dto";
 import { featuredNight, scheduleLabel } from "@/features/night/program";
 import { GenreRail } from "@/features/stage/GenreRail";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 
-export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
+export function SpatialSchedule({
+  events,
+}: {
+  events: (ContentEvent & Partial<Pick<EventDTO, "presentedBy">>)[];
+}) {
   const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(site.address.full)}&output=embed`;
   const night = featuredNight(events);
 
@@ -68,6 +73,14 @@ export function SpatialSchedule({ events }: { events: ContentEvent[] }) {
                   </p>
                   <h2 className="display mt-1 text-xl text-paper">{event.title}</h2>
                   <p className="mt-1 text-sm text-paper-muted">{event.venue}</p>
+                  {event.presentedBy ? (
+                    <p className="mt-1 text-xs text-paper-muted">
+                      Presented by{" "}
+                      <span className="font-semibold text-paper">
+                        {event.presentedBy.name}
+                      </span>
+                    </p>
+                  ) : null}
                 </Link>
               </li>
             ))}

@@ -53,7 +53,16 @@ export function organizationJsonLd() {
   };
 }
 
-export function eventJsonLd(event: ContentEvent & { cancelled?: boolean }) {
+type EventSponsor = {
+  name: string;
+  url: string | null;
+  logoUrl: string | null;
+} | null;
+
+export function eventJsonLd(
+  event: ContentEvent & { cancelled?: boolean; presentedBy?: EventSponsor },
+) {
+  const sponsor = event.presentedBy;
   return {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -87,6 +96,16 @@ export function eventJsonLd(event: ContentEvent & { cancelled?: boolean }) {
           performer: {
             "@type": "PerformingGroup",
             name: event.artist,
+          },
+        }
+      : {}),
+    ...(sponsor
+      ? {
+          sponsor: {
+            "@type": "Organization",
+            name: sponsor.name,
+            ...(sponsor.url ? { url: sponsor.url } : {}),
+            ...(sponsor.logoUrl ? { logo: sponsor.logoUrl } : {}),
           },
         }
       : {}),

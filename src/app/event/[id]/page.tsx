@@ -8,6 +8,8 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 import { SaveEventButton } from "@/features/app/SaveButton";
 import { featuredNight, scheduleLabel } from "@/features/night/program";
+import { PresentedBy } from "@/features/sponsors/PresentedBy";
+import { VendorList } from "@/features/sponsors/VendorList";
 import { findSiteEvent, listUpcomingSiteEvents } from "@/server/api/siteEvents";
 
 type Props = { params: Promise<{ id: string }> };
@@ -90,6 +92,7 @@ export default async function EventPage({ params }: Props) {
           <p className="mt-2 text-sm text-paper">
             {event.artist} · {event.venue}
           </p>
+          <PresentedBy sponsor={event.presentedBy} className="mt-3" />
         </div>
         {cancelled ? (
           <p
@@ -102,6 +105,7 @@ export default async function EventPage({ params }: Props) {
         <p className="max-w-2xl text-base leading-relaxed text-paper-muted">
           {event.description}
         </p>
+        <VendorList vendors={event.vendors} />
         <div className="flex flex-wrap gap-3">
           {holding ? (
             <ButtonLink href="/night" className="rounded-full">

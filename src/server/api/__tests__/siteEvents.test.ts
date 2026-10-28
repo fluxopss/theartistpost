@@ -67,6 +67,10 @@ function row(overrides: Partial<EventRow> = {}): EventRow {
     status: "PUBLISHED",
     coverImageUrl: null,
     comingSoon: false,
+    sponsorName: null,
+    sponsorUrl: null,
+    sponsorLogoUrl: null,
+    vendors: [],
     createdById: "user_admin",
     publishedAt: new Date("2026-10-20T00:00:00Z"),
     cancelledAt: null,
@@ -142,6 +146,39 @@ describe("site lists only load nights that are still relevant", () => {
     ]);
     const upcoming = await listUpcomingSiteEvents(NOW);
     expect(upcoming).toEqual([]);
+  });
+
+  it("carries the sponsor and vendors through the recent-nights loader", async () => {
+    db.event.findMany.mockResolvedValue([
+      row({
+        medium: "culinary",
+        sponsorName: "Clematis Coffee",
+        sponsorUrl: "https://clematis.coffee/",
+        vendors: [{ name: "Taco Bus", offering: "Tacos" }],
+      }),
+    ]);
+    const [night] = await listUpcomingSiteEvents(NOW);
+    expect(night).toMatchObject({
+      id: "evt_launch",
+      presentedBy: { name: "Clematis Coffee", url: "https://clematis.coffee/", logoUrl: null },
+      vendors: [{ name: "Taco Bus", offering: "Tacos", url: null }],
+    });
+    // Still the recent-nights query, with every column selected explicitly.
+    const args = db.event.findMany.mock.calls[0][0];
+    expect(args.where.OR).toBeDefined();
+    expect(args.select).toMatchObject({ sponsorName: true, vendors: true });
+  });
+
+  it("keeps the recent-nights filter on the pre-migration retry", async () => {
+    db.event.findMany
+      .mockRejectedValueOnce(Object.assign(new Error("column missing"), { code: "P2022" }))
+      .mockResolvedValueOnce([row()]);
+    const events = await listSiteEvents(NOW);
+    expect(events.map((e) => e.id)).toEqual(["e4", "evt_launch"]);
+    expect(events[1]).toMatchObject({ presentedBy: null, vendors: [] });
+    const retry = db.event.findMany.mock.calls[1][0];
+    expect(retry.where.OR).toBeDefined();
+    expect(retry.select.sponsorName).toBeUndefined();
   });
 
   it("listUpcomingSiteEvents makes one query", async () => {

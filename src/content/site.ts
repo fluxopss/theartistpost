@@ -396,6 +396,44 @@ export const copy = {
     stewardOnce: "I gave once",
     stewardMonthly: "I give monthly",
   },
+  sponsors: {
+    kicker: "Sponsor a night",
+    title: "Help open the doors for a night of local art",
+    lead: "Sponsors help The Artist Post keep showcase space free for local artists and makers. Artists and vendors never pay to take part.",
+    fundsTitle: "What sponsorship helps cover",
+    funds: [
+      {
+        title: "Coordination",
+        body: "Booking artists and makers, setting up the room, and welcoming people at the door.",
+      },
+      {
+        title: "Tech",
+        body: "The schedule, the app, and the tools that let people hold a seat and check in.",
+      },
+      {
+        title: "Free artist placements",
+        body: "Showcase space for local creatives, with no fee to show, sell, or serve.",
+      },
+    ],
+    howTitle: "How a presented night looks",
+    howBody:
+      "A sponsored night says so plainly. Its page reads “Presented by” and your name, with your logo and a link to your site when you share them. Nights without a sponsor show nothing of the kind.",
+    promiseTitle: "Our promise",
+    promise: [
+      "Every sponsored night is labeled, so no one has to guess.",
+      "Artists and vendors never pay to take part.",
+      "Sponsorship is recognition for your business, not a personal tax-deductible donation unless counsel says otherwise.",
+    ],
+    listTitle: "Nights presented by our sponsors",
+    listEmpty:
+      "No upcoming nights have a sponsor yet. Yours could be the first one listed here.",
+    ctaTitle: "Want to present a night?",
+    ctaBody:
+      "Tell Robbie about your business and the kind of night you would like to support. He reads every note and will follow up.",
+    cta: "Become a partner",
+    donateLine: "Prefer to give to the nonprofit instead?",
+    donateCta: "Donate",
+  },
   schedule: {
     title: "Artist Schedule",
     supportLine: "Come support our scheduled local artisans.",

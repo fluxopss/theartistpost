@@ -34,6 +34,7 @@ vi.mock("next/navigation", () => ({
   },
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/",
 }));
 vi.mock("@/features/stage/GenreRail", () => ({ GenreRail: () => null }));
 vi.mock("@/features/wall/LivingWall", () => ({

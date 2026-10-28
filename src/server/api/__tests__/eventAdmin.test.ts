@@ -518,3 +518,219 @@ describe("POST /admin/events/media", () => {
     expect(storeMock.storeUploadedMedia).not.toHaveBeenCalled();
   });
 });
+
+describe("sponsor and vendors (Phase 2)", () => {
+  const SPONSOR = {
+    sponsorName: "  Clematis Coffee ",
+    sponsorUrl: "https://clematis.coffee/",
+    sponsorLogoUrl: "/uploads/clematis-logo.png",
+    vendors: [
+      { name: " Taco Bus ", offering: "Street tacos", url: "https://taco.bus/" },
+      { name: "Pie Lady", offering: "" },
+    ],
+  };
+  const echoCreate = () =>
+    db.event.create.mockImplementation(async (args: { data: Record<string, unknown> }) =>
+      eventRow({ ...args.data, id: "evt_new" }),
+    );
+  const create = (body: unknown, as = admin) =>
+    createEvent(jsonRequest(BASE, "POST", body, signInAs(as)));
+  const patch = (body: unknown, as = admin) =>
+    patchEvent(jsonRequest(`${BASE}/evt_1`, "PATCH", body, signInAs(as)), ctx("evt_1"));
+
+  it("only admins can set them (acceptance 3: 403 for everyone else)", async () => {
+    expect((await create({ ...VALID, ...SPONSOR }, member)).status).toBe(403);
+    expect((await patch({ sponsorName: "Sneaky" }, member)).status).toBe(403);
+    expect((await patch({ vendors: [{ name: "Sneaky" }] }, member)).status).toBe(403);
+    const anon = await patchEvent(
+      jsonRequest(`${BASE}/evt_1`, "PATCH", { sponsorName: "x" }),
+      ctx("evt_1"),
+    );
+    expect(anon.status).toBe(401);
+    expect(db.event.create).not.toHaveBeenCalled();
+    expect(db.event.update).not.toHaveBeenCalled();
+  });
+
+  it("an admin creates a presented culinary night with vendors", async () => {
+    echoCreate();
+    const res = await create({ ...VALID, medium: "culinary", ...SPONSOR });
+    expect(res.status).toBe(201);
+    const data = db.event.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      medium: "culinary",
+      sponsorName: "Clematis Coffee",
+      sponsorUrl: "https://clematis.coffee/",
+      sponsorLogoUrl: "/uploads/clematis-logo.png",
+      vendors: [
+        { name: "Taco Bus", offering: "Street tacos", url: "https://taco.bus/" },
+        { name: "Pie Lady", offering: "", url: null },
+      ],
+    });
+    const { data: body } = await res.json();
+    expect(body.event).toMatchObject({
+      sponsorName: "Clematis Coffee",
+      sponsorUrl: "https://clematis.coffee/",
+      sponsorLogoUrl: "https://theartistpost.fluxlab.agency/uploads/clematis-logo.png",
+      vendors: [
+        { name: "Taco Bus", offering: "Street tacos", url: "https://taco.bus/" },
+        { name: "Pie Lady", offering: "", url: null },
+      ],
+    });
+  });
+
+  it("does not touch sponsor columns when a create leaves them out", async () => {
+    echoCreate();
+    expect((await create(VALID)).status).toBe(201);
+    const data = db.event.create.mock.calls[0][0].data;
+    for (const key of ["sponsorName", "sponsorUrl", "sponsorLogoUrl", "vendors"]) {
+      expect(key in data, key).toBe(false);
+    }
+  });
+
+  it("rejects http:, javascript: and foreign logos (acceptance 4)", async () => {
+    for (const [body, field] of [
+      [{ sponsorName: "C", sponsorUrl: "http://clematis.coffee/" }, "sponsorUrl"],
+      [{ sponsorName: "C", sponsorUrl: "javascript:alert(1)" }, "sponsorUrl"],
+      [{ sponsorName: "C", sponsorUrl: `https://x.example/${"a".repeat(300)}` }, "sponsorUrl"],
+      [{ sponsorName: "C", sponsorLogoUrl: "https://elsewhere.example/logo.png" }, "sponsorLogoUrl"],
+      [{ sponsorUrl: "https://clematis.coffee/" }, "sponsorUrl"],
+      [{ sponsorLogoUrl: "/uploads/clematis-logo.png" }, "sponsorLogoUrl"],
+      [{ sponsorName: "x".repeat(81) }, "sponsorName"],
+      [{ vendors: [{ name: "Taco Bus", url: "http://taco.bus/" }] }, "vendors.0.url"],
+      [{ vendors: [{ name: "Taco Bus", url: "javascript:alert(1)" }] }, "vendors.0.url"],
+      [{ vendors: [{ name: "" }] }, "vendors.0.name"],
+      [{ vendors: [{ name: "x".repeat(61) }] }, "vendors.0.name"],
+      [{ vendors: [{ name: "Ok", offering: "y".repeat(81) }] }, "vendors.0.offering"],
+      [{ vendors: Array.from({ length: 13 }, (_, i) => ({ name: `V${i}` })) }, "vendors"],
+    ] as const) {
+      const res = await create({ ...VALID, ...body });
+      expect(res.status, JSON.stringify(body)).toBe(400);
+      const json = await res.json();
+      expect(json.error.code).toBe("validation_failed");
+      expect(Object.keys(json.error.fields ?? {}), JSON.stringify(body)).toContain(field);
+    }
+    expect(db.event.create).not.toHaveBeenCalled();
+  });
+
+  it("stores no money field, even if one is sent", async () => {
+    echoCreate();
+    await create({
+      ...VALID,
+      sponsorName: "C",
+      price: 100,
+      fee: 5,
+      vendors: [{ name: "Taco Bus", price: 10, fee: 2, amount: 3 }],
+    });
+    const data = db.event.create.mock.calls[0][0].data;
+    expect(JSON.stringify(data)).not.toMatch(/price|fee|amount/i);
+  });
+
+  it("limits a new night's medium to the house lanes plus community", async () => {
+    echoCreate();
+    expect((await create({ ...VALID, medium: "culinary" })).status).toBe(201);
+    expect((await create({ ...VALID, medium: "community" })).status).toBe(201);
+    const bad = await create({ ...VALID, medium: "crypto" });
+    expect(bad.status).toBe(400);
+    expect((await bad.json()).error.fields.medium).toBeDefined();
+  });
+
+  it("keeps an older night's medium editable as it is", async () => {
+    db.event.findUnique.mockResolvedValue(eventRow({ medium: "visual" }));
+    db.event.update.mockImplementation(async (args: { data: Record<string, unknown> }) =>
+      eventRow({ medium: "visual", ...args.data }),
+    );
+    expect((await patch({ medium: "visual", title: "Same lane" })).status).toBe(200);
+    expect((await patch({ medium: "crypto" })).status).toBe(400);
+  });
+
+  it("removing the sponsor name removes the whole sponsor", async () => {
+    db.event.findUnique.mockResolvedValue(
+      eventRow({
+        sponsorName: "Clematis Coffee",
+        sponsorUrl: "https://clematis.coffee/",
+        sponsorLogoUrl: "/uploads/clematis-logo.png",
+      }),
+    );
+    db.event.update.mockImplementation(async (args: { data: Record<string, unknown> }) =>
+      eventRow({ ...args.data }),
+    );
+    const res = await patch({ sponsorName: null });
+    expect(res.status).toBe(200);
+    expect(db.event.update.mock.calls[0][0].data).toMatchObject({
+      sponsorName: null,
+      sponsorUrl: null,
+      sponsorLogoUrl: null,
+    });
+    // But a link with no name is refused.
+    db.event.update.mockClear();
+    expect((await patch({ sponsorName: null, sponsorUrl: "https://x.example/" })).status).toBe(400);
+    expect(db.event.update).not.toHaveBeenCalled();
+  });
+
+  it("can clear the vendor list", async () => {
+    db.event.findUnique.mockResolvedValue(eventRow({ vendors: [{ name: "Taco Bus" }] }));
+    db.event.update.mockImplementation(async (args: { data: Record<string, unknown> }) =>
+      eventRow({ ...args.data }),
+    );
+    expect((await patch({ vendors: [] })).status).toBe(200);
+    expect(db.event.update.mock.calls[0][0].data.vendors).toEqual([]);
+  });
+
+  it("duplicating a night copies its sponsor and vendors", async () => {
+    db.event.findUnique.mockResolvedValueOnce(
+      eventRow({
+        status: "PUBLISHED",
+        medium: "culinary",
+        sponsorName: "Clematis Coffee",
+        sponsorUrl: "https://clematis.coffee/",
+        sponsorLogoUrl: "/uploads/clematis-logo.png",
+        vendors: [{ name: "Taco Bus", offering: "Tacos", url: null }],
+      }),
+    );
+    db.event.create.mockImplementation(async (args: { data: Record<string, unknown> }) =>
+      eventRow({ ...args.data, id: "evt_copy" }),
+    );
+    const res = await duplicateEvent(
+      jsonRequest(`${BASE}/evt_1/duplicate`, "POST", {}, signInAs(admin)),
+      ctx("evt_1"),
+    );
+    expect(res.status).toBe(201);
+    expect(db.event.create.mock.calls[0][0].data).toMatchObject({
+      medium: "culinary",
+      sponsorName: "Clematis Coffee",
+      sponsorUrl: "https://clematis.coffee/",
+      sponsorLogoUrl: "/uploads/clematis-logo.png",
+      vendors: [{ name: "Taco Bus", offering: "Tacos", url: null }],
+    });
+  });
+
+  it("reads explicit columns and keeps working before the migration", async () => {
+    const p2022 = () =>
+      Object.assign(new Error("The column `Event.sponsorName` does not exist"), { code: "P2022" });
+    const base: Record<string, unknown> = eventRow();
+    for (const key of ["sponsorName", "sponsorUrl", "sponsorLogoUrl", "vendors"]) {
+      delete base[key];
+    }
+
+    db.event.findMany.mockRejectedValueOnce(p2022()).mockResolvedValueOnce([base]);
+    const list = await listEvents(getRequest(BASE, signInAs(admin)));
+    expect(list.status).toBe(200);
+    expect((await list.json()).data.items[0]).toMatchObject({ id: "evt_1", sponsorName: null, vendors: [] });
+
+    // Editing a plain field still saves; the retry uses the old columns.
+    db.event.findUnique.mockRejectedValueOnce(p2022()).mockResolvedValueOnce(base);
+    db.event.update
+      .mockRejectedValueOnce(p2022())
+      .mockImplementationOnce(async (args: { data: Record<string, unknown> }) => ({ ...base, ...args.data }));
+    const edited = await patch({ title: "Renamed" });
+    expect(edited.status).toBe(200);
+    expect(db.event.update.mock.calls[1][0].select.sponsorName).toBeUndefined();
+
+    // Saving a sponsor before the migration says so plainly instead of a 500.
+    db.event.findUnique.mockResolvedValueOnce(eventRow());
+    db.event.update.mockRejectedValue(p2022());
+    const sponsor = await patch({ sponsorName: "Clematis Coffee" });
+    expect(sponsor.status).toBe(409);
+    expect((await sponsor.json()).error.message).toMatch(/sponsor/i);
+  });
+});

@@ -64,6 +64,15 @@ function row(overrides: Partial<EventRow> = {}): EventRow {
 }
 
 const NOW = new Date("2030-10-01T12:00:00Z");
+
+/** A row as the pre-migration database returns it (no sponsor columns). */
+function withoutSponsorColumns(full: EventRow): Record<string, unknown> {
+  const base: Record<string, unknown> = { ...full };
+  for (const key of ["sponsorName", "sponsorUrl", "sponsorLogoUrl", "vendors"]) {
+    delete base[key];
+  }
+  return base;
+}
 const missingColumn = () =>
   Object.assign(new Error("The column `Event.sponsorName` does not exist in the current database."), {
     code: "P2022",
@@ -184,11 +193,7 @@ describe("explicit Event columns (safe before the migration is applied)", () => 
     db.event.findMany
       .mockRejectedValueOnce(missingColumn())
       .mockResolvedValueOnce([
-        (() => {
-          const { sponsorName, sponsorUrl, sponsorLogoUrl, vendors, ...base } = row();
-          void sponsorName, void sponsorUrl, void sponsorLogoUrl, void vendors;
-          return base;
-        })(),
+        withoutSponsorColumns(row()),
       ]);
     const res = await listEvents(new Request("http://localhost/api/v1/events"));
     expect(res.status).toBe(200);

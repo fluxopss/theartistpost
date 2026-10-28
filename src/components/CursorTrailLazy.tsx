@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useIsTouchDevice, useReducedMotion } from "@/hooks/useMedia";
 
 const CursorTrail = dynamic(
   () =>
@@ -13,15 +13,10 @@ const CursorTrail = dynamic(
 
 /** Skip loading cursor JS on touch / reduced-motion devices. */
 export function CursorTrailLazy() {
-  const [enabled, setEnabled] = useState(false);
+  // useIsTouchDevice reports touch on the server, so the trail stays off until hydrated.
+  const touch = useIsTouchDevice();
+  const reduce = useReducedMotion();
 
-  useEffect(() => {
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    const noHover = window.matchMedia("(hover: none)").matches;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setEnabled(!(coarse || noHover || reduce));
-  }, []);
-
-  if (!enabled) return null;
+  if (touch || reduce) return null;
   return <CursorTrail />;
 }

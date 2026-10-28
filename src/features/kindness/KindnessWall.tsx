@@ -12,7 +12,7 @@ import { Chip } from "@/design-system/primitives/Chip";
 import { Skeleton } from "@/design-system/primitives/Skeleton";
 import { useIsTouchDevice, useReducedMotion } from "@/hooks/useMedia";
 import { cn } from "@/shared/lib/cn";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type KindnessWallProps = {
   notes: KindnessNote[];
@@ -25,11 +25,14 @@ export function KindnessWall({ notes, hydrated = true }: KindnessWallProps) {
   const reduce = useReducedMotion();
   const touch = useIsTouchDevice();
   const defaultView = reduce || touch ? "grid" : "field";
-  const [view, setView] = useState<"field" | "grid">(defaultView);
-
-  useEffect(() => {
-    setView(reduce || touch ? "grid" : "field");
-  }, [reduce, touch]);
+  // A picked view holds until the device default changes (touch / reduced motion).
+  const [picked, setPicked] = useState<{
+    view: "field" | "grid";
+    over: "field" | "grid";
+  } | null>(null);
+  const view = picked?.over === defaultView ? picked.view : defaultView;
+  const setView = (next: "field" | "grid") =>
+    setPicked({ view: next, over: defaultView });
 
   const filtered = useMemo(() => {
     if (filter === "all") return notes;

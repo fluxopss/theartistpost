@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useHydrated, useHydratedState } from "@/hooks/useHydrated";
 import { kindnessSeeds } from "./fixtures";
 import { moderateKindnessBody } from "./moderation";
 import {
@@ -60,14 +61,13 @@ export type AddKindnessInput = {
 };
 
 export function useKindnessNotes() {
-  const [local, setLocal] = useState<KindnessNote[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useHydrated();
+  const [local, setLocal] = useHydratedState<KindnessNote[]>(
+    "kindness",
+    readLocal,
+    [],
+  );
   const [storageError, setStorageError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLocal(readLocal());
-    setHydrated(true);
-  }, []);
 
   const notes = useMemo(() => mergeNotes(local), [local]);
 
@@ -102,7 +102,7 @@ export function useKindnessNotes() {
     });
 
     return { ok: true as const, note };
-  }, []);
+  }, [setLocal]);
 
   const clearStorageError = useCallback(() => setStorageError(null), []);
 

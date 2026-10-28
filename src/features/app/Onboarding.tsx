@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { assets, mantra, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
 import { useReducedMotion } from "@/hooks/useMedia";
+import { useHydratedState } from "@/hooks/useHydrated";
 import {
+  DEFAULT_STUDIO,
   getStudio,
   isOnboarded,
   markOnboarded,
@@ -32,18 +34,16 @@ const slides = [
 
 export function Onboarding() {
   const reduce = useReducedMotion();
-  const [ready, setReady] = useState(false);
-  const [open, setOpen] = useState(false);
+  // Closed on the server and during hydration; opens once storage says this device is new.
+  const [open, setOpen] = useHydratedState("onboarding", () => !isOnboarded(), false);
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(getStudio().displayName);
+  const [name, setName] = useHydratedState(
+    "studio",
+    () => getStudio().displayName,
+    DEFAULT_STUDIO.displayName,
+  );
 
-  useEffect(() => {
-    setReady(true);
-    if (!isOnboarded()) setOpen(true);
-    setName(getStudio().displayName);
-  }, []);
-
-  if (!ready || !open) return null;
+  if (!open) return null;
 
   const last = step === slides.length - 1;
   const slide = slides[step];

@@ -15,10 +15,8 @@ export function MagneticWrap({
   );
 
   useEffect(() => {
-    if (!enabled) {
-      setInner(null);
-      return;
-    }
+    // Render ignores Inner while disabled, so a loaded module can stay cached.
+    if (!enabled) return;
     let cancelled = false;
     import("./MagneticInner").then((m) => {
       if (!cancelled) setInner(() => m.MagneticInner);

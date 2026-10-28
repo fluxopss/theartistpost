@@ -21,7 +21,8 @@ import { getSaves, getStudio } from "@/features/app/storage";
 import { useSession } from "@/features/auth/AuthProvider";
 import { GenreRail } from "@/features/stage/GenreRail";
 import { useStandalone } from "@/features/app/useDisplayMode";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 
 const destinations = [
   {
@@ -65,18 +66,18 @@ const destinations = [
 export function StudioHub() {
   const standalone = useStandalone();
   const { user, isAuthenticated } = useSession();
-  const [name, setName] = useState<string>(site.name);
-  const [savedCount, setSavedCount] = useState(0);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setName(user.name);
-    } else {
-      setName(getStudio().displayName);
-    }
+  const hydrated = useHydrated();
+  // Device storage is only readable after hydration; the server render shows the house defaults.
+  const device = useMemo(() => {
+    if (!hydrated) return { name: site.name, savedCount: 0 };
     const library = getSaves();
-    setSavedCount(library.posts.length + library.events.length);
-  }, [isAuthenticated, user]);
+    return {
+      name: getStudio().displayName,
+      savedCount: library.posts.length + library.events.length,
+    };
+  }, [hydrated]);
+  const name = hydrated && isAuthenticated && user ? user.name : device.name;
+  const savedCount = device.savedCount;
 
   const sessionLine = !isAuthenticated || !user
     ? appCopy.guestLine

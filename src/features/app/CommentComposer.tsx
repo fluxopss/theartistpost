@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Button } from "@/shared/ui/Button";
+import { Button, ButtonLink } from "@/shared/ui/Button";
+import { useHydratedState } from "@/hooks/useHydrated";
 import { useSession } from "@/features/auth/AuthProvider";
 import { createCommentAction } from "@/features/posts/engagement";
 import {
@@ -28,22 +29,22 @@ export function CommentComposer({
 }) {
   const { user, isAuthenticated } = useSession();
   const signedIn = isAuthenticated && Boolean(user);
-  const [local, setLocal] = useState<LocalComment[]>([]);
+  // Device-only comments: re-read from storage per post and whenever the session flips.
+  const [local, setLocal] = useHydratedState<LocalComment[]>(
+    signedIn ? "signed-in" : `device:${postId}`,
+    () => (signedIn ? [] : getComments(postId)),
+    [],
+  );
   const [serverExtra, setServerExtra] = useState<DisplayComment[]>([]);
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [author, setAuthor] = useState("Guest");
+  const [studioName] = useHydratedState(
+    `studio:${postId}:${signedIn}`,
+    () => getStudio().displayName,
+    "Guest",
+  );
+  const author = signedIn ? user!.name : studioName;
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (!signedIn) {
-      setLocal(getComments(postId));
-      setAuthor(getStudio().displayName);
-    } else {
-      setLocal([]);
-      setAuthor(user!.name);
-    }
-  }, [postId, signedIn, user]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -166,16 +167,9 @@ export function CommentComposer({
             <Button type="submit" size="sm" variant="outline" className="rounded-full">
               Save on this device
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="rounded-full"
-              onClick={() => {
-                window.location.href = "/join?door=member";
-              }}
-            >
+            <ButtonLink href="/join?door=member" size="sm" className="rounded-full">
               Join to post publicly
-            </Button>
+            </ButtonLink>
           </div>
         )}
       </form>

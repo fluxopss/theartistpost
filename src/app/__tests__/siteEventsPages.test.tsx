@@ -101,6 +101,11 @@ function dto(overrides: Partial<EventDTO> = {}): EventDTO {
   };
 }
 
+const schedulePage = {
+  params: Promise.resolve({}),
+  searchParams: Promise.resolve({}),
+} as PageProps<"/artist-schedule">;
+
 const launch = dto();
 const past = dto({
   id: "e4",
@@ -159,7 +164,7 @@ describe("pages read the same events as /api/v1/events, per request", () => {
 
 describe("/artist-schedule", () => {
   it("lists the upcoming nights and not past or cancelled ones", async () => {
-    render(await ArtistSchedulePage());
+    render(await ArtistSchedulePage(schedulePage));
     expect(screen.getAllByText("Launch Night").length).toBeGreaterThan(0);
     expect(screen.queryByText("Kindness Always Community Night")).not.toBeInTheDocument();
     expect(screen.queryByText("Rained Out Night")).not.toBeInTheDocument();
@@ -168,7 +173,7 @@ describe("/artist-schedule", () => {
 
   it("shows a warm, honest empty state when nothing is booked", async () => {
     fixtures.upcoming = [];
-    render(await ArtistSchedulePage());
+    render(await ArtistSchedulePage(schedulePage));
     const empty = screen.getByTestId("schedule-empty");
     expect(within(empty).getByText("The next nights are being booked.")).toBeInTheDocument();
     expect(within(empty).getByRole("link", { name: /get involved/i })).toHaveAttribute(

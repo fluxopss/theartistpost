@@ -31,10 +31,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ArtistSchedulePage({
   searchParams,
-}: {
-  searchParams?: Promise<{ lane?: string | string[] }>;
-} = {}) {
-  const lane = scheduleLane((await searchParams)?.lane);
+}: PageProps<"/artist-schedule">) {
+  const lane = scheduleLane((await searchParams).lane);
   const all = await listUpcomingSiteEvents();
   const events = lane
     ? all.filter((event) => event.medium.trim().toLowerCase() === lane)

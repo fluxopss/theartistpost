@@ -86,6 +86,11 @@ const music = dto({
 });
 
 const params = (id: string) => ({ params: Promise.resolve({ id }) });
+const schedulePage = (lane?: string) =>
+  ({
+    params: Promise.resolve({}),
+    searchParams: Promise.resolve(lane ? { lane } : {}),
+  }) as PageProps<"/artist-schedule">;
 const PRESENTED = /presented by/i;
 
 afterEach(() => cleanup());
@@ -113,7 +118,7 @@ describe("a night without a sponsor (acceptance 5)", () => {
 
   it("the schedule says it only for the presented night", async () => {
     fixtures.upcoming = [plain, music];
-    const { container } = render(await ArtistSchedulePage());
+    const { container } = render(await ArtistSchedulePage(schedulePage()));
     expect(container.textContent).not.toMatch(PRESENTED);
   });
 });
@@ -175,8 +180,7 @@ describe("a presented culinary night", () => {
 });
 
 describe("/artist-schedule lane chips", () => {
-  const page = (lane?: string) =>
-    ArtistSchedulePage({ searchParams: Promise.resolve(lane ? { lane } : {}) });
+  const page = (lane?: string) => ArtistSchedulePage(schedulePage(lane));
 
   it("offers every house lane, Culinary second, plus all nights", async () => {
     render(await page());

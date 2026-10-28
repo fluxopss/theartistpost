@@ -34,7 +34,9 @@ async function seatsLeftFor(event: {
   capacity: number | null;
 }): Promise<number | null> {
   if (event.source !== "db" || event.capacity === null) return null;
-  const summary = await seatSummary(getPrisma(), event.id, event.capacity);
+  const prisma = getPrisma();
+  if (!prisma) throw new Error("database unavailable for a managed night");
+  const summary = await seatSummary(prisma, event.id, event.capacity);
   return summary.seatsLeft;
 }
 

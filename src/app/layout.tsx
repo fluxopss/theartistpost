@@ -8,11 +8,7 @@ import { Providers } from "@/shared/ui/Providers";
 import { SITE_URL } from "@/shared/lib/constants";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 import { PulseBeacon } from "@/components/seo/PulseBeacon";
-import {
-  adsenseClient,
-  adsenseScriptEnabled,
-  adsenseScriptSrc,
-} from "@/lib/adsense";
+import { adsenseClient } from "@/lib/adsense";
 import "./globals.css";
 
 const jost = Jost({
@@ -91,8 +87,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getSession();
+  // Site verification only (meta tag + /ads.txt). Google's ad script is NOT
+  // loaded here: it loads only where an approved <AdSlot> renders (AdUnit).
+  // Auto ads must stay OFF in the AdSense dashboard; placements are
+  // code-controlled and approved by The Artist Post.
   const adsenseAccount = adsenseClient();
-  const adsenseScript = adsenseScriptEnabled();
 
   return (
     <html
@@ -111,13 +110,6 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         {adsenseAccount ? (
           <meta name="google-adsense-account" content={adsenseAccount} />
-        ) : null}
-        {adsenseAccount && adsenseScript ? (
-          <script
-            async
-            src={adsenseScriptSrc(adsenseAccount)}
-            crossOrigin="anonymous"
-          />
         ) : null}
       </head>
       <body className="min-h-full antialiased">

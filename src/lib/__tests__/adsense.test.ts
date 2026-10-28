@@ -3,7 +3,6 @@ import {
   adsTxt,
   adsenseClient,
   adsensePublisherId,
-  adsenseScriptEnabled,
   adsenseScriptSrc,
 } from "@/lib/adsense";
 import { GET } from "@/app/ads.txt/route";
@@ -15,7 +14,6 @@ describe("AdSense config", () => {
     expect(adsensePublisherId({})).toBeNull();
     expect(adsenseClient({})).toBeNull();
     expect(adsTxt({})).toBeNull();
-    expect(adsenseScriptEnabled({ ADSENSE_AUTO_ADS: "1" })).toBe(false);
   });
 
   it("accepts pub- or ca-pub- and normalizes both", () => {
@@ -30,11 +28,7 @@ describe("AdSense config", () => {
     }
   });
 
-  it("links the site without loading ads until ADSENSE_AUTO_ADS=1", () => {
-    expect(adsenseScriptEnabled({ ADSENSE_PUBLISHER_ID: ID })).toBe(false);
-    expect(
-      adsenseScriptEnabled({ ADSENSE_PUBLISHER_ID: ID, ADSENSE_AUTO_ADS: "1" }),
-    ).toBe(true);
+  it("builds the ad script URL for the client", () => {
     expect(adsenseScriptSrc(`ca-${ID}`)).toBe(
       `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-${ID}`,
     );

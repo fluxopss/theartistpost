@@ -7,6 +7,7 @@ import { MantraStrip } from "@/features/involve/MantraStrip";
 import { OpeningDoor } from "@/features/night/OpeningDoor";
 import { featuredNight } from "@/features/night/program";
 import { content } from "@/lib/content";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { listUpcomingSiteEvents } from "@/server/api/siteEvents";
 
 /** The next night comes from the database (Manage events), so read it per request. */
@@ -27,6 +28,7 @@ export default async function HomePage() {
       <HistoryTeaser />
       <HomeKindnessDeferred />
       <FeaturedArtistsSection artists={artists} />
+      <AdSlot placement="home-lower" />
       <HomeLowerDeferred />
     </>
   );

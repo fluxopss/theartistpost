@@ -23,6 +23,11 @@ import { Button, ButtonLink } from "@/design-system/primitives/Button";
 import { Tabs } from "@/design-system/primitives/Tabs";
 import { Modal } from "@/design-system/primitives/Modal";
 import { cn } from "@/shared/lib/cn";
+import type { EventDTO } from "@/server/api/dto";
+import { PresentedBy } from "@/features/sponsors/PresentedBy";
+
+/** Schedule nights; managed nights may also carry a sponsor. */
+type ScheduleEvent = ContentEvent & Partial<Pick<EventDTO, "presentedBy">>;
 
 type ViewMode = "list" | "calendar" | "agenda";
 
@@ -75,7 +80,7 @@ function formatDayHeading(dayKey: string, month: "short" | "long" = "short") {
   });
 }
 
-export function ScheduleView({ events }: { events: ContentEvent[] }) {
+export function ScheduleView({ events }: { events: ScheduleEvent[] }) {
   const [mode, setMode] = useState<ViewMode>("list");
   const [cursor, setCursor] = useState(() => {
     const first = events[0] ? new Date(events[0].start) : new Date();
@@ -86,7 +91,7 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
   const [wizardStep, setWizardStep] = useState(0);
 
   const byDay = useMemo(() => {
-    const map = new Map<string, ContentEvent[]>();
+    const map = new Map<string, ScheduleEvent[]>();
     for (const e of events) {
       const key = easternDayKey(e.start);
       const list = map.get(key) ?? [];
@@ -365,12 +370,13 @@ export function ScheduleView({ events }: { events: ContentEvent[] }) {
   );
 }
 
-function EventActions({ event }: { event: ContentEvent }) {
+function EventActions({ event }: { event: ScheduleEvent }) {
   return (
     <>
       <p className="text-sm text-paper-muted">
         {event.artist} · {event.venue}
       </p>
+      <PresentedBy sponsor={event.presentedBy} size="sm" className="mt-1" />
       <p className="mt-2 text-sm leading-relaxed text-paper">
         {event.description}
       </p>

@@ -9,7 +9,7 @@
  *    to the free join page or the partner/sponsor door. Artists are never
  *    charged, so those pages are never rebuilt.
  * Pages that exist on both sites (/about, /artist-schedule, /kindness-always,
- * /supporters) need no rule.
+ * /supporters, /sponsors) need no rule.
  */
 export type LegacyRedirect = { source: string; destination: string };
 
@@ -21,7 +21,6 @@ export const LEGACY_REDIRECTS: readonly LegacyRedirect[] = [
   { source: "/team", destination: "/about" },
   { source: "/arts-collective", destination: "/about" },
   { source: "/venues", destination: PARTNER_DOOR },
-  { source: "/sponsors", destination: PARTNER_DOOR },
   { source: "/marketing-services", destination: PARTNER_DOOR },
   { source: "/advertise-with-tap", destination: PARTNER_DOOR },
   { source: "/membership", destination: "/join" },

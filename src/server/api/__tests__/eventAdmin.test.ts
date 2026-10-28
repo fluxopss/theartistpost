@@ -640,6 +640,7 @@ describe("sponsor and vendors (Phase 2)", () => {
       eventRow({ medium: "visual", ...args.data }),
     );
     expect((await patch({ medium: "visual", title: "Same lane" })).status).toBe(200);
+    expect((await patch({ medium: "Visual" })).status).toBe(200);
     expect((await patch({ medium: "crypto" })).status).toBe(400);
   });
 

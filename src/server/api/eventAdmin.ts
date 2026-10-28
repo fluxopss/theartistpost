@@ -726,14 +726,12 @@ export async function updateAdminEvent(
   // A night keeps the lane it already has; a new lane must be a real one.
   const medium =
     input.medium !== undefined ? input.medium.toLowerCase() : undefined;
-  if (
-    input.medium !== undefined &&
-    input.medium !== existing.medium &&
-    !EVENT_MEDIUMS.includes(medium!)
-  ) {
+  const keepsLane =
+    medium !== undefined && medium === existing.medium.toLowerCase();
+  if (medium !== undefined && !keepsLane && !EVENT_MEDIUMS.includes(medium)) {
     return invalid(MEDIUM_MESSAGE, { medium: MEDIUM_MESSAGE });
   }
-  const nextMedium = input.medium === existing.medium ? existing.medium : medium;
+  const nextMedium = keepsLane ? existing.medium : medium;
 
   const touchesSponsorFields =
     input.sponsorName !== undefined ||

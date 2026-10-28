@@ -8,10 +8,15 @@ export const SCHEDULE_PATH = "/artist-schedule";
 export function scheduleLane(raw: string | string[] | undefined): string | null {
   const value = (Array.isArray(raw) ? raw[0] : raw)?.trim().toLowerCase();
   if (!value) return null;
+  if (value === COMMUNITY_LANE) return value;
   return houseGenres.some((genre) => genre.id === value) ? value : null;
 }
 
+/** Nights that aren't tied to one discipline (the API's default medium). */
+const COMMUNITY_LANE = "community";
+
 export function laneLabel(id: string): string {
+  if (id === COMMUNITY_LANE) return "Community nights";
   return houseGenres.find((genre) => genre.id === id)?.label ?? id;
 }
 

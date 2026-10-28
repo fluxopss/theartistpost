@@ -391,31 +391,40 @@ enum RsvpStatus {
 /// content service only for events that have no row here (see `sourceId`).
 /// Times are absolute instants; `timeZone` is how the house reads them.
 model Event {
-  id            String      @id @default(cuid())
+  id             String      @id @default(cuid())
   /// Content-service event id this row supersedes (hides the seed entry).
-  sourceId      String?     @unique
-  title         String
-  description   String      @default("")
-  artist        String      @default("")
-  medium        String      @default("community")
-  startsAt      DateTime
-  endsAt        DateTime
-  timeZone      String      @default("America/New_York")
-  venueName     String
-  venueAddress  String?
+  sourceId       String?     @unique
+  title          String
+  description    String      @default("")
+  artist         String      @default("")
+  medium         String      @default("community")
+  startsAt       DateTime
+  endsAt         DateTime
+  timeZone       String      @default("America/New_York")
+  venueName      String
+  venueAddress   String?
   /// Optional venue point; only used to confirm a check-in is near the door.
-  latitude      Float?
-  longitude     Float?
+  latitude       Float?
+  longitude      Float?
   /// Total seats (sum of party sizes). Null = unlimited.
-  capacity      Int?
-  status        EventStatus @default(DRAFT)
-  coverImageUrl String?
-  comingSoon    Boolean     @default(false)
-  createdById   String?
-  publishedAt   DateTime?
-  cancelledAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  capacity       Int?
+  status         EventStatus @default(DRAFT)
+  coverImageUrl  String?
+  comingSoon     Boolean     @default(false)
+  /// "Presented by" sponsor, disclosed plainly on the night. Admin-set only.
+  /// No money field on purpose: artists and vendors never pay.
+  sponsorName    String?
+  /// https only; requires sponsorName.
+  sponsorUrl     String?
+  /// An upload from our own store (same rule as coverImageUrl); requires sponsorName.
+  sponsorLogoUrl String?
+  /// Food & vendors: [{ name, offering, url? }], at most 12. Admin-set only.
+  vendors        Json        @default("[]")
+  createdById    String?
+  publishedAt    DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   createdBy User?          @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
   rsvps     EventRsvp[]

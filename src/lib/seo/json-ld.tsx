@@ -112,11 +112,22 @@ export function eventJsonLd(
   };
 }
 
+/**
+ * JSON for a <script> tag. Escapes `<` (so no value can close the tag or open
+ * an HTML comment) and U+2028/U+2029; the result still parses to the same data.
+ */
+export function serializeJsonLd(data: Record<string, unknown>): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );
 }

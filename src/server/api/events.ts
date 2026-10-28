@@ -59,3 +59,31 @@ export function inWindow(event: Timed, window: EventWindow): boolean {
 export function isPlausibleEventId(id: string): boolean {
   return id.length > 0 && id.length <= 40;
 }
+
+/** A lane is a medium id ("music", "culinary", "community", …). */
+const LANE_RE = /^[a-z0-9-]{1,40}$/;
+
+type LaneResult =
+  | { ok: true; lane: string | null }
+  | { ok: false; message: string; fields: Record<string, string> };
+
+/** Optional `lane` filter. Absent or empty = every night (unchanged default). */
+export function parseLane(params: URLSearchParams): LaneResult {
+  const raw = params.get("lane")?.trim().toLowerCase() ?? "";
+  if (!raw) return { ok: true, lane: null };
+  if (!LANE_RE.test(raw)) {
+    return {
+      ok: false,
+      message: "Check the lane.",
+      fields: { lane: "lane must be a medium id like music or culinary." },
+    };
+  }
+  return { ok: true, lane: raw };
+}
+
+export function inLane(
+  event: Pick<ContentEvent, "medium">,
+  lane: string | null,
+): boolean {
+  return lane === null || event.medium.trim().toLowerCase() === lane;
+}

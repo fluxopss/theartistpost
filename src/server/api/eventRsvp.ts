@@ -14,6 +14,7 @@ import {
 } from "@/server/api/eventResult";
 import { notifyEventPeople } from "@/server/api/eventNotify";
 import { eventRowToDTO, type EventRow } from "@/server/api/eventStore";
+import { fillRow, withEventColumns } from "@/server/api/eventColumns";
 import { zodFieldErrors } from "@/server/api/validation";
 
 export type RsvpStatus = "GOING" | "MAYBE" | "NOT_GOING";
@@ -108,9 +109,14 @@ async function loadPublicEvent(
   eventId: string,
 ): Promise<EventRow | null> {
   if (!EVENT_ID_RE.test(eventId)) return null;
-  return (await prisma.event.findFirst({
-    where: { id: eventId, status: { in: [...PUBLIC_STATUSES] } },
-  })) as EventRow | null;
+  return (await withEventColumns(
+    (select) =>
+      prisma.event.findFirst({
+        select,
+        where: { id: eventId, status: { in: [...PUBLIC_STATUSES] } },
+      }),
+    fillRow,
+  )) as EventRow | null;
 }
 
 type Ok<T> = { ok: true; data: T };
@@ -350,15 +356,19 @@ export async function listMyRsvps(
   person: Person,
 ): Promise<Ok<{ items: MyRsvpItem[] }> | EventFailure> {
   try {
-    const rows = (await prisma.eventRsvp.findMany({
-      where: {
-        userId: person.id,
-        status: { in: ["GOING", "MAYBE"] },
-        event: { status: "PUBLISHED" },
-      },
-      include: { event: true },
-      orderBy: { event: { startsAt: "asc" } },
-    })) as (RsvpRow & { event: EventRow })[];
+    const rows = (await withEventColumns(
+      (select) =>
+        prisma.eventRsvp.findMany({
+          where: {
+            userId: person.id,
+            status: { in: ["GOING", "MAYBE"] },
+            event: { status: "PUBLISHED" },
+          },
+          include: { event: { select } },
+          orderBy: { event: { startsAt: "asc" } },
+        }),
+      (found) => found.map((r) => ({ ...r, event: fillRow(r.event)! })),
+    )) as unknown as (RsvpRow & { event: EventRow })[];
     const now = new Date();
     return {
       ok: true,

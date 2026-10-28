@@ -9,10 +9,12 @@ const pageExists = (route: string) =>
   existsSync(path.join(APP_DIR, route.replace(/^\//, ""), "page.tsx"));
 
 describe("legacy theartistpost.org redirects", () => {
-  it("covers the 20 GoDaddy-era URLs with unique sources", () => {
+  it("covers the 19 GoDaddy-era URLs with unique sources", () => {
+    // /sponsors was the 20th; it is a real page again (Phase 2), so it needs no rule.
     const sources = LEGACY_REDIRECTS.map((r) => r.source);
-    expect(sources).toHaveLength(20);
-    expect(new Set(sources).size).toBe(20);
+    expect(sources).toHaveLength(19);
+    expect(new Set(sources).size).toBe(19);
+    expect(sources).not.toContain("/sponsors");
   });
 
   it("never sends anyone to the home page", () => {

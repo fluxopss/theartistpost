@@ -13,8 +13,17 @@ import {
   type ApiErrorCode,
 } from "@/server/api/respond";
 
-/** Per IP, per route: 5 submissions every 10 minutes. */
+/** App (/api/v1) lead routes, per IP, per route: 5 submissions every 10 minutes. */
 export const LEAD_RATE_LIMIT = { windowMs: 10 * 60_000, max: 5 } as const;
+
+/**
+ * Website form routes, per IP, per route. Looser than the app budget because
+ * at an in-person night many guests share the venue's one public IP.
+ */
+export const WEB_LEAD_IP_RATE_LIMIT = { windowMs: 10 * 60_000, max: 40 } as const;
+
+/** Website form routes, per normalized email, per route (whatever the IP). */
+export const WEB_LEAD_EMAIL_RATE_LIMIT = { windowMs: 10 * 60_000, max: 5 } as const;
 
 const REASON_CODE: Record<LeadFailureReason, ApiErrorCode> = {
   invalid: "validation_failed",
@@ -22,6 +31,58 @@ const REASON_CODE: Record<LeadFailureReason, ApiErrorCode> = {
   closed: "conflict",
   undelivered: "upstream_unavailable",
 };
+
+const RATE_LIMITED_MESSAGE = "Too many tries. Wait a bit and send it again.";
+
+function webRateLimited(retryAfterMs: number): Response {
+  const retryAfterSec = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  return Response.json(
+    { ok: false, error: RATE_LIMITED_MESSAGE },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSec), "Cache-Control": "no-store" },
+    },
+  );
+}
+
+/**
+ * Per-IP budget for the website's own form routes (/api/subscribe,
+ * /api/involve, /api/night/rsvp, /api/donate/steward). Separate keys from
+ * the v1 routes, so the website and the app never spend each other's budget.
+ * Call before reading the body. Returns a 429 in the website's
+ * `{ ok: false, error }` shape, or null to go on.
+ */
+export function limitWebLead(request: Request, route: string): Response | null {
+  const limit = checkRateLimit(
+    `web:${route}:${clientIp(request)}`,
+    WEB_LEAD_IP_RATE_LIMIT,
+  );
+  return limit.ok ? null : webRateLimited(limit.retryAfterMs);
+}
+
+/** The body's `email`, trimmed and lowercased, or null when there is none. */
+export function leadEmailKey(body: unknown): string | null {
+  if (typeof body !== "object" || body === null || !("email" in body)) return null;
+  const value = (body as { email: unknown }).email;
+  if (typeof value !== "string") return null;
+  const email = value.trim().toLowerCase();
+  return email ? email : null;
+}
+
+/**
+ * Per-email budget for the website form routes, applied after the body
+ * parses: one person cannot flood a form even from many IPs, while a venue
+ * full of different guests on one IP is not held back. No email, no check.
+ */
+export function limitWebLeadEmail(route: string, body: unknown): Response | null {
+  const email = leadEmailKey(body);
+  if (!email) return null;
+  const limit = checkRateLimit(
+    `web:${route}:email:${email}`,
+    WEB_LEAD_EMAIL_RATE_LIMIT,
+  );
+  return limit.ok ? null : webRateLimited(limit.retryAfterMs);
+}
 
 type PlatformResult =
   | { ok: true; platform?: LeadPlatform }
@@ -58,7 +119,7 @@ export function handleLeadPost<T>(
       LEAD_RATE_LIMIT,
     );
     if (!limit.ok) {
-      return apiError("rate_limited", "Too many tries. Wait a bit and send it again.", {
+      return apiError("rate_limited", RATE_LIMITED_MESSAGE, {
         retryAfterSec: Math.max(1, Math.ceil(limit.retryAfterMs / 1000)),
       });
     }

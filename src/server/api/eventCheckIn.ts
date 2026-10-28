@@ -14,6 +14,7 @@ import {
   type EventFailure,
 } from "@/server/api/eventResult";
 import type { EventRow } from "@/server/api/eventStore";
+import { fillRow, withEventColumns } from "@/server/api/eventColumns";
 import { zodFieldErrors } from "@/server/api/validation";
 
 export type CheckInDTO = { checkedInAt: string; verified: boolean };
@@ -55,9 +56,14 @@ async function loadLiveEvent(
   eventId: string,
 ): Promise<EventRow | null> {
   if (!EVENT_ID_RE.test(eventId)) return null;
-  return (await prisma.event.findFirst({
-    where: { id: eventId, status: { in: ["PUBLISHED", "CANCELLED"] } },
-  })) as EventRow | null;
+  return (await withEventColumns(
+    (select) =>
+      prisma.event.findFirst({
+        select,
+        where: { id: eventId, status: { in: ["PUBLISHED", "CANCELLED"] } },
+      }),
+    fillRow,
+  )) as EventRow | null;
 }
 
 function stateFor(event: EventRow, checkIn: CheckInRow | null, now: Date): CheckInStateDTO {

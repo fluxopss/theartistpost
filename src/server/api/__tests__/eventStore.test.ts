@@ -146,6 +146,17 @@ describe("listPublicEvents", () => {
   });
 });
 
+describe("listPublicEvents default (used by /api/v1/events)", () => {
+  it("has no date filter unless the caller asks for one", async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+    await listPublicEvents(prisma, NOW);
+    expect(prisma.event.findMany.mock.calls.at(-1)?.[0]).toEqual({
+      where: { status: { in: ["PUBLISHED", "CANCELLED"] } },
+      orderBy: { startsAt: "asc" },
+    });
+  });
+});
+
 describe("findPublicEvent", () => {
   it("finds a DB night by id", async () => {
     prisma.event.findFirst.mockResolvedValueOnce(row());

@@ -68,12 +68,8 @@ export function apiError(
   return Response.json(body, { status: API_ERROR_STATUS[code], headers });
 }
 
-/** Caller IP: first x-forwarded-for hop, else x-real-ip, else "unknown". */
-export function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
-}
+/** Caller IP for rate limits — see `@/shared/lib/clientIp` (last proxy hop). */
+export { clientIp } from "@/shared/lib/clientIp";
 
 /**
  * Wrap a handler so an unexpected throw becomes an `internal` envelope

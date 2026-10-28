@@ -3,12 +3,14 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getSession } from "@/features/auth/adapter";
+import { isSameOriginWrite } from "@/features/auth/sameOrigin";
 import {
   authorizePublisher,
   isMockGuestSession,
   PUBLISHING_CLOSED_ERROR,
 } from "@/features/auth/publishGate";
 import { uploadDir } from "@/server/api/uploadStore";
+import { clientIp } from "@/shared/lib/clientIp";
 import { getPrisma } from "@/shared/lib/prisma";
 
 export const runtime = "nodejs";
@@ -28,12 +30,6 @@ const MAGIC: Array<{ mime: string; bytes: number[] }> = [
 const uploadHits = new Map<string, { count: number; resetAt: number }>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 20;
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();
@@ -69,11 +65,32 @@ function sniffImageMime(buffer: Buffer): string | null {
   return null;
 }
 
+/** Same cookie-write origin check `resolveRequestAuth` applies to /api/v1. */
+function sameOrigin(request: Request): boolean {
+  return isSameOriginWrite(
+    {
+      method: request.method,
+      origin: request.headers.get("origin"),
+      referer: request.headers.get("referer"),
+      host: request.headers.get("x-forwarded-host") ?? request.headers.get("host"),
+    },
+    { canonicalHost: process.env.CANONICAL_HOST, legacyHosts: process.env.LEGACY_HOSTS },
+  );
+}
+
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session || isMockGuestSession(session)) {
     return NextResponse.json(
       { error: "Uploads are closed until an artist is approved." },
+      { status: 403 },
+    );
+  }
+
+  // The session rides a cookie, so the write must come from our own host.
+  if (!sameOrigin(request)) {
+    return NextResponse.json(
+      { error: "Uploads must come from The Artist Post site." },
       { status: 403 },
     );
   }
@@ -87,7 +104,7 @@ export async function POST(request: Request) {
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: session.email },
+    where: { email: session.email.trim().toLowerCase() },
     include: { artistProfile: true },
   });
   const gate = authorizePublisher(session, dbUser);

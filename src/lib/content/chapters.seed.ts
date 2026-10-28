@@ -29,7 +29,7 @@ export const chapters: ContentChapter[] = [
     state: "Idaho",
     stateCode: "ID",
     status: "forming",
-    summary: "Chapter region on the national map — local leadership TBD.",
+    summary: "Chapter region on the national map. Local team forming.",
   },
   {
     id: "nv",
@@ -37,7 +37,7 @@ export const chapters: ContentChapter[] = [
     state: "Nevada",
     stateCode: "NV",
     status: "forming",
-    summary: "Chapter region on the national map — local leadership TBD.",
+    summary: "Chapter region on the national map. Local team forming.",
   },
   {
     id: "tn",
@@ -61,6 +61,6 @@ export const chapters: ContentChapter[] = [
     state: "Texas",
     stateCode: "TX",
     status: "forming",
-    summary: "Chapter region on the national map — local leadership TBD.",
+    summary: "Chapter region on the national map. Local team forming.",
   },
 ];

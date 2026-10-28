@@ -116,6 +116,27 @@ export function weeklyLabel(schedule: WeeklyHours): string {
     .join(" · ");
 }
 
+/**
+ * While closed: when the house opens next, in the schedule's zone.
+ * "Opens at 11 AM" (later today), "Opens tomorrow at 11 AM", or
+ * "Opens Mon at 10 AM". Null while open or when no day has hours.
+ */
+export function opensLabel(schedule: WeeklyHours, date = new Date()): string | null {
+  if (isOpenAt(schedule, date)) return null;
+  const { day, minutes } = localClock(date, schedule.timeZone);
+  for (let ahead = 0; ahead < 8; ahead++) {
+    const d = ((day + ahead) % 7) as DayIndex;
+    const h = hoursFor(schedule, d);
+    if (!h) continue;
+    if (ahead === 0 && minutes >= h.openMinutes) continue;
+    const at = formatMinutes(h.openMinutes);
+    if (ahead === 0) return `Opens at ${at}`;
+    if (ahead === 1) return `Opens tomorrow at ${at}`;
+    return `Opens ${DAY_SHORT[d]} at ${at}`;
+  }
+  return null;
+}
+
 /** Today's window in the schedule's zone, e.g. "11 AM – Midnight", or "Closed today". */
 export function todayLabel(schedule: WeeklyHours, date = new Date()): string {
   const { day } = localClock(date, schedule.timeZone);

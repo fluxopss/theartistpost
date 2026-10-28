@@ -1,3 +1,5 @@
+import { KINDNESS_STORAGE_KEY } from "@/features/kindness/types";
+
 export const STUDIO_KEY = "tap-studio";
 export const LIKES_KEY = "tap-likes";
 export const SAVES_KEY = "tap-saves";
@@ -5,6 +7,8 @@ export const COMMENTS_KEY = "tap-comments";
 export const ONBOARD_KEY = "tap-onboarded";
 export const INSTALL_DISMISS_KEY = "tap-install-dismissed";
 export const MOTION_KEY = "tap-motion";
+/** Random visitor id the Pulse analytics beacon keeps (see PulseBeacon). */
+export const PULSE_VISITOR_KEY = "fp_uid";
 
 export type StudioProfile = {
   displayName: string;
@@ -225,6 +229,8 @@ export function clearLocalAppData() {
     ONBOARD_KEY,
     INSTALL_DISMISS_KEY,
     MOTION_KEY,
+    KINDNESS_STORAGE_KEY,
+    PULSE_VISITOR_KEY,
   ].forEach((key) => localStorage.removeItem(key));
   if (typeof document !== "undefined") {
     document.documentElement.classList.remove("reduce-motion");

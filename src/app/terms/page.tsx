@@ -44,7 +44,8 @@ export default function TermsPage() {
 
       <h2>No warranties</h2>
       <p>
-        Event listings marked coming soon are placeholders. Featured artists
+        Event details can change; check the event page before you go. Featured
+        artists
         appear only when real portraits and bios are provided. The service is
         offered as-is.
       </p>

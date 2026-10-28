@@ -3,6 +3,8 @@ import { content } from "@/lib/content";
 import { nightPhase } from "@/features/night/program";
 import { toEventDTO, type EventDTO } from "@/server/api/dto";
 import { absoluteUrl } from "@/server/api/urls";
+import { fillRow, fillRows, withEventColumns } from "@/server/api/eventColumns";
+import { presentedByFromRow, vendorsFromJson } from "@/server/api/eventSponsors";
 
 /** The columns of an `Event` row the API reads (structural, no client import). */
 export type EventRow = {
@@ -23,6 +25,11 @@ export type EventRow = {
   status: "DRAFT" | "PUBLISHED" | "CANCELLED";
   coverImageUrl: string | null;
   comingSoon: boolean;
+  sponsorName: string | null;
+  sponsorUrl: string | null;
+  sponsorLogoUrl: string | null;
+  /** Stored JSON; read it through vendorsFromJson. */
+  vendors: unknown;
   createdById: string | null;
   publishedAt: Date | null;
   cancelledAt: Date | null;
@@ -55,6 +62,8 @@ export function eventRowToDTO(row: EventRow, now = new Date()): EventDTO {
     longitude: row.longitude,
     capacity: row.capacity,
     coverImageUrl: absoluteUrl(row.coverImageUrl),
+    presentedBy: presentedByFromRow(row),
+    vendors: vendorsFromJson(row.vendors),
   };
 }
 
@@ -74,15 +83,38 @@ function byStart(a: EventDTO, b: EventDTO): number {
 export async function listPublicEvents(
   prisma: PrismaClient | null,
   now = new Date(),
+  options: {
+    /**
+     * Only load DB nights ending at or after this moment. Rows adopted from a
+     * schedule night (sourceId set) are always loaded, so an old adopted night
+     * keeps hiding the schedule night it replaced. Omit for every night
+     * (the /api/v1/events default).
+     */
+    endedAfter?: Date;
+  } = {},
 ): Promise<EventDTO[]> {
   const schedule = await content.getEvents();
   let rows: EventRow[] = [];
   if (prisma) {
+    const status = { in: [...PUBLIC_STATUSES] };
     try {
-      rows = (await prisma.event.findMany({
-        where: { status: { in: [...PUBLIC_STATUSES] } },
-        orderBy: { startsAt: "asc" },
-      })) as EventRow[];
+      rows = (await withEventColumns(
+        (select) =>
+          prisma.event.findMany({
+            select,
+            where: options.endedAfter
+              ? {
+                  status,
+                  OR: [
+                    { endsAt: { gte: options.endedAfter } },
+                    { sourceId: { not: null } },
+                  ],
+                }
+              : { status },
+            orderBy: { startsAt: "asc" },
+          }),
+        fillRows,
+      )) as EventRow[];
     } catch (error) {
       console.error("[events] database unavailable, serving schedule", error);
     }
@@ -107,12 +139,17 @@ export async function findPublicEvent(
 ): Promise<EventDTO | null> {
   if (prisma) {
     try {
-      const row = (await prisma.event.findFirst({
-        where: {
-          status: { in: [...PUBLIC_STATUSES] },
-          OR: [{ id }, { sourceId: id }],
-        },
-      })) as EventRow | null;
+      const row = (await withEventColumns(
+        (select) =>
+          prisma.event.findFirst({
+            select,
+            where: {
+              status: { in: [...PUBLIC_STATUSES] },
+              OR: [{ id }, { sourceId: id }],
+            },
+          }),
+        fillRow,
+      )) as EventRow | null;
       if (row) return eventRowToDTO(row, now);
     } catch (error) {
       console.error("[events] database unavailable, serving schedule", error);

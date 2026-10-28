@@ -2,6 +2,7 @@ import { assets } from "@/content/site";
 import type { ContentArtist, ContentEvent } from "@/lib/content";
 import type { KindnessNote } from "@/features/kindness/types";
 import type { ArtistMedium } from "@/data/artists";
+import { isUpcomingNight } from "@/features/night/program";
 import type { WallPiece } from "./types";
 import { WALL_CANVAS } from "./types";
 
@@ -83,13 +84,17 @@ function eventMedium(
 /**
  * Assemble The Wall from real artists, published nights, reserved frames,
  * the Hacienda room, and kindness notes. Never invents an artist name.
+ * Only nights people can still go to are hung (not cancelled, not ended).
  */
 export function buildWallPieces(input: {
   artists: ContentArtist[];
-  events: ContentEvent[];
+  events: Array<ContentEvent & { cancelled?: boolean }>;
   notes: KindnessNote[];
+  now?: Date;
 }): WallPiece[] {
   const pieces: WallPiece[] = [];
+  const now = input.now ?? new Date();
+  const nights = input.events.filter((event) => isUpcomingNight(event, now));
 
   pieces.push({
     id: "venue-hacienda",
@@ -105,7 +110,7 @@ export function buildWallPieces(input: {
     availability: "upcoming",
     href: "/get-involved?door=events",
     bookHref: "/get-involved?door=space",
-    eventIds: input.events.map((e) => e.id),
+    eventIds: nights.map((e) => e.id),
     kindnessIds: [],
     x: 980,
     y: 280,
@@ -127,7 +132,7 @@ export function buildWallPieces(input: {
       imageAlt: `Portrait of ${artist.name}`,
       medium: artist.medium,
       neighborhood: "hacienda",
-      availability: artist.comingSoon ? "upcoming" : "upcoming",
+      availability: "upcoming",
       href: artist.handle ? `/artist/${artist.handle}` : undefined,
       bookHref: "/get-involved?door=space",
       eventIds: [],
@@ -173,7 +178,7 @@ export function buildWallPieces(input: {
     { x: 1420, y: 1180, w: 400, h: 260 },
   ];
 
-  input.events.forEach((event, i) => {
+  nights.forEach((event, i) => {
     const slot = eventLayout[i % eventLayout.length]!;
     const col = Math.floor(i / eventLayout.length);
     pieces.push({
@@ -186,7 +191,8 @@ export function buildWallPieces(input: {
       imageAlt: event.title,
       medium: eventMedium(event.medium),
       neighborhood: "clematis",
-      availability: event.comingSoon ? "upcoming" : "upcoming",
+      // Every hung night is still ahead (or tonight): see `nights` above.
+      availability: "upcoming",
       showcaseDate: event.start,
       href: `/event/${event.id}`,
       bookHref: "/get-involved?door=events",

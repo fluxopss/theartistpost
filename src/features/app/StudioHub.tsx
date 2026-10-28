@@ -216,7 +216,6 @@ export function StudioHub() {
               <p className="font-semibold text-paper">Install the app</p>
               <p className="mt-1 text-sm text-paper-muted">
                 Add The Artist Post to your home screen for a full-screen studio.
-                The same site becomes the App Store binary via Capacitor.
               </p>
               <Link
                 href="/install"

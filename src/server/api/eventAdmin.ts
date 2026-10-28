@@ -11,6 +11,26 @@ import {
 import { eventAudienceIds, notifyEventPeople } from "@/server/api/eventNotify";
 import { eventRowToDTO, type EventRow } from "@/server/api/eventStore";
 import {
+  fillRow,
+  fillRows,
+  isMissingColumnError,
+  withEventColumns,
+  EVENT_BASE_SELECT,
+  EVENT_SELECT,
+} from "@/server/api/eventColumns";
+import {
+  SPONSOR_NAME_MAX,
+  SPONSOR_URL_MAX,
+  VENDORS_MAX,
+  VENDOR_NAME_MAX,
+  VENDOR_OFFERING_MAX,
+  VENDOR_URL_MAX,
+  httpsUrl,
+  vendorsFromJson,
+  type VendorDTO,
+} from "@/server/api/eventSponsors";
+import { houseGenres } from "@/content/stage";
+import {
   HOUSE_TIME_ZONE,
   formatLocalInZone,
   isSupportedTimeZone,
@@ -56,6 +76,13 @@ export type AdminEventDTO = {
   publishState: "DRAFT" | "PUBLISHED" | "CANCELLED";
   coverImageUrl: string | null;
   comingSoon: boolean;
+  /** "Presented by" sponsor. null = not a sponsored night. */
+  sponsorName: string | null;
+  sponsorUrl: string | null;
+  /** Absolute URL of the uploaded logo. */
+  sponsorLogoUrl: string | null;
+  /** Food & vendors, [] when none. */
+  vendors: VendorDTO[];
   publishedAt: string | null;
   cancelledAt: string | null;
   createdAt: string;
@@ -97,6 +124,12 @@ export function toAdminEventDTO(
     publishState: row.status,
     coverImageUrl: absoluteUrl(row.coverImageUrl),
     comingSoon: row.comingSoon,
+    sponsorName: row.sponsorName?.trim() || null,
+    sponsorUrl: httpsUrl(row.sponsorUrl),
+    sponsorLogoUrl: row.sponsorLogoUrl
+      ? absoluteUrl(normalizeUploadUrl(row.sponsorLogoUrl))
+      : null,
+    vendors: vendorsFromJson(row.vendors),
     publishedAt: row.publishedAt?.toISOString() ?? null,
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
@@ -149,6 +182,66 @@ async function countsFor(
 
 // --- validation -------------------------------------------------------------
 
+/** Lanes a new night can be filed under: the house genres plus community. */
+export const EVENT_MEDIUMS: readonly string[] = [
+  "community",
+  ...houseGenres.map((genre) => genre.id),
+];
+const MEDIUM_MESSAGE = "Pick community or one of the house lanes.";
+
+/** Empty text means "none". */
+const blankToNull = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? null : value;
+
+const httpsField = (max: number, message: string) =>
+  z.preprocess(
+    blankToNull,
+    z
+      .string()
+      .trim()
+      .max(max, `Keep the link under ${max} characters.`)
+      .refine((value) => httpsUrl(value, max) !== null, message)
+      .nullable(),
+  );
+
+const vendorShape = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Give each vendor a name.")
+    .max(VENDOR_NAME_MAX, `Keep vendor names under ${VENDOR_NAME_MAX} characters.`),
+  offering: z
+    .string()
+    .trim()
+    .max(VENDOR_OFFERING_MAX, `Keep it under ${VENDOR_OFFERING_MAX} characters.`)
+    .optional(),
+  url: httpsField(VENDOR_URL_MAX, "Use the vendor's https:// link.").optional(),
+});
+
+const sponsorShape = {
+  sponsorName: z.preprocess(
+    blankToNull,
+    z
+      .string()
+      .trim()
+      .min(1)
+      .max(SPONSOR_NAME_MAX, `Keep the sponsor's name under ${SPONSOR_NAME_MAX} characters.`)
+      .nullable(),
+  ),
+  sponsorUrl: httpsField(SPONSOR_URL_MAX, "Use the sponsor's https:// link."),
+  sponsorLogoUrl: z.preprocess(blankToNull, z.string().trim().max(500).nullable()),
+  vendors: z
+    .array(vendorShape)
+    .max(VENDORS_MAX, `List up to ${VENDORS_MAX} vendors.`),
+};
+
+const SPONSOR_KEYS = [
+  "sponsorName",
+  "sponsorUrl",
+  "sponsorLogoUrl",
+  "vendors",
+] as const;
+
 const fieldShape = {
   title: z.string().trim().min(1, "Give the night a title.").max(120),
   description: z.string().trim().max(2000),
@@ -190,6 +283,10 @@ const createSchema = z.object({
   coverImageUrl: fieldShape.coverImageUrl.optional(),
   comingSoon: fieldShape.comingSoon.optional(),
   sourceId: z.string().trim().min(1).max(40).optional(),
+  sponsorName: sponsorShape.sponsorName.optional(),
+  sponsorUrl: sponsorShape.sponsorUrl.optional(),
+  sponsorLogoUrl: sponsorShape.sponsorLogoUrl.optional(),
+  vendors: sponsorShape.vendors.optional(),
 });
 
 const updateSchema = z.object({
@@ -207,6 +304,10 @@ const updateSchema = z.object({
   capacity: fieldShape.capacity.optional(),
   coverImageUrl: fieldShape.coverImageUrl.optional(),
   comingSoon: fieldShape.comingSoon.optional(),
+  sponsorName: sponsorShape.sponsorName.optional(),
+  sponsorUrl: sponsorShape.sponsorUrl.optional(),
+  sponsorLogoUrl: sponsorShape.sponsorLogoUrl.optional(),
+  vendors: sponsorShape.vendors.optional(),
 });
 
 function invalid(
@@ -261,6 +362,86 @@ function resolveFields(input: {
   return { ok: true, startsAt, endsAt, coverImageUrl };
 }
 
+type SponsorValues = {
+  sponsorName: string | null;
+  sponsorUrl: string | null;
+  sponsorLogoUrl: string | null;
+  vendors: VendorDTO[];
+};
+
+/**
+ * Cross-field sponsor rules on the merged values: a link or logo needs a
+ * name; the logo must be one of our uploads (same rule as the cover); links
+ * are stored normalized. Vendors are stored as { name, offering, url }.
+ */
+function resolveSponsor(input: {
+  sponsorName: string | null;
+  sponsorUrl: string | null;
+  sponsorLogoUrl: string | null;
+  vendors: { name: string; offering?: string; url?: string | null }[] | unknown;
+}):
+  | { ok: true; values: SponsorValues }
+  | { ok: false; fields: Record<string, string> } {
+  const fields: Record<string, string> = {};
+  const sponsorName = input.sponsorName?.trim() || null;
+  const sponsorUrl = input.sponsorUrl ? httpsUrl(input.sponsorUrl) : null;
+  if (input.sponsorUrl && !sponsorUrl) {
+    fields.sponsorUrl = "Use the sponsor's https:// link.";
+  }
+  let sponsorLogoUrl: string | null = null;
+  if (input.sponsorLogoUrl) {
+    sponsorLogoUrl = normalizeUploadUrl(input.sponsorLogoUrl);
+    if (!sponsorLogoUrl) {
+      fields.sponsorLogoUrl = "Use a logo uploaded through the app.";
+    }
+  }
+  if (!sponsorName && input.sponsorUrl) {
+    fields.sponsorUrl = "Add the sponsor's name first.";
+  }
+  if (!sponsorName && input.sponsorLogoUrl) {
+    fields.sponsorLogoUrl = "Add the sponsor's name first.";
+  }
+  if (Object.keys(fields).length > 0) return { ok: false, fields };
+  return {
+    ok: true,
+    values: {
+      sponsorName,
+      sponsorUrl,
+      sponsorLogoUrl,
+      vendors: vendorsFromJson(input.vendors),
+    },
+  };
+}
+
+const SPONSOR_NOT_READY: EventFailure = {
+  ok: false,
+  code: "conflict",
+  message:
+    "Sponsor and vendor details can't be saved yet. Save the night without them for now.",
+};
+
+/**
+ * Run an Event write with the full select; before the migration, retry with
+ * the old columns when the write itself does not touch sponsor fields, and
+ * say so plainly when it does.
+ */
+async function writeEvent(
+  run: (select: typeof EVENT_SELECT | typeof EVENT_BASE_SELECT) => Promise<unknown>,
+  touchesSponsor: boolean,
+): Promise<EventRow | EventFailure> {
+  try {
+    return (await run(EVENT_SELECT)) as EventRow;
+  } catch (error) {
+    if (!isMissingColumnError(error)) throw error;
+    if (touchesSponsor) return SPONSOR_NOT_READY;
+    return fillRow((await run(EVENT_BASE_SELECT)) as EventRow) as EventRow;
+  }
+}
+
+function isFailure(value: EventRow | EventFailure): value is EventFailure {
+  return (value as EventFailure).ok === false;
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (error as { code?: string } | null)?.code === "P2002";
 }
@@ -290,7 +471,10 @@ async function loadRow(
   id: string,
 ): Promise<EventRow | null> {
   if (!EVENT_ID_RE.test(id)) return null;
-  return (await prisma.event.findUnique({ where: { id } })) as EventRow | null;
+  return (await withEventColumns(
+    (select) => prisma.event.findUnique({ select, where: { id } }),
+    fillRow,
+  )) as EventRow | null;
 }
 
 // --- reads ------------------------------------------------------------------
@@ -311,9 +495,11 @@ export async function listAdminEvents(
   prisma: PrismaClient,
 ): Promise<Ok<AdminEventList> | EventFailure> {
   try {
-    const rows = (await prisma.event.findMany({
-      orderBy: [{ startsAt: "desc" }],
-    })) as EventRow[];
+    const rows = (await withEventColumns(
+      (select) =>
+        prisma.event.findMany({ select, orderBy: [{ startsAt: "desc" }] }),
+      fillRows,
+    )) as EventRow[];
     const counts = await countsFor(
       prisma,
       rows.map((r) => r.id),
@@ -391,6 +577,22 @@ export async function createAdminEvent(
     return invalid("Check the night's details.", resolved.fields);
   }
 
+  const medium = (input.medium ?? "community").toLowerCase();
+  if (!EVENT_MEDIUMS.includes(medium)) {
+    return invalid(MEDIUM_MESSAGE, { medium: MEDIUM_MESSAGE });
+  }
+
+  const touchesSponsor = SPONSOR_KEYS.some((key) => input[key] !== undefined);
+  const sponsor = resolveSponsor({
+    sponsorName: input.sponsorName ?? null,
+    sponsorUrl: input.sponsorUrl ?? null,
+    sponsorLogoUrl: input.sponsorLogoUrl ?? null,
+    vendors: input.vendors ?? [],
+  });
+  if (!sponsor.ok) {
+    return invalid("Check the sponsor details.", sponsor.fields);
+  }
+
   if (input.sourceId) {
     const known = await content.getEventById(input.sourceId);
     if (!known) {
@@ -404,27 +606,40 @@ export async function createAdminEvent(
   if (limited) return limited;
 
   try {
-    const row = (await prisma.event.create({
-      data: {
-        title: input.title,
-        description: input.description ?? "",
-        artist: input.artist ?? "",
-        medium: input.medium ?? "community",
-        startsAt: resolved.startsAt,
-        endsAt: resolved.endsAt,
-        timeZone,
-        venueName: input.venueName,
-        venueAddress: input.venueAddress || null,
-        latitude,
-        longitude,
-        capacity: input.capacity ?? null,
-        coverImageUrl: resolved.coverImageUrl,
-        comingSoon: input.comingSoon ?? false,
-        sourceId: input.sourceId ?? null,
-        status: "DRAFT",
-        createdById: admin.id,
-      },
-    })) as EventRow;
+    const written = await writeEvent(
+      (select) =>
+        prisma.event.create({
+          select,
+          data: {
+            title: input.title,
+            description: input.description ?? "",
+            artist: input.artist ?? "",
+            medium,
+            startsAt: resolved.startsAt,
+            endsAt: resolved.endsAt,
+            timeZone,
+            venueName: input.venueName,
+            venueAddress: input.venueAddress || null,
+            latitude,
+            longitude,
+            capacity: input.capacity ?? null,
+            coverImageUrl: resolved.coverImageUrl,
+            comingSoon: input.comingSoon ?? false,
+            sourceId: input.sourceId ?? null,
+            status: "DRAFT",
+            createdById: admin.id,
+            ...(touchesSponsor
+              ? {
+                  ...sponsor.values,
+                  vendors: sponsor.values.vendors as Prisma.InputJsonValue,
+                }
+              : {}),
+          },
+        }),
+      touchesSponsor,
+    );
+    if (isFailure(written)) return written;
+    const row = written;
     await writeAuditLog(prisma, {
       actorId: admin.id,
       action: "event.create",
@@ -508,6 +723,60 @@ export async function updateAdminEvent(
     return invalid("Check the night's details.", resolved.fields);
   }
 
+  // A night keeps the lane it already has; a new lane must be a real one.
+  const medium =
+    input.medium !== undefined ? input.medium.toLowerCase() : undefined;
+  const keepsLane =
+    medium !== undefined && medium === existing.medium.toLowerCase();
+  if (medium !== undefined && !keepsLane && !EVENT_MEDIUMS.includes(medium)) {
+    return invalid(MEDIUM_MESSAGE, { medium: MEDIUM_MESSAGE });
+  }
+  const nextMedium = keepsLane ? existing.medium : medium;
+
+  const touchesSponsorFields =
+    input.sponsorName !== undefined ||
+    input.sponsorUrl !== undefined ||
+    input.sponsorLogoUrl !== undefined;
+  const touchesSponsor = touchesSponsorFields || input.vendors !== undefined;
+  let sponsorData: Prisma.EventUpdateInput = {};
+  if (touchesSponsor) {
+    const name =
+      input.sponsorName !== undefined ? input.sponsorName : existing.sponsorName;
+    // Removing the name removes the sponsor; its link and logo go with it.
+    const keep = Boolean(name?.trim());
+    const sponsor = resolveSponsor({
+      sponsorName: name,
+      sponsorUrl:
+        input.sponsorUrl !== undefined
+          ? input.sponsorUrl
+          : keep
+            ? existing.sponsorUrl
+            : null,
+      sponsorLogoUrl:
+        input.sponsorLogoUrl !== undefined
+          ? input.sponsorLogoUrl
+          : keep
+            ? existing.sponsorLogoUrl
+            : null,
+      vendors: input.vendors !== undefined ? input.vendors : existing.vendors,
+    });
+    if (!sponsor.ok) {
+      return invalid("Check the sponsor details.", sponsor.fields);
+    }
+    sponsorData = {
+      ...(touchesSponsorFields
+        ? {
+            sponsorName: sponsor.values.sponsorName,
+            sponsorUrl: sponsor.values.sponsorUrl,
+            sponsorLogoUrl: sponsor.values.sponsorLogoUrl,
+          }
+        : {}),
+      ...(input.vendors !== undefined
+        ? { vendors: sponsor.values.vendors as Prisma.InputJsonValue }
+        : {}),
+    };
+  }
+
   const limited = adminLimit(admin.id);
   if (limited) return limited;
 
@@ -517,7 +786,7 @@ export async function updateAdminEvent(
       ? { description: input.description }
       : {}),
     ...(input.artist !== undefined ? { artist: input.artist } : {}),
-    ...(input.medium !== undefined ? { medium: input.medium } : {}),
+    ...(nextMedium !== undefined ? { medium: nextMedium } : {}),
     ...(input.timeZone !== undefined ? { timeZone: input.timeZone } : {}),
     ...(input.venueName !== undefined ? { venueName: input.venueName } : {}),
     ...(input.venueAddress !== undefined
@@ -532,13 +801,16 @@ export async function updateAdminEvent(
     ...(input.coverImageUrl !== undefined
       ? { coverImageUrl: resolved.coverImageUrl }
       : {}),
+    ...sponsorData,
   };
 
   try {
-    const row = (await prisma.event.update({
-      where: { id },
-      data,
-    })) as EventRow;
+    const written = await writeEvent(
+      (select) => prisma.event.update({ select, where: { id }, data }),
+      touchesSponsor,
+    );
+    if (isFailure(written)) return written;
+    const row = written;
 
     const changed = Object.keys(data);
     await writeAuditLog(prisma, {
@@ -600,10 +872,17 @@ export async function publishAdminEvent(
   if (limited) return limited;
 
   try {
-    const row = (await prisma.event.update({
-      where: { id },
-      data: { status: "PUBLISHED", publishedAt: new Date() },
-    })) as EventRow;
+    const written = await writeEvent(
+      (select) =>
+        prisma.event.update({
+          select,
+          where: { id },
+          data: { status: "PUBLISHED", publishedAt: new Date() },
+        }),
+      false,
+    );
+    if (isFailure(written)) return written;
+    const row = written;
     await writeAuditLog(prisma, {
       actorId: admin.id,
       action: "event.publish",
@@ -636,10 +915,17 @@ export async function cancelAdminEvent(
   if (limited) return limited;
 
   try {
-    const row = (await prisma.event.update({
-      where: { id },
-      data: { status: "CANCELLED", cancelledAt: new Date() },
-    })) as EventRow;
+    const written = await writeEvent(
+      (select) =>
+        prisma.event.update({
+          select,
+          where: { id },
+          data: { status: "CANCELLED", cancelledAt: new Date() },
+        }),
+      false,
+    );
+    if (isFailure(written)) return written;
+    const row = written;
     await writeAuditLog(prisma, {
       actorId: admin.id,
       action: "event.cancel",
@@ -678,28 +964,48 @@ export async function duplicateAdminEvent(
   const limited = adminLimit(admin.id);
   if (limited) return limited;
 
+  // The copy keeps its sponsor and vendors (admins edit them like the rest).
+  const sourceVendors = vendorsFromJson(source.vendors);
+  const hasSponsor =
+    Boolean(source.sponsorName?.trim()) || sourceVendors.length > 0;
+
   try {
-    const row = (await prisma.event.create({
-      data: {
-        title: `${source.title} (copy)`.slice(0, 120),
-        description: source.description,
-        artist: source.artist,
-        medium: source.medium,
-        startsAt: source.startsAt,
-        endsAt: source.endsAt,
-        timeZone: source.timeZone,
-        venueName: source.venueName,
-        venueAddress: source.venueAddress,
-        latitude: source.latitude,
-        longitude: source.longitude,
-        capacity: source.capacity,
-        coverImageUrl: source.coverImageUrl,
-        comingSoon: source.comingSoon,
-        sourceId: null,
-        status: "DRAFT",
-        createdById: admin.id,
-      },
-    })) as EventRow;
+    const written = await writeEvent(
+      (select) =>
+        prisma.event.create({
+          select,
+          data: {
+            title: `${source.title} (copy)`.slice(0, 120),
+            description: source.description,
+            artist: source.artist,
+            medium: source.medium,
+            startsAt: source.startsAt,
+            endsAt: source.endsAt,
+            timeZone: source.timeZone,
+            venueName: source.venueName,
+            venueAddress: source.venueAddress,
+            latitude: source.latitude,
+            longitude: source.longitude,
+            capacity: source.capacity,
+            coverImageUrl: source.coverImageUrl,
+            comingSoon: source.comingSoon,
+            sourceId: null,
+            status: "DRAFT",
+            createdById: admin.id,
+            ...(hasSponsor
+              ? {
+                  sponsorName: source.sponsorName,
+                  sponsorUrl: source.sponsorUrl,
+                  sponsorLogoUrl: source.sponsorLogoUrl,
+                  vendors: sourceVendors as Prisma.InputJsonValue,
+                }
+              : {}),
+          },
+        }),
+      hasSponsor,
+    );
+    if (isFailure(written)) return written;
+    const row = written;
     await writeAuditLog(prisma, {
       actorId: admin.id,
       action: "event.duplicate",

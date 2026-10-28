@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { copy } from "@/content/site";
 import type { ContentEvent } from "@/lib/content";
+import type { EventDTO } from "@/server/api/dto";
+import { PresentedBy } from "@/features/sponsors/PresentedBy";
 import { floorBeats, formatNightWhen, stampWord, nightPhase } from "@/features/night/program";
 
 /** Door poster for the next night — the seat itself lives on /night. */
-export function OpeningDoor({ event }: { event: ContentEvent }) {
+export function OpeningDoor({
+  event,
+}: {
+  event: ContentEvent & Partial<Pick<EventDTO, "presentedBy">>;
+}) {
   const when = formatNightWhen(event);
   const phase = nightPhase(event);
   const beats = floorBeats(event).slice(0, 3);
@@ -44,6 +50,7 @@ export function OpeningDoor({ event }: { event: ContentEvent }) {
           <h2 id="opening-title" className="display opening-door__title">
             {event.title}
           </h2>
+          <PresentedBy sponsor={event.presentedBy} className="mt-2" />
           <p className="opening-door__lead">{copy.night.lineup}</p>
           <ol className="opening-door__beats">
             {beats.map((beat, index) => (

@@ -8,6 +8,7 @@ import type {
   TagSummary,
 } from "@/features/posts/types";
 import type { PaymentLink } from "@/server/api/paymentLinks";
+import type { PresentedByDTO, VendorDTO } from "@/server/api/eventSponsors";
 import { absoluteUrl, externalUrl } from "@/server/api/urls";
 
 /** Wire shapes for /api/v1. Every URL in them is absolute. */
@@ -34,6 +35,10 @@ export type EventDTO = {
   /** Total seats; null = unlimited. */
   capacity: number | null;
   coverImageUrl: string | null;
+  /** The night's sponsor, said plainly. null = not a sponsored night. */
+  presentedBy: PresentedByDTO | null;
+  /** Food & vendors on the night. [] when none. */
+  vendors: VendorDTO[];
 };
 
 export type TagDTO = { slug: string; name: string };
@@ -121,6 +126,8 @@ export function toEventDTO(event: ContentEvent, now = new Date()): EventDTO {
     longitude: null,
     capacity: null,
     coverImageUrl: null,
+    presentedBy: null,
+    vendors: [],
   };
 }
 

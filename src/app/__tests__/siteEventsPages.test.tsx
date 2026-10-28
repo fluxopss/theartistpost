@@ -95,6 +95,8 @@ function dto(overrides: Partial<EventDTO> = {}): EventDTO {
     longitude: null,
     capacity: null,
     coverImageUrl: null,
+    presentedBy: null,
+    vendors: [],
     ...overrides,
   };
 }

@@ -11,11 +11,16 @@ import {
   publicCatalogWhere,
 } from "@/features/posts/denylist";
 import { writeAuditLog } from "@/features/posts/audit";
+import { commentBodySchema } from "@/server/api/engagement";
+import { blockedIdsFor } from "@/server/api/safety";
+import { SUSPENDED_ERROR } from "@/server/api/session";
+import { screenText } from "@/server/api/textFilter";
 import { getPrisma } from "@/shared/lib/prisma";
 
 const commentSchema = z.object({
   postId: z.string().min(1).max(64),
-  body: z.string().trim().min(1).max(280),
+  // Same body rule as /api/v1 (counted by what a person sees).
+  body: commentBodySchema.shape.body,
 });
 
 const likeSchema = z.object({
@@ -37,7 +42,11 @@ export type LikeStatusResult =
   | { ok: false; error: string }
   | { ok: true; liked: boolean; likeCount: number };
 
-async function requireEngagementUser() {
+/**
+ * Signed-in house member backed by a DB user. Writes also refuse suspended
+ * accounts, exactly like `requireActiveMember` on /api/v1.
+ */
+async function requireEngagementUser(options: { write: boolean }) {
   const session = await getSession();
   if (!session || isMockGuestSession(session)) {
     return { ok: false as const, error: "Join to leave a note on the Wall." };
@@ -46,19 +55,29 @@ async function requireEngagementUser() {
   if (!prisma) {
     return { ok: false as const, error: "Comments are briefly offline." };
   }
-  const dbUser = await prisma.user.findUnique({ where: { email: session.email } });
+  const dbUser = await prisma.user.findUnique({
+    where: { email: session.email.trim().toLowerCase() },
+  });
   if (!dbUser) {
     return { ok: false as const, error: "Join to leave a note on the Wall." };
   }
   if (isDeniedAuthorEmail(dbUser.email)) {
     return { ok: false as const, error: "That identity cannot respond." };
   }
+  if (options.write && dbUser.suspendedAt) {
+    return { ok: false as const, error: SUSPENDED_ERROR };
+  }
   return { ok: true as const, prisma, dbUser, session };
 }
 
+/**
+ * A public post the viewer may engage with. Like /api/v1, a post by someone
+ * in a block with the viewer (either direction) is treated as not there.
+ */
 async function loadPublicPost(
   prisma: NonNullable<ReturnType<typeof getPrisma>>,
   postId: string,
+  viewerId: string,
 ) {
   const post = await prisma.post.findFirst({
     where: {
@@ -73,6 +92,8 @@ async function loadPublicPost(
   if (!post) return null;
   if (isDeniedPostSlug(post.slug)) return null;
   if (isDeniedAuthorEmail(post.author.email)) return null;
+  const blocked = await blockedIdsFor(prisma, viewerId);
+  if (blocked.has(post.authorId)) return null;
   return post;
 }
 
@@ -90,8 +111,13 @@ export async function createCommentAction(
     };
   }
 
-  const gate = await requireEngagementUser();
+  const gate = await requireEngagementUser({ write: true });
   if (!gate.ok) return gate;
+
+  const screened = screenText(parsed.data.body);
+  if (!screened.ok) {
+    return { ok: false, error: screened.message };
+  }
 
   if (
     !hitRateLimit(`comment:${gate.dbUser.id}`, { windowMs: 60_000, max: 20 })
@@ -100,7 +126,11 @@ export async function createCommentAction(
   }
 
   try {
-    const post = await loadPublicPost(gate.prisma, parsed.data.postId);
+    const post = await loadPublicPost(
+      gate.prisma,
+      parsed.data.postId,
+      gate.dbUser.id,
+    );
     if (!post) {
       return { ok: false, error: "That post is not open for comments." };
     }
@@ -150,11 +180,15 @@ export async function getLikeStatusAction(
     return { ok: false, error: "Invalid like" };
   }
 
-  const gate = await requireEngagementUser();
+  const gate = await requireEngagementUser({ write: false });
   if (!gate.ok) return gate;
 
   try {
-    const post = await loadPublicPost(gate.prisma, parsed.data.postId);
+    const post = await loadPublicPost(
+      gate.prisma,
+      parsed.data.postId,
+      gate.dbUser.id,
+    );
     if (!post) {
       return { ok: false, error: "That post is not open for likes." };
     }
@@ -187,7 +221,7 @@ export async function toggleLikeAction(
     return { ok: false, error: "Invalid like" };
   }
 
-  const gate = await requireEngagementUser();
+  const gate = await requireEngagementUser({ write: true });
   if (!gate.ok) return gate;
 
   if (!hitRateLimit(`like:${gate.dbUser.id}`, { windowMs: 60_000, max: 40 })) {
@@ -195,7 +229,11 @@ export async function toggleLikeAction(
   }
 
   try {
-    const post = await loadPublicPost(gate.prisma, parsed.data.postId);
+    const post = await loadPublicPost(
+      gate.prisma,
+      parsed.data.postId,
+      gate.dbUser.id,
+    );
     if (!post) {
       return { ok: false, error: "That post is not open for likes." };
     }

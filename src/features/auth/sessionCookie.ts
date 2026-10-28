@@ -94,9 +94,12 @@ export function decodeSessionToken(
 }
 
 export async function readSessionFromCookie(): Promise<SessionUser | null> {
+  // Read the cookie jar FIRST, even if there is no secret: cookies() is what
+  // tells Next the root layout is per-request. Returning before it (secret
+  // missing at build time) let pages bake as static with no signed-in user.
+  const jar = await cookies();
   const secret = getAuthSecret();
   if (!secret) return null;
-  const jar = await cookies();
   const raw = jar.get(SESSION_COOKIE)?.value;
   if (!raw) return null;
   return decodeSessionToken(raw, secret);

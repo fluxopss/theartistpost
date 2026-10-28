@@ -5,6 +5,7 @@ import {
   formatMinutes,
   isOpenAt,
   localClock,
+  opensLabel,
   openingHoursSpecification,
   todayLabel,
   weeklyLabel,
@@ -99,5 +100,36 @@ describe("weekly hours math", () => {
     expect(formatMinutes(1440)).toBe("Midnight");
     expect(formatMinutes(0)).toBe("Midnight");
     expect(formatMinutes(13 * 60 + 5)).toBe("1:05 PM");
+  });
+});
+
+describe("opensLabel (closed-state pill text)", () => {
+  it("says today's opening time before 11 AM", () => {
+    expect(opensLabel(houseSchedule, edt("2026-10-22T08:15"))).toBe("Opens at 11 AM");
+  });
+
+  it("says tomorrow after the night closes", () => {
+    // Thu 11:30 PM -> Fri 11 AM
+    expect(opensLabel(houseSchedule, edt("2026-10-22T23:30"))).toBe(
+      "Opens tomorrow at 11 AM",
+    );
+    // Sat past midnight (Sun 12:30 AM) -> Sun 11 AM is "today" in Eastern
+    expect(opensLabel(houseSchedule, edt("2026-10-25T00:30"))).toBe("Opens at 11 AM");
+  });
+
+  it("names the weekday when the next open day is further out", () => {
+    const weekdaysOnly: WeeklyHours = {
+      timeZone: "America/New_York",
+      weekly: [{ day: 1, openMinutes: 600, closeMinutes: 1020 }],
+    };
+    // Thu -> next Monday 10 AM
+    expect(opensLabel(weekdaysOnly, edt("2026-10-22T12:00"))).toBe("Opens Mon at 10 AM");
+  });
+
+  it("returns null while open and when the house has no hours", () => {
+    expect(opensLabel(houseSchedule, edt("2026-10-22T12:00"))).toBeNull();
+    expect(
+      opensLabel({ timeZone: "America/New_York", weekly: [] }, edt("2026-10-22T12:00")),
+    ).toBeNull();
   });
 });

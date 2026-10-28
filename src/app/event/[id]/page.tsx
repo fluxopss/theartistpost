@@ -2,24 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { assets, copy } from "@/content/site";
-import { content } from "@/lib/content";
 import { JsonLd, eventJsonLd } from "@/lib/seo/json-ld";
 import { googleCalendarUrl } from "@/lib/schedule/calendar";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 import { SaveEventButton } from "@/features/app/SaveButton";
 import { featuredNight, scheduleLabel } from "@/features/night/program";
+import { findSiteEvent, listUpcomingSiteEvents } from "@/server/api/siteEvents";
 
 type Props = { params: Promise<{ id: string }> };
 
-export async function generateStaticParams() {
-  const events = await content.getEvents();
-  return events.map((e) => ({ id: e.id }));
-}
+/**
+ * Nights published in Manage events appear (and change) without a rebuild,
+ * so every night page is read per request. Past and cancelled nights stay
+ * reachable; only upcoming ones are in the sitemap.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const event = await content.getEventById(id);
+  const event = await findSiteEvent(id);
   if (!event) return { title: "Event" };
   return {
     title: event.title,
@@ -41,10 +43,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventPage({ params }: Props) {
   const { id } = await params;
-  const event = await content.getEventById(id);
+  const event = await findSiteEvent(id);
   if (!event) notFound();
 
-  const night = featuredNight(await content.getEvents());
+  const cancelled = event.cancelled;
+  const night = cancelled ? null : featuredNight(await listUpcomingSiteEvents());
   const holding = night?.id === event.id;
   const start = new Date(event.start);
   const end = new Date(event.end);
@@ -62,7 +65,7 @@ export default async function EventPage({ params }: Props) {
         </Link>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-spark-gold">
-            {scheduleLabel(event)}
+            {cancelled ? copy.schedule.cancelledLabel : scheduleLabel(event)}
           </p>
           <h1 className="display mt-3 text-4xl text-paper sm:text-5xl">
             {event.title}
@@ -88,6 +91,14 @@ export default async function EventPage({ params }: Props) {
             {event.artist} · {event.venue}
           </p>
         </div>
+        {cancelled ? (
+          <p
+            role="status"
+            className="max-w-2xl rounded-2xl border border-spark-coral/50 bg-spark-coral/10 px-4 py-3 text-sm font-semibold text-paper"
+          >
+            {copy.schedule.cancelledNote}
+          </p>
+        ) : null}
         <p className="max-w-2xl text-base leading-relaxed text-paper-muted">
           {event.description}
         </p>
@@ -97,22 +108,26 @@ export default async function EventPage({ params }: Props) {
               {copy.night.hold}
             </ButtonLink>
           ) : null}
-          <SaveEventButton
-            event={{
-              id: event.id,
-              title: event.title,
-              venue: event.venue,
-              start: event.start,
-            }}
-          />
-          <ButtonLink
-            href={googleCalendarUrl(event)}
-            external
-            variant="secondary"
-            className="rounded-full"
-          >
-            Add to Google Calendar
-          </ButtonLink>
+          {cancelled ? null : (
+            <>
+              <SaveEventButton
+                event={{
+                  id: event.id,
+                  title: event.title,
+                  venue: event.venue,
+                  start: event.start,
+                }}
+              />
+              <ButtonLink
+                href={googleCalendarUrl(event)}
+                external
+                variant="secondary"
+                className="rounded-full"
+              >
+                Add to Google Calendar
+              </ButtonLink>
+            </>
+          )}
           <ButtonLink
             href="/artist-schedule"
             variant="outline"

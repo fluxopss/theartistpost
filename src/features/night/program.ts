@@ -24,6 +24,18 @@ export function nightPhase(
   return "closed";
 }
 
+/**
+ * A night people can still go to: not cancelled and not ended. Pure, so the
+ * server lists and client components (The Wall) share one rule.
+ */
+export function isUpcomingNight(
+  event: Pick<ContentEvent, "start" | "end"> & { cancelled?: boolean },
+  now = new Date(),
+): boolean {
+  if (event.cancelled) return false;
+  return nightPhase(event, now) !== "closed";
+}
+
 /** The night people can still walk into — soonest event that has not ended. */
 export function featuredNight<T extends Pick<ContentEvent, "start" | "end">>(
   events: T[],

@@ -10,6 +10,7 @@ import {
   getAuthSecret,
 } from "@/features/auth/secret";
 import { hitRateLimit } from "@/features/auth/rateLimit";
+import { clientIpFromHeaders } from "@/shared/lib/clientIp";
 import {
   artistJoinSchema,
   EXISTING_EMAIL_ERROR,
@@ -71,10 +72,7 @@ const returnVerifySchema = z.object({
 });
 
 async function clientKey(): Promise<string> {
-  const h = await headers();
-  const forwarded = h.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return h.get("x-real-ip") ?? "unknown";
+  return clientIpFromHeaders(await headers());
 }
 
 /**

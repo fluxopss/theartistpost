@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, MapPin, Phone } from "lucide-react";
-import { copy, site } from "@/content/site";
+import { copy, hours, site } from "@/content/site";
 import { OpenStatus } from "@/components/OpenStatus";
 import { SectionReveal } from "@/components/SectionReveal";
 import { SubscribeForm } from "@/components/SubscribeForm";
@@ -29,8 +29,9 @@ export function ContactSocialSection() {
             {copy.home.contactBody}
           </p>
 
-          <div className="mt-6">
+          <div className="mt-6 space-y-2">
             <OpenStatus />
+            <p className="text-sm text-paper-muted">{hours.label}</p>
           </div>
 
           <ul className="mt-6 space-y-3 text-sm">

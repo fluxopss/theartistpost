@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { assets, copy, hours, site } from "@/content/site";
-import { content } from "@/lib/content";
+import { listUpcomingSiteEvents } from "@/server/api/siteEvents";
 import { NightRoom } from "@/features/night/NightRoom";
 import { GenreRail } from "@/features/stage/GenreRail";
 import { featuredNight } from "@/features/night/program";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ButtonLink } from "@/shared/ui/Button";
 
+/** The next night comes from the database (Manage events), so read it per request. */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
-  const night = featuredNight(await content.getEvents());
+  const night = featuredNight(await listUpcomingSiteEvents());
   const title = night?.title ?? copy.night.kicker;
   const description = night ? copy.night.lineup : copy.night.emptyBody;
   return {
@@ -30,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NightPage() {
-  const night = featuredNight(await content.getEvents());
+  const night = featuredNight(await listUpcomingSiteEvents());
 
   if (!night) {
     return (

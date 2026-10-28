@@ -83,9 +83,9 @@ describe("clientIp", () => {
   const req = (headers: Record<string, string>) =>
     new Request("http://localhost/api/v1/subscribe", { headers });
 
-  it("uses the first x-forwarded-for hop", () => {
+  it("uses the last x-forwarded-for hop (the one Traefik appended)", () => {
     expect(clientIp(req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }))).toBe(
-      "203.0.113.9",
+      "10.0.0.1",
     );
   });
 

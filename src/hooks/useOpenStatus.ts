@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { houseSchedule } from "@/content/site";
-import { isOpenAt, todayLabel } from "@/lib/hours";
+import { isOpenAt, opensLabel, todayLabel } from "@/lib/hours";
 
 /** Is Hacienda open right now (Eastern time), per the weekly schedule in site.ts. */
 export function isOpenNow(date = new Date()): boolean {
@@ -13,12 +13,14 @@ export function useOpenStatus() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [today, setToday] = useState("");
+  const [opens, setOpens] = useState<string | null>(null);
 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
       setOpen(isOpenNow(now));
       setToday(todayLabel(houseSchedule, now));
+      setOpens(opensLabel(houseSchedule, now));
       setReady(true);
     };
     tick();
@@ -29,7 +31,9 @@ export function useOpenStatus() {
   return {
     open,
     ready,
-    label: open ? "Open now" : "Closed",
+    // The server render (and first client render) is neutral; the real state
+    // arrives after mount, so the HTML never disagrees with the browser clock.
+    label: open ? "Open now" : (opens ?? "Closed"),
     /** Today's window once mounted (client clock), e.g. "11 AM – Midnight". */
     hoursLabel: ready ? `Today ${today}` : "",
   };

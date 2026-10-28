@@ -41,7 +41,7 @@ describe("Event sponsor + vendors migration", () => {
       expect(text, col).toMatch(re);
     }
     expect(text).toMatch(
-      /ADD COLUMN\s+(?:IF NOT EXISTS\s+)?"vendors"\s+JSONB\s+NOT NULL\s+DEFAULT\s+'\[\]'/,
+      /ADD COLUMN\s+(?:IF NOT EXISTS\s+)?"vendors"\s+JSONB\s+NOT NULL\s+DEFAULT\s+jsonb_build_array\(\)/,
     );
   });
 
@@ -50,7 +50,7 @@ describe("Event sponsor + vendors migration", () => {
     expect(model).toMatch(/\bsponsorName\s+String\?/);
     expect(model).toMatch(/\bsponsorUrl\s+String\?/);
     expect(model).toMatch(/\bsponsorLogoUrl\s+String\?/);
-    expect(model).toMatch(/\bvendors\s+Json\s+@default\("\[\]"\)/);
+    expect(model).toMatch(/\bvendors\s+Json\s+@default\(dbgenerated\("jsonb_build_array\(\)"\)\)/);
   });
 
   it("has no field that holds money", () => {

@@ -419,7 +419,7 @@ model Event {
   /// An upload from our own store (same rule as coverImageUrl); requires sponsorName.
   sponsorLogoUrl String?
   /// Food & vendors: [{ name, offering, url? }], at most 12. Admin-set only.
-  vendors        Json        @default("[]")
+  vendors        Json        @default(dbgenerated("jsonb_build_array()"))
   createdById    String?
   publishedAt    DateTime?
   cancelledAt    DateTime?

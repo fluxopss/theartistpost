@@ -55,7 +55,7 @@ export const AD_PLACEMENTS: readonly AdPlacement[] = [
 
 /**
  * Pages that must never carry an ad, whatever anyone configures: the art,
- * the community, sign-in, accounts, giving, and kindness.
+ * the community, sign-in, accounts, giving, sponsorship, and kindness.
  */
 export const AD_FREE_PATHS: readonly string[] = [
   "/explore",
@@ -68,6 +68,7 @@ export const AD_FREE_PATHS: readonly string[] = [
   "/saved",
   "/delete-account",
   "/donate",
+  "/sponsors",
   "/supporters",
   "/kindness-always",
   "/night",

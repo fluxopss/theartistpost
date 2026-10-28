@@ -23,6 +23,7 @@ describe("ad placements", () => {
       "/night",
       "/event/123",
       "/get-involved",
+      "/sponsors",
     ]) {
       expect(isAdFreePath(path), path).toBe(true);
     }

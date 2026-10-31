@@ -22,6 +22,7 @@ import {
   type RegisterArtistInput,
   type RegisterMemberInput,
 } from "@/features/auth/register";
+import { scheduleJoinToCrm } from "@/features/auth/joinCrm";
 import { returningAuthMode } from "@/features/auth/returningSignIn";
 import {
   clearSessionCookie,
@@ -116,6 +117,14 @@ export async function registerMemberAction(
   });
   if (!result.ok) return { ok: false, error: result.error };
 
+  scheduleJoinToCrm({
+    name: parsed.data.name,
+    email,
+    role: "viewer",
+    platform: "web",
+    surface: "website",
+  });
+
   const wrote = await writeSessionCookie(result.user);
   if (!wrote) return { ok: false, error: authSecretRequiredError() };
 
@@ -163,6 +172,15 @@ export async function registerArtistAction(
     existingEmailError: EXISTING_EMAIL_ERROR,
   });
   if (!result.ok) return { ok: false, error: result.error };
+
+  scheduleJoinToCrm({
+    name: parsed.data.name,
+    email,
+    role: "artist_pending",
+    handle,
+    platform: "web",
+    surface: "website",
+  });
 
   const wrote = await writeSessionCookie(result.user);
   if (!wrote) return { ok: false, error: authSecretRequiredError() };

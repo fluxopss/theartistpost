@@ -115,6 +115,15 @@ export default function PrivacyPage() {
         pages help people find the house. It is not sold, and no ads profile is
         built from it.
       </p>
+      <p>
+        We also use Google Analytics 4, which sets Google cookies and sends
+        Google the pages you open, the site that sent you here, your rough
+        location from your IP address, your device type, and the same button
+        taps described above. It never receives your name, email or handle.
+        Google explains its handling at policies.google.com/technologies/partner-sites.
+        You can block it with the Google Analytics opt-out browser add-on or
+        by refusing cookies in your browser.
+      </p>
 
       <h2>Advertising</h2>
       <p>

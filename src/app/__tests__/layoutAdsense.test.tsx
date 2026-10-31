@@ -12,6 +12,11 @@ vi.mock("@/shared/ui/AppShell", () => ({
   AppShell: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock("@/components/seo/PulseBeacon", () => ({ PulseBeacon: () => null }));
+vi.mock("@next/third-parties/google", () => ({
+  GoogleAnalytics: ({ gaId }: { gaId: string }) => (
+    <meta name="x-test-ga" content={gaId} />
+  ),
+}));
 
 import RootLayout from "@/app/layout";
 
@@ -46,5 +51,17 @@ describe("root layout and AdSense", () => {
     const html = await renderLayout();
     expect(html).not.toContain("google-adsense-account");
     expect(html).not.toContain("adsbygoogle");
+  });
+
+  it("loads GA4 site-wide only when a measurement id is configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-TEST12345");
+    const html = await renderLayout();
+    expect(html).toContain(`<meta name="x-test-ga" content="G-TEST12345"/>`);
+  });
+
+  it("has no GA4 markup while the measurement id is unset or malformed", async () => {
+    vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "UA-12345-1");
+    const html = await renderLayout();
+    expect(html).not.toContain("x-test-ga");
   });
 });

@@ -9,6 +9,8 @@ import { SITE_URL } from "@/shared/lib/constants";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 import { PulseBeacon } from "@/components/seo/PulseBeacon";
 import { adsenseClient } from "@/lib/adsense";
+import { gaMeasurementId, googleSiteVerification } from "@/lib/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const jost = Jost({
@@ -28,6 +30,9 @@ const clash = localFont({
   variable: "--font-clash",
   display: "swap",
 });
+
+// Search Console ownership token (HTML-tag method). Off until the env is set.
+const siteVerification = googleSiteVerification();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,6 +72,7 @@ export const metadata: Metadata = {
     site: site.twitterHandle,
     images: [assets.coverOg],
   },
+  ...(siteVerification ? { verification: { google: siteVerification } } : {}),
 };
 
 export const viewport: Viewport = {
@@ -92,6 +98,8 @@ export default async function RootLayout({
   // Auto ads must stay OFF in the AdSense dashboard; placements are
   // code-controlled and approved by The Artist Post.
   const adsenseAccount = adsenseClient();
+  // GA4 may run site-wide (it is analytics, not ads). Off until the env is set.
+  const gaId = gaMeasurementId();
 
   return (
     <html
@@ -119,6 +127,7 @@ export default async function RootLayout({
         </Providers>
         <PulseBeacon />
       </body>
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }

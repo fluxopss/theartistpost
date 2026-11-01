@@ -5,6 +5,7 @@ import {
   reservedArtistIdentityError,
   reservedMemberIdentityError,
 } from "@/features/auth/register";
+import { scheduleJoinToCrm } from "@/features/auth/joinCrm";
 import { checkRateLimit } from "@/features/auth/rateLimit";
 import { issueSessionToken } from "@/features/auth/requestSession";
 import {
@@ -108,6 +109,15 @@ export async function POST(request: Request) {
       }
       return apiError("upstream_unavailable", result.error);
     }
+
+    scheduleJoinToCrm({
+      name: parsed.data.name,
+      email,
+      role: door === "member" ? "viewer" : "artist_pending",
+      ...(parsed.data.door === "artist" ? { handle: parsed.data.handle } : {}),
+      ...(parsed.data.platform ? { platform: parsed.data.platform } : {}),
+      surface: "app",
+    });
 
     const issued = issueSessionToken(result.user);
     if (!issued) {

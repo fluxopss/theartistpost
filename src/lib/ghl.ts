@@ -7,6 +7,14 @@ export const LEAD_PLATFORMS = ["ios", "android", "web"] as const;
 
 export type LeadPlatform = (typeof LEAD_PLATFORMS)[number];
 
+/** A new account (web /join or app POST /api/v1/auth/join). Returning sign-ins never post. */
+export const JOIN_INTENT = "join" as const;
+
+/** Member role at join time; artist studios start pending until Robbie approves them. */
+export const JOIN_ROLES = ["viewer", "artist_pending"] as const;
+
+export type JoinRole = (typeof JOIN_ROLES)[number];
+
 /** Give up on the webhook after this long so a stuck CRM never hangs a form. */
 export const GHL_TIMEOUT_MS = 8_000;
 
@@ -25,6 +33,10 @@ export type LeadPayload = {
   is_test?: boolean | number | string;
   flux_internal?: boolean | number | string;
   utm_source?: string;
+  /** Join leads only: the member's role at sign-up. */
+  role?: JoinRole;
+  /** Join leads only: the artist studio handle. */
+  handle?: string;
 };
 
 /** Reserved documentation domains (RFC 2606); the domain or any subdomain. */

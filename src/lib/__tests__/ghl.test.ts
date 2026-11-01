@@ -137,3 +137,50 @@ describe("sendLeadToGhl", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("join leads", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("GHL_WEBHOOK_URL", WEBHOOK);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("skips a QA join (test+x@fluxlab.agency) without calling the webhook", async () => {
+    const result = await sendLeadToGhl({
+      name: "QA",
+      email: "test+x@fluxlab.agency",
+      intent: "join",
+      role: "viewer",
+      platform: "web",
+    });
+    expect(result).toEqual({ ok: true, skipped: "test" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps intent join, role and handle in the webhook body", async () => {
+    fetchMock.mockResolvedValue(new Response("ok", { status: 200 }));
+    const result = await sendLeadToGhl({
+      name: "Leo",
+      email: "leo@gmail.com",
+      intent: "join",
+      role: "artist_pending",
+      handle: "leopaints",
+      platform: "ios",
+    });
+    expect(result.ok).toBe(true);
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body).toMatchObject({
+      intent: "join",
+      role: "artist_pending",
+      handle: "leopaints",
+      platform: "ios",
+    });
+  });
+});

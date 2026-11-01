@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LEAD_PLATFORMS } from "@/lib/ghl";
 import {
   artistJoinSchema,
   memberJoinSchema,
@@ -6,12 +7,17 @@ import {
 import type { AuthUserDTO } from "@/features/auth/sessionUser";
 import type { IssuedSession } from "@/features/auth/requestSession";
 
+/** Optional client tag the app sends so the CRM can tell iOS testers apart. */
+const joinPlatformSchema = z.enum(LEAD_PLATFORMS).optional();
+
 export const joinMemberBodySchema = memberJoinSchema.extend({
   door: z.literal("member"),
+  platform: joinPlatformSchema,
 });
 
 export const joinArtistBodySchema = artistJoinSchema.extend({
   door: z.literal("artist"),
+  platform: joinPlatformSchema,
 });
 
 export const joinBodySchema = z.discriminatedUnion("door", [

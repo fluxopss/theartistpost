@@ -87,6 +87,11 @@ export default function PrivacyPage() {
         message you write to our CRM (GoHighLevel) so Robbie and the team can
         follow up.
       </p>
+      <p>
+        When you create an account, your name, email, member type and studio
+        handle go to the same CRM so we can welcome you and keep in touch. We
+        never sell it. To be removed, email Robbie at robbie@theartistpost.org.
+      </p>
 
       <h2>On this device</h2>
       <p>

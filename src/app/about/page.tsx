@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { AdSlot } from "@/components/ads/AdSlot";
 import { assets, copy, links, site } from "@/content/site";
 import { ButtonLink } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -128,7 +127,6 @@ export default function AboutPage() {
             />
           </a>
         </SectionReveal>
-        <AdSlot placement="about-end" />
       </PageShell>
     </>
   );

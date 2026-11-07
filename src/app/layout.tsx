@@ -9,7 +9,6 @@ import { SITE_URL } from "@/shared/lib/constants";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
 import { FirstTouchCapture } from "@/components/FirstTouchCapture";
 import { PulseBeacon } from "@/components/seo/PulseBeacon";
-import { adsenseClient } from "@/lib/adsense";
 import { gaMeasurementId, googleSiteVerification } from "@/lib/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
@@ -94,11 +93,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getSession();
-  // Site verification only (meta tag + /ads.txt). Google's ad script is NOT
-  // loaded here: it loads only where an approved <AdSlot> renders (AdUnit).
-  // Auto ads must stay OFF in the AdSense dashboard; placements are
-  // code-controlled and approved by The Artist Post.
-  const adsenseAccount = adsenseClient();
   // GA4 may run site-wide (it is analytics, not ads). Off until the env is set.
   const gaId = gaMeasurementId();
 
@@ -117,9 +111,6 @@ export default async function RootLayout({
           fetchPriority="high"
         />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
-        {adsenseAccount ? (
-          <meta name="google-adsense-account" content={adsenseAccount} />
-        ) : null}
       </head>
       <body className="min-h-full antialiased">
         <JsonLd data={organizationJsonLd()} />

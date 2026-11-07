@@ -10,8 +10,8 @@
  *   NEXT_PUBLIC_GA_MEASUREMENT_ID The GA4 web stream's "G-XXXXXXXXXX".
  *                                 Baked into the client bundle at build.
  *                                 Loads gtag.js site-wide (analytics may run
- *                                 everywhere; ad scripts may not — see
- *                                 lib/adsense.ts).
+ *                                 everywhere; ad scripts may not: Ad Grants
+ *                                 policy forbids AdSense on this site).
  *
  * Neither value is a secret: the verification token is a public ownership
  * claim and the measurement ID ships in every page's JavaScript.

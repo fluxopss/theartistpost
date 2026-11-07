@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdSlot } from "@/components/ads/AdSlot";
 import { assets, copy, hours, site } from "@/content/site";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ScheduleView } from "@/components/ScheduleView";
@@ -50,7 +49,6 @@ export default async function ArtistSchedulePage({
               {copy.schedule.showcaseTitle}
             </h2>
             <ScheduleView events={events} />
-            <AdSlot placement="schedule-end" />
           </>
         ) : lane ? (
           <section

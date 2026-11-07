@@ -6,6 +6,7 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { SectionReveal } from "@/components/SectionReveal";
 import { AboutMarks } from "@/features/about/AboutMarks";
 import { AboutHacienda } from "@/features/about/AboutHacienda";
+import { AboutPrograms } from "@/features/about/AboutPrograms";
 import { AboutHistory } from "@/features/about/AboutHistory";
 import { AboutSupport } from "@/features/about/AboutSupport";
 import { GenreRail } from "@/features/stage/GenreRail";
@@ -62,6 +63,7 @@ export default function AboutPage() {
         <AboutHistory />
         <AboutMarks />
         <AboutHacienda />
+        <AboutPrograms />
         <AboutSupport />
 
         <SectionReveal className="grid gap-4 sm:grid-cols-2">

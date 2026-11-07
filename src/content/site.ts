@@ -220,7 +220,14 @@ export const appCopy = {
   sessionArtistLine: "Studio session open — publish waits on approval.",
   installTitle: "Get the app",
   installLead:
-    "The Artist Post is a real app — the same house on your home screen, ready even when the signal drops.",
+    "The Artist Post is a real app — the same house on your home screen, ready even when the signal drops. Install it, then join to hold seats at nights and respond on the Wall.",
+  installSteps: [
+    { title: "iPhone or iPad", body: "Open this page in Safari, tap Share, then Add to Home Screen." },
+    { title: "Android", body: "Open this page in Chrome and tap Install when prompted." },
+    { title: "Desktop Chrome", body: "Use the install icon in the address bar." },
+  ],
+  // TODO(Robbie): App Store / Google Play listing links go here once the app is
+  // public in the stores. No store links are published until then.
   installBenefits: [
     {
       title: "Home-screen studio",
@@ -250,6 +257,26 @@ export const appCopy = {
       body: "The App Store wrapper can tap the OS for calendar and quiet event pings. The web app already saves nights locally.",
     },
   ],
+} as const;
+
+export const joinCopy = {
+  whyTitle: "Why join",
+  why: [
+    {
+      title: "Members",
+      body: "Open a member door with your name and email. Respond on the Wall and keep the nights you want to remember.",
+    },
+    {
+      title: "Artists",
+      body: "Open a studio to share your work. Publishing waits on approval, and showcase space is free.",
+    },
+    {
+      title: "Returning",
+      body: "Already joined? Sign back in with a one-time code sent to your email.",
+    },
+  ],
+  // TODO(Robbie): add a one-line member-count or community highlight here once
+  // there is a real number you are happy to publish.
 } as const;
 
 export const copy = {
@@ -357,6 +384,51 @@ export const copy = {
     supportTitle: "Toward a permanent home",
     supportBody:
       "Your donations help keep our space going and build toward a physical location in the future. Every bit helps us grow closer to a permanent home for art and creativity.",
+    // TODO(Robbie): add impact numbers (artists hosted, nights held, people
+    // reached) and a short founder note once confirmed. None are published
+    // here until then.
+    programsKicker: "What we do",
+    programsTitle: "Programs",
+    programsLead:
+      "Everything The Artist Post offers is built around one idea: local creatives should be seen, heard, and supported without the usual barriers. Artists and vendors never pay to take part.",
+    programs: [
+      {
+        title: "Free artist showcases",
+        body: "Book a free showcase at Hacienda on Clematis Street. Review and sign the artist agreement, get approved, then receive a scheduling link.",
+        href: "/get-involved",
+        cta: "Book an artist space",
+      },
+      {
+        title: "Nights at Hacienda",
+        body: "Nights booked with local artists, with a pass you can hold on your phone and show at the door.",
+        href: "/artist-schedule",
+        cta: "See the schedule",
+      },
+      {
+        title: "The Wall",
+        body: "Our living gallery of local arts, music, theater, and culture. Only approved artists appear, and empty frames stay lit until a real artist is approved.",
+        href: "/explore",
+        cta: "Explore the Wall",
+      },
+      {
+        title: "Kindness Always and donation-based merch",
+        body: "Kindness Always is a reminder to choose kindness on purpose. Merch and donations help keep the space going and build toward a permanent home for art.",
+        href: "/kindness-always",
+        cta: "Kindness Always",
+      },
+      {
+        title: "Sponsors and venue partners",
+        body: "Businesses and venues can present a night or open a room. Every sponsored night is labeled, and artists never pay.",
+        href: "/sponsors",
+        cta: "Sponsor a night",
+      },
+      {
+        title: "Local chapters",
+        body: "The Artist Post is growing with the vision of operating nationwide, so every community has a hub where local artists are seen and celebrated.",
+        href: "/supporters",
+        cta: "Launch a chapter",
+      },
+    ],
     liveRoomTitle: "The live room",
     liveRoomBody:
       "Hacienda on Clematis is where TAP meets people in the room — rotating showcases, donation-based merch, and a space built to connect.",
@@ -442,7 +514,10 @@ export const copy = {
     status: "Nights at Hacienda, booked with local artists.",
     emptyTitle: "The next nights are being booked.",
     emptyBody:
-      "Follow along or get involved. New nights land here as soon as they are on the calendar.",
+      "New nights land here as soon as they are on the calendar. Artists can book a free showcase, and everyone is welcome to join the community or visit Hacienda during open hours.",
+    visitTitle: "Visit The Artist Post at Hacienda",
+    visitBody:
+      "Stop by to meet the featured local artists and pick up Kindness Always merch. Nights are held with local artists, and you can hold a seat for a night on your phone.",
     emptyInvolve: "Get involved",
     emptyCommunity: "Join the community",
     cancelledLabel: "Cancelled",

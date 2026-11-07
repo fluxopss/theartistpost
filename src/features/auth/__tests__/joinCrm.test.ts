@@ -24,6 +24,21 @@ import {
 const sendLead = vi.mocked(sendLeadToGhl);
 
 describe("joinLeadPayload", () => {
+  it("adds first-touch attribution when present", () => {
+    const payload = joinLeadPayload({
+      name: "Ana",
+      email: "ana@mail.com",
+      role: "viewer",
+      surface: "website",
+      firstTouch: { utm_source: "instagram", gclid: "g1", landing_page: "/join" },
+    });
+    expect(payload).toMatchObject({
+      utm_source: "instagram",
+      gclid: "g1",
+      landing_page: "/join",
+    });
+  });
+
   it("builds a website viewer join", () => {
     expect(
       joinLeadPayload({

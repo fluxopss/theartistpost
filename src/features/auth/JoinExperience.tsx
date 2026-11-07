@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { trackGa4 } from "@/lib/analytics";
+import { readFirstTouch } from "@/lib/firstTouch";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -91,14 +93,16 @@ export function JoinExperience({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await registerMemberAction({
-        name: memberName,
-        email: memberEmail,
-      });
+      const result = await registerMemberAction(
+        { name: memberName, email: memberEmail },
+        readFirstTouch(),
+      );
       if (!result.ok) {
         setError(result.error);
         return;
       }
+      trackGa4("generate_lead", { lead_type: "member" });
+      trackGa4("sign_up", { method: "email" });
       setDoor("memberDone");
       router.refresh();
     });
@@ -108,17 +112,22 @@ export function JoinExperience({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await registerArtistAction({
-        name: artistName,
-        email: artistEmail,
-        handle,
-        medium,
-        intent,
-      });
+      const result = await registerArtistAction(
+        {
+          name: artistName,
+          email: artistEmail,
+          handle,
+          medium,
+          intent,
+        },
+        readFirstTouch(),
+      );
       if (!result.ok) {
         setError(result.error);
         return;
       }
+      trackGa4("generate_lead", { lead_type: "artist" });
+      trackGa4("sign_up", { method: "email" });
       setDoor("artistDone");
       router.refresh();
     });

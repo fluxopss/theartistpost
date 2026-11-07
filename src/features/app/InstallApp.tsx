@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Download, Share, Smartphone } from "lucide-react";
 import { appCopy, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
@@ -95,6 +96,21 @@ export function InstallApp() {
       )}
 
       <section>
+        <h2 className="display text-2xl text-paper">How to install</h2>
+        <ul className="mt-4 space-y-3">
+          {appCopy.installSteps.map((item) => (
+            <li
+              key={item.title}
+              className="rounded-2xl border border-line px-4 py-3"
+            >
+              <p className="font-semibold text-paper">{item.title}</p>
+              <p className="mt-1 text-sm text-paper-muted">{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
         <h2 className="display text-2xl text-paper">What you get</h2>
         <ul className="mt-4 space-y-3">
           {appCopy.installBenefits.map((item) => (
@@ -107,6 +123,21 @@ export function InstallApp() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="flex flex-wrap gap-3 border-t border-line pt-6">
+        <Link
+          href="/join"
+          className="inline-flex min-h-11 items-center rounded-full bg-spark-coral px-5 text-sm font-semibold text-ink"
+        >
+          Join the community
+        </Link>
+        <Link
+          href="/artist-schedule"
+          className="inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-semibold text-paper hover:border-spark-teal hover:text-spark-teal"
+        >
+          See the schedule
+        </Link>
       </section>
     </div>
   );

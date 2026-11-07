@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdSlot } from "@/components/ads/AdSlot";
 import Image from "next/image";
 import { history, historyMetaDescription } from "@/content/history";
 import { assets, site } from "@/content/site";
@@ -50,7 +49,6 @@ export default function HistoryPage() {
 
       <PageShell className="space-y-12">
         <AboutHistory heading="lead-only" />
-        <AdSlot placement="history-end" />
         <div className="flex flex-col gap-3 border-t border-line pt-8 sm:flex-row">
           <ButtonLink
             href="/about"

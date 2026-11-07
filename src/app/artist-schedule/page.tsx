@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdSlot } from "@/components/ads/AdSlot";
-import { assets, copy } from "@/content/site";
+import { assets, copy, hours, site } from "@/content/site";
 import { PageShell } from "@/shared/ui/PageShell";
 import { ScheduleView } from "@/components/ScheduleView";
 import { SpatialSchedule } from "@/features/schedule/SpatialSchedule";
@@ -106,6 +106,32 @@ export default async function ArtistSchedulePage({
             </div>
           </section>
         )}
+        <section className="mt-10 rounded-3xl border border-line bg-surface-glass p-6 sm:p-8">
+          <h2 className="display text-2xl text-paper">
+            {copy.schedule.visitTitle}
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-paper-muted">
+            {copy.schedule.visitBody}
+          </p>
+          <p className="mt-3 text-sm font-semibold text-paper">
+            {site.address.full}
+          </p>
+          <p className="text-sm text-paper-muted">{hours.label}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/night"
+              className="inline-flex min-h-11 items-center rounded-full bg-spark-coral px-5 text-sm font-semibold text-ink"
+            >
+              The next night
+            </Link>
+            <Link
+              href="/join"
+              className="inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-semibold text-paper hover:border-spark-teal hover:text-spark-teal"
+            >
+              Join the community
+            </Link>
+          </div>
+        </section>
       </PageShell>
     </>
   );

@@ -22,6 +22,7 @@ import {
   type RegisterArtistInput,
   type RegisterMemberInput,
 } from "@/features/auth/register";
+import { parseFirstTouch, type FirstTouch } from "@/lib/firstTouch";
 import { scheduleJoinToCrm } from "@/features/auth/joinCrm";
 import { returningAuthMode } from "@/features/auth/returningSignIn";
 import {
@@ -82,6 +83,7 @@ async function clientKey(): Promise<string> {
  */
 export async function registerMemberAction(
   raw: RegisterMemberInput,
+  firstTouch?: FirstTouch,
 ): Promise<RegisterResult> {
   const parsed = memberJoinSchema.safeParse(raw);
   if (!parsed.success) {
@@ -123,6 +125,7 @@ export async function registerMemberAction(
     role: "viewer",
     platform: "web",
     surface: "website",
+    firstTouch: parseFirstTouch(firstTouch),
   });
 
   const wrote = await writeSessionCookie(result.user);
@@ -137,6 +140,7 @@ export async function registerMemberAction(
  */
 export async function registerArtistAction(
   raw: RegisterArtistInput,
+  firstTouch?: FirstTouch,
 ): Promise<RegisterResult> {
   const parsed = artistJoinSchema.safeParse(raw);
   if (!parsed.success) {
@@ -180,6 +184,7 @@ export async function registerArtistAction(
     handle,
     platform: "web",
     surface: "website",
+    firstTouch: parseFirstTouch(firstTouch),
   });
 
   const wrote = await writeSessionCookie(result.user);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, X } from "lucide-react";
 import { site } from "@/content/site";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackGa4 } from "@/lib/analytics";
 import { Button } from "@/shared/ui/Button";
 import {
   dismissInstall,
@@ -52,6 +52,7 @@ export function InstallPrompt() {
 
   async function install() {
     if (!deferred) return;
+    trackGa4("beta_install_click", { platform: "pwa" });
     await deferred.prompt();
     const choice = await deferred.userChoice;
     if (choice.outcome === "accepted") {

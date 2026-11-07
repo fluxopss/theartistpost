@@ -31,6 +31,7 @@ import {
   nightPhase,
   stampWord,
 } from "@/features/night/program";
+import { trackGa4 } from "@/lib/analytics";
 import { parseNightRsvp } from "@/features/night/rsvp";
 
 type RsvpResponse = {
@@ -199,6 +200,7 @@ export function NightRoom({ event }: { event: ContentEvent }) {
         setError(data.error || copy.night.device);
         return;
       }
+      trackGa4("rsvp", { event_id: event.id, event_date: event.start });
       remember({
         eventId: event.id,
         name: parsed.data.name,

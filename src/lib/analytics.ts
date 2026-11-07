@@ -34,3 +34,29 @@ export function trackEvent(
     // GA must never break a CTA either
   }
 }
+
+/**
+ * GA4 key events used for Google Ads conversions (see the TAP ad strategy).
+ * Params are source/intent style values only: never an email, name or handle.
+ */
+export type Ga4Event =
+  | { name: "sign_up"; params: { method: string } }
+  | { name: "generate_lead"; params: { lead_type: string } }
+  | { name: "rsvp"; params: { event_id: string; event_date: string } }
+  | {
+      name: "beta_install_click";
+      params: { platform: "ios" | "android" | "pwa" | "web" };
+    };
+
+/** Send one typed GA4 event through the existing gtag setup. No-op when GA4 is off. */
+export function trackGa4<N extends Ga4Event["name"]>(
+  name: N,
+  params: Extract<Ga4Event, { name: N }>["params"],
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.gtag?.("event", name, params);
+  } catch {
+    // GA must never break a form or a button
+  }
+}

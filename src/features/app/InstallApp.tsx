@@ -4,7 +4,7 @@ import { Download, Share, Smartphone } from "lucide-react";
 import { appCopy, site } from "@/content/site";
 import { Button } from "@/shared/ui/Button";
 import { useIosDevice, useStandalone } from "@/features/app/useDisplayMode";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackGa4 } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -30,6 +30,7 @@ export function InstallApp() {
 
   async function install() {
     if (!deferred) return;
+    trackGa4("beta_install_click", { platform: "pwa" });
     await deferred.prompt();
     const choice = await deferred.userChoice;
     if (choice.outcome === "accepted") {

@@ -6,6 +6,7 @@ import {
   type LeadPayload,
   type LeadPlatform,
 } from "@/lib/ghl";
+import type { FirstTouch } from "@/lib/firstTouch";
 
 export type JoinCrmInput = {
   name: string;
@@ -15,6 +16,8 @@ export type JoinCrmInput = {
   platform?: LeadPlatform;
   /** "website" for /join, "app" for POST /api/v1/auth/join. */
   surface: "website" | "app";
+  /** First-touch UTMs, gclid and landing page from the browser (website joins). */
+  firstTouch?: FirstTouch;
 };
 
 /** The CRM payload for a brand-new account. Pure, so it is unit-tested directly. */
@@ -29,6 +32,7 @@ export function joinLeadPayload(input: JoinCrmInput): LeadPayload {
     source:
       input.surface === "website" ? "theartistpost-join" : "theartistpost-app-join",
     page: input.surface === "website" ? "/join" : "/api/v1/auth/join",
+    ...(input.firstTouch ?? {}),
   };
 }
 

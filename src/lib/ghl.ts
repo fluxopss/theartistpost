@@ -33,6 +33,12 @@ export type LeadPayload = {
   is_test?: boolean | number | string;
   flux_internal?: boolean | number | string;
   utm_source?: string;
+  /** First-touch attribution captured on the visitor's first visit (join leads). */
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  gclid?: string;
+  landing_page?: string;
   /** Join leads only: the member's role at sign-up. */
   role?: JoinRole;
   /** Join leads only: the artist studio handle. */

@@ -7,6 +7,7 @@ import { AppShell } from "@/shared/ui/AppShell";
 import { Providers } from "@/shared/ui/Providers";
 import { SITE_URL } from "@/shared/lib/constants";
 import { JsonLd, organizationJsonLd } from "@/lib/seo/json-ld";
+import { FirstTouchCapture } from "@/components/FirstTouchCapture";
 import { PulseBeacon } from "@/components/seo/PulseBeacon";
 import { adsenseClient } from "@/lib/adsense";
 import { gaMeasurementId, googleSiteVerification } from "@/lib/google";
@@ -126,6 +127,7 @@ export default async function RootLayout({
           <AppShell>{children}</AppShell>
         </Providers>
         <PulseBeacon />
+        <FirstTouchCapture />
       </body>
       {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>

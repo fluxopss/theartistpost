@@ -13,16 +13,16 @@ import {
 const hours = (a: Date, b: Date) => (b.getTime() - a.getTime()) / 3_600_000;
 
 describe("blocksForDay", () => {
-  it("makes three four-hour blocks from 10:00 to 22:00 house time", () => {
+  it("makes three four-hour blocks from 11:00 to 23:00 house time", () => {
     const blocks = blocksForDay("2026-11-12", blockBooking);
     expect(blocks).toHaveLength(3);
     // November = EST (UTC-5)
     expect(blocks.map((b) => b.startsAt.toISOString())).toEqual([
-      "2026-11-12T15:00:00.000Z",
-      "2026-11-12T19:00:00.000Z",
-      "2026-11-12T23:00:00.000Z",
+      "2026-11-12T16:00:00.000Z",
+      "2026-11-12T20:00:00.000Z",
+      "2026-11-13T00:00:00.000Z",
     ]);
-    expect(blocks[2]!.endsAt.toISOString()).toBe("2026-11-13T03:00:00.000Z");
+    expect(blocks[2]!.endsAt.toISOString()).toBe("2026-11-13T04:00:00.000Z");
     expect(blocks.map((b) => b.index)).toEqual([0, 1, 2]);
     for (const b of blocks) expect(hours(b.startsAt, b.endsAt)).toBe(4);
   });
@@ -38,15 +38,15 @@ describe("blocksForDay", () => {
         minute: "2-digit",
         hourCycle: "h23",
       }).format(blocks[0]!.startsAt);
-      expect(first).toBe("10:00");
+      expect(first).toBe("11:00");
       for (const b of blocks) expect(hours(b.startsAt, b.endsAt)).toBe(4);
     }
     // The UTC instant moves one hour with daylight time.
     expect(blocksForDay("2026-11-01", blockBooking)[0]!.startsAt.toISOString()).toBe(
-      "2026-11-01T15:00:00.000Z",
+      "2026-11-01T16:00:00.000Z",
     );
     expect(blocksForDay("2026-10-31", blockBooking)[0]!.startsAt.toISOString()).toBe(
-      "2026-10-31T14:00:00.000Z",
+      "2026-10-31T15:00:00.000Z",
     );
   });
 

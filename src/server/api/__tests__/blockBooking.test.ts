@@ -89,7 +89,7 @@ describe("bookBlock", () => {
     if (!res.ok) return;
     expect(res.data.block).toMatchObject({ mine: true, taken: 1, left: 0, capacity: 1 });
     expect(env.rows).toHaveLength(1);
-    expect(env.rows[0]!.startsAt.toISOString()).toBe("2026-11-13T15:00:00.000Z");
+    expect(env.rows[0]!.startsAt.toISOString()).toBe("2026-11-13T16:00:00.000Z");
   });
 
   it("refuses a full block with a friendly message", async () => {
@@ -158,7 +158,7 @@ describe("bookBlock", () => {
   });
 
   it("refuses a block that has started or is outside the window", async () => {
-    const started = await book(ada, "2026-11-12", 0); // 10 AM, now is 9 AM -> open
+    const started = await book(ada, "2026-11-12", 0); // 11 AM, now is 9 AM -> open
     expect(started.ok).toBe(true);
     const late = bookBlock(env.prisma, bo, { day: "2026-11-12", index: 0 }, new Date("2026-11-12T16:00:00Z"));
     expect(await late).toMatchObject({ ok: false, code: "conflict" });

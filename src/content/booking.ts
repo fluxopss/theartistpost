@@ -28,16 +28,15 @@ export type BlockBookingConfig = {
   horizonDays: number;
 };
 
-// TODO(Robbie): confirm the real values below before launch. Placeholders:
-//  - opensAt / closesAt: real Hacienda sign-up window (house hours are
-//    11 AM - 11 PM Sun-Thu and 11 AM - midnight Fri-Sat in src/content/site.ts)
-//  - capacityPerBlock: 1 = one artist/act per block
-//  - maxBlocksPerPersonPerDay / maxUpcomingPerPerson: the "can't book 365
-//    days in a row" fair-use limits
+// Confirmed by Robbie 2026-11-12: follows Hacienda hours, one per block.
+// House hours are 11 AM - 11 PM Sun-Thu and 11 AM - midnight Fri-Sat
+// (src/content/site.ts), so three 4-hour blocks from 11:00 to 23:00 fit
+// every day. maxBlocksPerPersonPerDay / maxUpcomingPerPerson are the
+// "can't book 365 days in a row" fair-use limits.
 export const blockBooking: BlockBookingConfig = {
   timeZone: "America/New_York",
-  opensAt: "10:00",
-  closesAt: "22:00",
+  opensAt: "11:00",
+  closesAt: "23:00",
   blockHours: 4,
   blocksPerDay: 3,
   capacityPerBlock: 1,

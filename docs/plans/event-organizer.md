@@ -1,6 +1,6 @@
 # Event Organizer (free opportunities by local artists)
 
-Status: DRAFT plan for review. No feature code in this PR.
+Status: DRAFT plan for review. No feature code in this PR. Updated 2026-11-13 with Robbie's answers of 2026-11-12 (section 9).
 Ask (Robbie, Nov 10-11): local artists are starting to create their own events; launch the Event Organizer part soon so they can create their own free opportunities for creatives on the site.
 
 ## 1. What exists today
@@ -25,11 +25,13 @@ Read from `main` at 25790e2.
 
 ## 2. Smallest version that works
 
-An approved artist (and admins) can submit a **free** opportunity or event. It lands as `PENDING_REVIEW`. An admin approves it (it becomes public) or sends it back with a short note. Nothing an artist submits is public until an admin says yes.
+An approved artist or approved business (and admins) can submit a **free** opportunity or event. It lands as `PENDING_REVIEW`. An admin approves it (it becomes public) or sends it back with a short note. Nothing an artist submits is public until an admin says yes.
 
 Why reuse `Event` instead of a new table: the listing, RSVP, check-in, lane filter, calendar and app already read `Event`. Submitting is a new door into the same table, so the website and app show organizer events with no new reader code.
 
-Recommendation: **no new role in Phase 1.** Use ARTIST + approved profile (the existing gate). Add an `organizerApprovedAt` flag on the user only if Robbie wants organizing to be a separate permission from performing (open question 1). A role enum change is the costlier, less reversible route; a nullable flag is additive.
+Who can organize (decided by Robbie 2026-11-12): "Any approved artist or business can create events." No separate organizer permission, so `organizerApprovedAt` is dropped from the plan.
+
+**Businesses and venues: no such account type exists today.** `Role` is VIEWER, ARTIST, ADMIN, and the only profile table is `ArtistProfile` (handle, bio, avatar, `approved`). Smallest addition: reuse the existing ARTIST role and `ArtistProfile.approved` gate, and add one additive column `ArtistProfile.kind` (enum `ARTIST` | `BUSINESS`, default `ARTIST`). A business signs up like anyone, picks "business or venue" in the profile form, and is approved by an admin exactly like an artist; `authorizePublisher` needs no change. This avoids a Role enum change and keeps every existing row valid. Alternative if Robbie wants businesses kept out of the artist directory: a new `BUSINESS` role value, which touches every role switch and is the costlier route.
 
 Free only in Phase 1: no price, ticket or payment fields exist, and the server rejects ones that appear. This matches "donation-based, nobody pays to take part".
 
@@ -47,19 +49,24 @@ enum EventStatus {
 
 model Event {
   // existing fields unchanged, plus:
-  organizerId    String?    // user who proposed it; createdById stays "who made the row"
+  organizerId    String?    // user who proposed it (artist or business); createdById stays "who made the row"
   submittedAt    DateTime?
   reviewedById   String?
   reviewedAt     DateTime?
   reviewNote     String?    // shown to the organizer when sent back
   isFree         Boolean    @default(true)
   rsvpUrl        String?    // https only, optional external sign-up
-  category       String?    // see open question 4; falls back to `medium`
+  category       String?    // see remaining question 1; falls back to `medium`
   @@index([organizerId, status])
 }
 
-model User {
-  organizerApprovedAt DateTime?   // only if Robbie wants a separate permission
+enum ProfileKind {
+  ARTIST
+  BUSINESS
+}
+
+model ArtistProfile {
+  kind ProfileKind @default(ARTIST)   // new; lets businesses and venues organize
 }
 ```
 
@@ -71,7 +78,7 @@ Notes:
 
 ## 4. Routes
 
-Organizer (gate: real session, approved ARTIST or ADMIN, not suspended, plus `organizerApprovedAt` if adopted):
+Organizer (gate: real session, approved ARTIST or ADMIN, not suspended; approved businesses use the same gate via `ArtistProfile.kind = BUSINESS`):
 - `POST /api/v1/organizer/events` create, always `PENDING_REVIEW` (or `DRAFT` with `?draft=1`).
 - `GET /api/v1/organizer/events` my submissions with status and `reviewNote`.
 - `PATCH /api/v1/organizer/events/[id]` edit while DRAFT or returned; editing a PUBLISHED one sends it back to review.
@@ -83,7 +90,7 @@ Admin (existing `requireAdmin`):
 - `POST /api/v1/admin/events/[id]/approve` and `/return` (body: `note`).
 - Existing `/publish`, `/cancel` keep working.
 
-Public: `GET /api/v1/events` unchanged (PUBLISHED only). Event DTO gains optional `organizer` (name, handle) and `isFree`.
+Public: `GET /api/v1/events` unchanged (PUBLISHED only). Event DTO gains optional `organizer` (name, handle, kind) and `isFree`. No location limit: `venueAddress` is free text and the server does not restrict it to Palm Beach County.
 
 Safe fields for organizers: title, description, medium/category, times, venue name and address, capacity, cover image, rsvpUrl. Admin-only stays admin-only: sponsor, vendors, `comingSoon`, status changes to PUBLISHED.
 
@@ -107,10 +114,10 @@ Copy follows the site voice (plain, kind, "free opportunities for local creative
 - Duplicate guard: same organizer + same title + same start is rejected.
 - Image uploads use the existing store and size/type rules.
 - Report on events (`EVENT` target) with the existing rate limit; N distinct reports auto-hides pending admin look (Phase 3).
-- Admin can suspend organizing for a user (`organizerApprovedAt = null`) without suspending the whole account.
+- Admin can stop an organizer by un-approving their profile or suspending the account (no separate organizer flag).
 - Notifications: reuse `NotificationType.EVENT` for "approved" and "sent back".
 - Everything audited in `AuditLog`.
-- Terms: organizer accepts a short "organizer agreement" checkbox (what they host is their own event, TAP only lists it). Wording needs Robbie / counsel (open question).
+- Terms: organizer accepts a short "organizer agreement" checkbox (what they host is their own event, TAP only lists it). Wording still needs Robbie / counsel (remaining question 2).
 
 ## 7. What the mobile app needs
 
@@ -137,14 +144,18 @@ Out of Phase 1: payments, tickets, vendors from organizers, co-hosts.
 
 **Phase 3: trust and scale.** Trusted organizers skip review (after N clean events), recurring events, co-hosts, organizer-added vendor requests (admin still approves), category pages, analytics.
 
-## 9. Open questions for Robbie
+## 9. Questions for Robbie
 
-1. Who can organize: any approved artist, only artists he picks (separate "organizer" approval), or also businesses and venues?
-2. Free only for now, or do some events need a ticket link or donation ask (Phase 1 assumes free, no money handled by TAP)?
-3. Review before publish every time, or let trusted artists post straight away after a few good ones?
-4. Categories: keep the current lanes (music, culinary, community...) or add new ones (workshops, markets, open mics, volunteer calls)?
-5. Where can events be: Hacienda only, anywhere in Palm Beach County, or anywhere (no active TAP location in Texas right now, so should a location limit apply)?
-6. Does an organizer need to sign something (organizer agreement), and who writes it?
+Answered 2026-11-12:
+1. **Who can organize:** any approved artist or business. Reflected in section 2 (smallest addition: `ArtistProfile.kind`).
+2. **Free only:** yes, free opportunities; Phase 1 handles no money and the server rejects price fields.
+3. **Review before publish:** stays. Robbie agreed to approve each one. Trusted-organizer skip-review stays in Phase 3 only, not before he asks.
+4. **Location:** "ALL OVER". No location limit; events can be anywhere, not just Palm Beach County.
+
+Still open:
+1. Categories: keep the current lanes (music, culinary, community...) or add new ones (workshops, markets, open mics, volunteer calls)? Default if no answer: keep `medium` free text and suggest the existing lanes.
+2. Organizer agreement: does an organizer sign something, and who writes the wording (Robbie or counsel)? Default: a short checkbox stating the organizer hosts the event and TAP only lists it.
+3. Business sign-up: confirm businesses should appear in the artist directory with a "Business" label (the plan's default), or be kept separate.
 
 ## 10. Risks
 

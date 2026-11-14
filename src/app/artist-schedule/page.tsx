@@ -123,6 +123,12 @@ export default async function ArtistSchedulePage({
               The next night
             </Link>
             <Link
+              href="/artist-schedule/book"
+              className="inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-semibold text-paper hover:border-spark-teal hover:text-spark-teal"
+            >
+              Approved artists: book a block
+            </Link>
+            <Link
               href="/join"
               className="inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-semibold text-paper hover:border-spark-teal hover:text-spark-teal"
             >

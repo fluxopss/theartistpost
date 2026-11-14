@@ -125,6 +125,7 @@ model User {
   eventsCreated      Event[]             @relation("EventCreator")
   eventRsvps         EventRsvp[]
   eventCheckIns      EventCheckIn[]
+  blockBookings      BlockBooking[]
 
   @@index([role])
 }
@@ -467,4 +468,25 @@ model EventCheckIn {
 
   @@unique([eventId, userId])
   @@index([eventId, checkedInAt])
+}
+
+/// A person's hold on one daily sign-up block at the house. Blocks themselves
+/// are computed from src/content/booking.ts, so only bookings are stored.
+/// Cancelling deletes the row (the audit log keeps the history).
+model BlockBooking {
+  id         String   @id @default(cuid())
+  userId     String
+  /// House-zone date, "YYYY-MM-DD".
+  day        String
+  /// 0-based block position within that day.
+  blockIndex Int
+  startsAt   DateTime
+  endsAt     DateTime
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([day, blockIndex, userId])
+  @@index([day, blockIndex])
+  @@index([userId, endsAt])
 }
